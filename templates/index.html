@@ -2,151 +2,1243 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>J&J Studio - IA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>J&J STUDIO V126 - PINCEL OPTIMIZADO Y CONTRACCIÓN</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Arial+Black&family=Bangers&family=Bebas+Neue&family=Black+Ops+One&family=Bungee&family=Bungee+Shade&family=Butcherman&family=Creepster&family=Faster+One&family=Fascinate&family=Fredericka+the+Great&family=Frijole&family=Germania+One&family=Goldman&family=Grenze+Gotisch&family=Impact&family=Kelly+Slab&family=Kumar+One+Outline&family=Lacquer&family=Lobster&family=Luckiest+Guy&family=Metal+Mania&family=Modak&family=Monofett&family=Monoton&family=Nabla&family=Nosifer&family=Oi&family=Orbitron&family=Patua+One&family=Permanent+Marker&family=Pirata+One&family=Press+Start+2P&family=Righteous&family=Russo+One&family=Shojumaru&family=Silkscreen&family=Special+Elite&family=Spicy+Rice&family=Stalinist+One&family=Syncopate&family=Trade+Winds&family=UnifrakturMaguntia&family=Vampiro+One&family=Wallpoet&family=Zilla+Slab+Highlight&family=Rubik+Glitch&family=Bungee+Spice&family=Honk&family=Climate+Crisis&family=Michroma&family=Nova+Mono&family=Oxanium&family=Plaster&family=Space+Mono&family=Barrio&family=Codystar&family=Ewert&family=Major+Mono+Display&family=Megrim&family=New+Rocker&family=Piedra&family=Rye&family=Slackey&family=Vast+Shadow&family=Cinzel+Decorative&family=Comfortaa&family=Fredoka+One&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f4f9; }
-        
-        /* --- ESTILOS DEL LOGIN --- */
-        #loginModal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            display: flex; justify-content: center; align-items: center; z-index: 1000;
+        :root { --bg: #050505; --panel: #111111; --accent: #00ffcc; --text: #ffffff; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Arial Black', sans-serif; display: flex; height: 100vh; overflow: hidden; width: 100%; cursor: default; }
+        .sidebar { width: 350px; min-width: 350px; background: var(--panel); border-right: 1px solid #333; display: flex; flex-direction: column; height: 100vh; overflow-y: auto; z-index: 100; box-shadow: 2px 0 20px rgba(0,0,0,0.8); }
+        .header { padding: 20px; font-weight: 900; color: var(--accent); border-bottom: 1px solid #333; text-align: center; font-size: 18px; letter-spacing: 2px; }
+        .section { padding: 15px; border-bottom: 1px solid #333; }
+        .section-title { font-size: 10px; color: #777; text-transform: uppercase; margin-bottom: 10px; display: block; font-weight: 800; }
+        textarea, select, input[type="text"], input[type="range"] { background: #000; border: 1px solid #444; color: white; padding: 10px; border-radius: 4px; width: 100%; box-sizing: border-box; font-size: 13px; outline: none; margin-bottom: 8px; }
+        input[type=range] { accent-color: var(--accent); height: 4px; }
+        .btn-p { background: var(--accent); color: #000; font-weight: 900; padding: 12px; border: none; border-radius: 6px; cursor: pointer; width: 100%; transition: 0.2s; text-transform: uppercase; font-size: 11px; text-align: center; margin-bottom: 5px; }
+        .btn-p:hover { background: #fff; transform: scale(1.02); }
+        .tool-view { display: none; width: 100%; height: 100vh; flex-direction: row; }
+        .active-view { display: flex !important; }
+        .viewer { flex: 1; background: #080808; display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative; height: 100vh; }
+        .canvas-container { position: relative; border: 1px solid #333; box-shadow: 0 0 50px rgba(0,0,0,0.8); background-color: #0a0a0a; display: flex; align-items: center; justify-content: center; }
+        canvas { display: block; cursor: crosshair; }
+        #zoom-container { position: absolute; inset: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; pointer-events: none; }
+        #canvas-standard { position: absolute; left: 50%; top: 50%; transform-origin: center center; box-shadow: 0 0 60px rgba(0,0,0,0.9); pointer-events: auto; }
+        #selection-box { position: fixed; border: 1.5px dashed #00ffcc; display: none; pointer-events: none; z-index: 9999; background: rgba(0, 255, 204, 0.1); }
+        #view-home { position: fixed; inset: 0; background: #050505; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .card-menu { background: #111; padding: 30px; border-radius: 20px; border: 1px solid #333; cursor: pointer; text-align: center; transition: 0.3s; }
+        .card-menu:hover { border-color: var(--accent); transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0, 255, 204, 0.2); }
+        #download-lock-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 99999; display: none; align-items: center; justify-content: center; padding: 20px; }
+        #cropModal { position: fixed; inset: 0; background: rgba(0,0,0,0.98); display: none; justify-content: center; align-items: center; z-index: 9000; }
+        .crop-viewport { position: relative; width: 350px; height: 350px; background: #000; margin: 15px auto; overflow: hidden; border: 1px solid #333; cursor: grab; }
+        #cropImgUI { position: absolute; transform-origin: center; pointer-events: none; left: 50%; top: 50%; max-width: none !important; max-height: none !important; }
+        .btn-pulse { animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(37, 211, 102, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
         }
-        .login-box {
-            background: white; padding: 35px; border-radius: 12px;
-            text-align: center; width: 90%; max-width: 400px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        }
-        .login-box h2 { margin-top: 0; color: #333; font-size: 24px;}
-        .login-box p { color: #666; font-size: 15px; margin-bottom: 20px; }
-        .login-box input {
-            width: 100%; padding: 12px; margin: 15px 0;
-            border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;
-            font-size: 16px; text-align: center;
-        }
-        .login-box button {
-            background: #25D366; color: white; border: none;
-            padding: 12px 20px; font-size: 16px; border-radius: 8px;
-            cursor: pointer; width: 100%; font-weight: bold;
-        }
-        .login-box button:hover { background: #1ebd5a; }
-        .error-msg { color: #d93025; font-size: 14px; margin-top: 15px; font-weight: 500;}
-
-        /* --- ESTILOS DE LA PLATAFORMA (J&J) --- */
-        #mainApp { display: none; padding: 20px; text-align: center; }
-        .header { background: #111; color: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
-        .header h1 { margin: 0; font-size: 26px; }
-        .header p { margin: 5px 0 0 0; color: #ccc; }
-        
-        .editor-container {
-            background: white; padding: 30px; border-radius: 12px;
-            max-width: 600px; margin: auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .file-upload { margin: 20px 0; }
-        .process-btn {
-            background: #007BFF; color: white; border: none;
-            padding: 12px 25px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold;
-        }
-        .process-btn:hover { background: #0056b3; }
-        
-        .logout-btn {
-            background: #dc3545; color: white; border: none;
-            padding: 8px 15px; border-radius: 5px; cursor: pointer;
-            margin-top: 20px; font-size: 14px;
+        #brush-cursor {
+            position: fixed;
+            border: 1.5px solid #fff;
+            border-radius: 50%;
+            pointer-events: none;
+            display: none;
+            z-index: 99999;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: difference;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.5) inset;
         }
     </style>
 </head>
 <body>
 
-    <!-- PANTALLA DE SEGURIDAD (LOGIN) -->
-    <div id="loginModal">
-        <div class="login-box">
-            <h2>Comunidad Premium J&J</h2>
-            <p>Ingresa tu número de WhatsApp para usar el Studio IA.</p>
-            <input type="text" id="phoneInput" placeholder="Ej: 51999999999">
-            <button id="loginBtn">Ingresar</button>
-            <div id="errorMsg" class="error-msg"></div>
+    <div id="brush-cursor"></div>
+
+    <div id="view-home">
+        <button onclick="salirApp()" style="position:absolute; top:20px; right:20px; background:#ff3333; color:#fff; border:none; padding:10px 20px; border-radius:6px; font-weight:bold; cursor:pointer; z-index:99999;">🚪 CERRAR SESIÓN / SALIR</button>
+        <div style="width: 80px; height: 80px; background: var(--accent); color: #000; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 900; margin-bottom: 20px; box-shadow: 0 0 30px rgba(0,255,204,0.4);">J&J</div>
+        <h2 style="font-size: 3rem; margin-bottom: 40px; color: white; text-transform: uppercase; text-align: center;">STUDIO V126 PLATINUM</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; width: 100%; max-width: 1000px;">
+            <div onclick="initTool('color')" class="card-menu">
+                <h3 style="font-size: 20px; color: white; margin-bottom: 10px; text-transform: uppercase;">Master Color</h3>
+                <p style="color: #888; font-size: 11px; font-family: sans-serif;">Pincel inteligente de sustitución de color</p>
+            </div>
+            <div onclick="initTool('bg')" class="card-menu">
+                <h3 style="font-size: 20px; color: var(--accent); margin-bottom: 10px; text-transform: uppercase;">Quitar Fondo</h3>
+                <p style="color: #888; font-size: 11px; font-family: sans-serif;">Borrador inteligente y contracción de bordes</p>
+            </div>
+            <div onclick="initTool('designer')" class="card-menu">
+                <h3 style="font-size: 20px; color: white; margin-bottom: 10px; text-transform: uppercase;">Diseñador Only You</h3>
+                <p style="color: #888; font-size: 11px; font-family: sans-serif;">Diseño urbano, guías en CM y capas</p>
+            </div>
         </div>
     </div>
 
-    <!-- PLATAFORMA PRINCIPAL -->
-    <div id="mainApp">
-        <div class="header">
-            <h1>J&J Studio IA</h1>
-            <p>Edición Inteligente con SnapEdit</p>
+    <!-- MODAL DE VERIFICACIÓN / DESCARGA VIP -->
+    <div id="download-lock-modal">
+        <div class="max-w-md w-full bg-zinc-900 p-8 rounded-[2rem] border border-cyan-400/30 text-center shadow-2xl text-white">
+            <div class="w-16 h-16 bg-cyan-500 text-black rounded-2xl flex items-center justify-center font-black text-3xl mx-auto mb-6 shadow-xl">🔒</div>
+            <h2 class="text-2xl font-black italic uppercase mb-2 text-cyan-400" style="font-weight:900;">VERIFICACIÓN VIP</h2>
+            <p class="text-zinc-400 text-xs uppercase font-bold tracking-wider mb-4">Ingresa tu número registrado para descargar en 300 DPI</p>
+            <input type="tel" id="download-phone" placeholder="Número Celular" style="text-align: center; font-size: 20px; font-weight: 900; color: var(--accent); background: #000; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #333; width: 100%; outline: none;">
+            <button id="btn-verify-download" onclick="verificarYDescargar()" class="btn-p" style="padding: 15px; font-size: 13px; margin-bottom: 15px;">Validar e Iniciar Descarga</button>
+            <div style="margin-top: 10px; border-top: 1px solid #333; padding-top: 20px; margin-bottom: 20px;">
+                <p style="color: #ccc; font-size: 11px; margin-bottom: 12px; font-weight: bold; text-transform: uppercase;">¿Aún no tienes acceso o caducó?</p>
+                <a href="https://wa.me/51916689969" target="_blank" class="btn-pulse" style="display: flex; justify-content: center; align-items: center; background: #25D366; color: #fff; font-weight: 900; padding: 14px; border-radius: 8px; margin-bottom: 12px; text-decoration: none; text-transform: uppercase; font-size: 13px;">
+                    <span style="font-size:16px; margin-right:8px;">✨</span> SUSCRIBIRSE AL VIP
+                </a>
+                <a href="https://wa.me/51904503246" target="_blank" style="display: flex; justify-content: center; align-items: center; background: #FFD100; color: #000; font-weight: 900; padding: 14px; border-radius: 8px; text-decoration: none; text-transform: uppercase; font-size: 13px; box-shadow: 0 0 15px rgba(255,209,0,0.3);">
+                    <span style="font-size:16px; margin-right:8px;">🔄</span> RENOVAR MEMBRESÍA
+                </a>
+            </div>
+            <div id="vip-error-panel" style="display:none; margin-bottom: 20px;">
+                <p style="color: #ff3333; font-size: 13px; font-weight: bold; margin-bottom: 10px;">❌ Número no registrado o expirado.</p>
+            </div>
+            <button onclick="cerrarPopupDescarga()" style="background: #222; color: #888; border: none; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer; font-family: 'Arial Black'; font-size: 10px;">Seguir Editando</button>
         </div>
+    </div>
 
-        <div class="editor-container">
-            <h3>Sube una imagen para editar</h3>
-            <form action="/upload" method="POST" enctype="multipart/form-data">
-                <input type="file" name="image" class="file-upload" accept="image/*" required>
-                <br><br>
-                <button type="submit" class="process-btn">Procesar con IA</button>
-            </form>
+    <!-- VISTA PRINCIPAL DE HERRAMIENTAS -->
+    <div id="view-tool" class="tool-view">
+        <aside class="sidebar">
+            <div class="header" id="user-display">J&J STUDIO V126</div>
             
-            <br><br>
-            <button id="logoutBtn" class="logout-btn">Cerrar Sesión</button>
-        </div>
+            <div style="display:flex; gap:10px; margin: 15px 15px 0 15px;">
+                <button onclick="goBack()" class="btn-p" style="background:#222; color:#ff3333; margin:0; flex:1;">← MENÚ</button>
+                <button onclick="salirApp()" class="btn-p" style="background:#ff3333; color:#fff; margin:0; width:auto; padding: 0 15px;">🚪 SALIR</button>
+            </div>
+            
+            <div id="panel-carga" class="section">
+                <span class="section-title">Cargar Imagen Base</span>
+                <input type="file" id="upload" accept="image/*" style="font-family: sans-serif; color: #888;"/>
+            </div>
+
+            <!-- PANEL MASTER COLOR -->
+            <div id="panel-color" class="section" style="display: none;">
+                <span class="section-title text-cyan-400">1. ELIGE LOS COLORES</span>
+                <p style="font-size:10px; color:#888; font-family:sans-serif; margin-bottom:10px;">Usa el gotero para atrapar el color de la imagen. Abajo elige el nuevo color.</p>
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#1a1a1a; padding:10px; border-radius:6px; margin-bottom:10px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <button class="btn-p" style="margin:0; width:35px; padding:5px; background:#444; color:#fff;" onclick="activateMasterEyedropper()" title="Gotero (Color a Quitar)">💉</button>
+                        <div id="color-old" style="width:30px; height:30px; border:1px solid #555; background:#ffffff; border-radius:4px;"></div>
+                    </div>
+                    <span style="color:var(--accent); font-weight:bold; font-size:10px;">➜ REEMPLAZAR ➜</span>
+                    <input type="color" id="custom-picker" value="#ff0000" style="width:35px; height:35px; padding:0; border:none; background:none; cursor:pointer; margin:0;">
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#1a1a1a; padding:10px; border-radius:6px; margin-bottom:5px;">
+                    <label style="font-size:11px; font-weight:bold;">Tolerancia Color:</label>
+                    <input type="range" id="colorBrushTol" min="1" max="150" value="40" style="width:100px; margin:0;">
+                </div>
+
+                <div style="height: 1px; background: #333; margin: 15px 0;"></div>
+
+                <span class="section-title text-pink-500">2. PINCEL DE SUSTITUCIÓN</span>
+                <p style="font-size:10px; color:#888; font-family:sans-serif; margin-bottom:10px;">Pinta a mano alzada para cambiar el color respetando los bordes.</p>
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#1a1a1a; padding:10px; border-radius:6px; margin-bottom:10px;">
+                    <label style="font-size:11px; font-weight:bold;">Tamaño Pincel:</label>
+                    <input type="range" id="colorBrushSize" min="5" max="250" value="50" style="width:100px; margin:0;">
+                </div>
+                <button id="btn-color-brush" class="btn-p" style="background:#444; color:#fff; margin-bottom:10px;" onclick="toggleColorBrush()">ACTIVAR PINCEL DE COLOR</button>
+
+                <div style="height: 1px; background: #333; margin: 15px 0;"></div>
+                
+                <span class="section-title text-yellow-500">3. REEMPLAZO POR ZONA O GLOBAL</span>
+                <p style="font-size:10px; color:#888; font-family:sans-serif; margin-bottom:10px;">Dibuja un cuadro en la imagen arrastrando el mouse para cambiar el color solo en esa zona, o aplica en toda la imagen.</p>
+                <button onclick="applyColor(false)" class="btn-p" style="background:#fff; color:#000; margin-bottom:5px;">Aplicar a Zona Seleccionada</button>
+                <button onclick="applyColor(true)" class="btn-p" style="background:var(--accent); color:#000;">Reemplazar Color en Todo</button>
+            </div>
+
+            <!-- PANEL QUITAR FONDO -->
+            <div id="panel-bg" class="section" style="display: none;">
+                <span class="section-title text-yellow-500">1. ELIGE EL COLOR A BORRAR</span>
+                <p style="font-size:10px; color:#888; font-family:sans-serif; margin-bottom:10px;">Usa el gotero para seleccionar qué color vas a eliminar.</p>
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#1a1a1a; padding:10px; border-radius:6px; margin-bottom:10px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <button class="btn-p" style="margin:0; width:35px; padding:5px; background:#444; color:#fff;" onclick="activateBgEyedropper()" title="Gotero de Fondo">💉</button>
+                        <input type="color" id="bg-color-picker" value="#ffffff" oninput="updateBGColorTarget(this.value)" style="width:0; height:0; visibility:hidden; position:absolute;">
+                        <div id="bg-color-indicator" style="width:30px; height:30px; border-radius:4px; border:1px solid #555; background:#ffffff;"></div>
+                    </div>
+                    <span style="font-size:11px; font-weight:bold; margin-right:auto; margin-left:15px;">Color Seleccionado</span>
+                </div>
+                
+                <label class="section-title" style="display:flex; justify-content:space-between;">Tolerancia de Color: <span id="val-tol">40</span></label>
+                <input type="range" id="bg-tolerance" min="1" max="150" value="40" oninput="updateBGTolerance()">
+
+                <div style="height: 1px; background: #333; margin: 15px 0;"></div>
+
+                <span class="section-title text-pink-500">2. PINCEL MÁGICO / MANUAL</span>
+                <div style="background: #1a1a1a; padding: 10px; border-radius: 6px; margin-bottom:10px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <input type="checkbox" id="eraserColorLock" checked>
+                        <label style="font-size:11px; font-family:sans-serif; color:#00ffcc; font-weight:bold; cursor:pointer;" for="eraserColorLock">PINCEL MÁGICO (Borra SOLO el color de arriba)</label>
+                    </div>
+                    <p style="font-size:9px; color:#888; margin-top:5px; padding-left:22px;">Si lo desmarcas, el pincel borrará todo a su paso (Borrador normal).</p>
+                </div>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#1a1a1a; padding:10px; border-radius:6px; margin-bottom:10px;">
+                    <label style="font-size:11px; font-weight:bold;">Tamaño Pincel:</label>
+                    <input type="range" id="eraserSize" min="5" max="250" value="50" style="width:100px; margin:0;">
+                </div>
+                <button id="btn-eraser" class="btn-p" style="background:#444; color:#fff; margin-bottom:10px;" onclick="toggleEraser()">ACTIVAR PINCEL BORRADOR</button>
+
+                <div style="height: 1px; background: #333; margin: 15px 0;"></div>
+
+                <span class="section-title text-accent">3. CONTRAER BORDES</span>
+                <p style="font-size:10px; color:#888; font-family:sans-serif; margin-bottom:10px;">Elimina los píxeles residuales blancos en los contornos.</p>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#1a1a1a; padding:10px; border-radius:6px; margin-bottom:5px;">
+                    <label style="font-size:11px; font-weight:bold;">Píxeles a contraer:</label>
+                    <div style="display:flex; align-items:center; gap:5px;">
+                        <input type="range" id="bgContract" min="1" max="15" value="1" style="width:80px; margin:0;" oninput="document.getElementById('bgContractVal').innerText = this.value + ' px'">
+                        <span id="bgContractVal" style="font-size:10px; font-weight:bold; color:var(--accent); width: 25px;">1 px</span>
+                    </div>
+                </div>
+                <button onclick="contractEdgesBg()" class="btn-p" style="background:#888; color:#fff; margin-bottom:15px;">🔄 APLICAR CONTRACCIÓN</button>
+
+                <div style="height: 1px; background: #333; margin: 15px 0;"></div>
+
+                <span class="section-title text-cyan-400">BORRADO RÁPIDO (EN TODO)</span>
+                <button id="btn-auto-bg-ia" onclick="removeBackgroundAutoMath()" class="btn-p" style="background:#fff; color:#000; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:8px;"><span id="ia-text">Borrar Fondos Claros Auto</span></button>
+                <button onclick="removeSpecificColor()" class="btn-p" style="background:var(--accent); color:#000;">Borrar Color Elegido en Todo</button>
+            </div>
+
+            <!-- PANEL DISEÑADOR -->
+            <div id="panel-designer" class="section" style="display: none; flex-direction: column; gap: 8px;">
+                <span class="section-title">Añadir Elementos</span>
+                <button class="btn-p" style="background:#fff; color:#000;" onclick="addText()">+ AÑADIR TEXTO</button>
+                <button class="btn-p" style="background:#ffd100; color:#000;" onclick="triggerFreeImage()">+ IMAGEN / SVG LIBRE</button>
+            </div>
+
+            <!-- EDITOR DE CAPA -->
+            <div id="editPanel" class="section" style="display:none;">
+                <span class="section-title text-cyan-400">Editor de Capa</span>
+                <div style="display:flex; justify-content:space-between; font-size:10px; color:#888;"><span>ESCALA GENERAL</span><span id="vScaleLabel">100%</span></div>
+                <input type="range" id="inpGlobalScale" min="10" max="500" value="100">
+                
+                <div id="textEditor">
+                    <textarea id="elText" style="margin-top:5px; height: 60px;"></textarea>
+                    <select id="elFont" style="margin-top:5px;"></select>
+                    <div style="display:flex; justify-content:space-between; font-size:10px; color:#888; margin-top:5px;"><span>ESPACIADO</span><span id="trackVal">0</span></div>
+                    <input type="range" id="elTracking" min="-20" max="150" value="0">
+                    <label class="section-title" style="margin-top:10px;">COLOR DE TEXTO</label>
+                    <input type="color" id="elColor" value="#FFFFFF" style="height:35px; padding:0; cursor:pointer;">
+                </div>
+                
+                <div id="imageEditor" style="display:none;">
+                    <div style="background: #1a1a1a; padding: 10px; border-radius: 6px; margin-bottom:8px; display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="keepRatio" checked>
+                        <label style="font-size:11px; font-family:sans-serif; color:#ccc; font-weight:bold;">ESCALA PROPORCIONAL</label>
+                    </div>
+                    
+                    <div style="background: #1a1a1a; padding: 10px; border-radius: 6px; margin-bottom:8px;">
+                        <label style="font-size:11px; font-family:sans-serif; color:#ccc; font-weight:bold; display:block; margin-bottom:5px;">TEÑIR SVG / PNG</label>
+                        <div style="display: flex; gap: 5px;">
+                            <input type="color" id="overlayColor" value="#ff0000" style="height:35px; padding:0; cursor:pointer; flex:1;">
+                            <button class="btn-p" style="margin:0; padding:5px; flex:1;" onclick="applyOverlay()">PINTAR</button>
+                            <button class="btn-p" style="margin:0; padding:5px; background:#333; color:#fff;" onclick="clearOverlay()">X</button>
+                        </div>
+                    </div>
+
+                    <div style="background: #1a1a1a; padding: 10px; border-radius: 6px; margin-bottom:8px; border: 1px solid #333;">
+                        <label style="font-size:11px; font-family:sans-serif; color:#00ffcc; font-weight:bold; display:block; margin-bottom:8px;">BORRAR COLOR DE ESTA CAPA</label>
+                        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                            <button class="btn-p" style="margin:0; width:40px; padding:5px; background:#444; color:#fff;" onclick="activateLayerEyedropper()" title="Usar Gotero en la capa">💉</button>
+                            <input type="color" id="layerBgColor" value="#ffffff" style="height:35px; padding:0; cursor:pointer; width:40px;">
+                            <div style="flex:1;">
+                                <div style="display:flex; justify-content:space-between; font-size:9px; color:#888;"><span>Tolerancia</span><span id="layerTolVal">40</span></div>
+                                <input type="range" id="layerBgTol" min="1" max="150" value="40" style="margin:0;" oninput="document.getElementById('layerTolVal').innerText = this.value">
+                            </div>
+                        </div>
+                        <button class="btn-p" style="background:#ff3366; color:#fff; margin-bottom:5px;" onclick="removeLayerColorExact()">APLICAR BORRADO</button>
+                        
+                        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px; margin-top:10px;">
+                            <div style="flex:1;">
+                                <div style="display:flex; justify-content:space-between; font-size:9px; color:#888;"><span>Contraer Píxeles</span><span id="layerContractVal">1 px</span></div>
+                                <input type="range" id="layerContract" min="1" max="15" value="1" style="margin:0;" oninput="document.getElementById('layerContractVal').innerText = this.value + ' px'">
+                            </div>
+                        </div>
+                        <button onclick="contractLayerEdges()" class="btn-p" style="background:#888; color:#fff; margin:0;">🔄 CONTRAER BORDES DE CAPA</button>
+                    </div>
+
+                    <button class="btn-p" style="background:#444; color:#fff; margin-bottom:5px;" onclick="applyMonochrome()">FILTRO B/N</button>
+                </div> 
+                
+                <div id="styleControls" style="margin-top:15px;">
+                    <div id="fillControlGroup" style="background: #1a1a1a; padding: 10px; border-radius: 6px; margin-bottom:8px;">
+                        <input type="checkbox" id="hasFill" checked> <label style="font-size:11px; font-family:sans-serif; color:#ccc;">Relleno Activo</label>
+                        <select id="fillType" style="margin-top:5px; font-size:10px;" onchange="toggleGradControls()"><option value="solid">Color Sólido</option><option value="custom">Degradado</option></select>
+                    </div>
+                    <div style="background: #1a1a1a; padding: 10px; border-radius: 6px;">
+                        <input type="checkbox" id="hasStroke"> <label style="font-size:11px; font-family:sans-serif; color:#ccc; font-weight:bold; color:var(--accent);">TRAZADO / MARCO</label>
+                        <div id="strokeSub" style="display:none; margin-top:5px;">
+                            <select id="strokeType" onchange="toggleGradControls()"><option value="solid">Sólido</option><option value="custom">Degradado</option></select>
+                            <div style="display:flex; justify-content:space-between; font-size:10px; color:#888;"><span>GROSOR</span></div>
+                            <input type="range" id="strokeWidth" min="1" max="80" value="4">
+                            <input type="color" id="strokeColor" value="#FFFFFF" style="width:100%; height:30px; padding:0; border:none; background:none; cursor:pointer; margin-top:5px;">
+                        </div>
+                    </div>
+                    <div id="gradUI" style="display:none; background:#000; padding:10px; margin-top:8px; border-radius:4px; border: 1px solid #333;">
+                        <span class="section-title">Colores Degradado</span>
+                        <div style="display:flex; gap:10px; margin-bottom:10px;"><input type="color" id="gradColor1" value="#00ffcc" style="padding:0; height:35px; cursor:pointer;"><input type="color" id="gradColor2" value="#0066ff" style="padding:0; height:35px; cursor:pointer;"></div>
+                        <div style="display:flex; justify-content:space-between; font-size:10px; color:#888;"><span>ÁNGULO DEGRADADO</span><span id="angleVal">90°</span></div>
+                        <input type="range" id="elAngle" min="0" max="360" value="90">
+                    </div>
+                </div>
+                <button class="btn-p" style="background:#ff3333; color:#fff; margin-top:20px" onclick="deleteEl()">BORRAR CAPA</button>
+            </div>
+            
+            <div class="section" style="margin-top: auto; border:none;">
+                <button class="btn-p" style="background:#cc0000; color:#fff; margin-bottom:10px;" onclick="globalReset()">REINICIAR DISEÑO</button>
+                <span class="section-title" style="color: var(--accent); margin-bottom: 12px;">Finalizar Proyecto</span>
+                <button class="btn-p" onclick="solicitarVerificacionVIP()" style="background:#fff; color:#000; padding: 15px;">DESCARGAR PNG (300 DPI)</button>
+            </div>
+        </aside>
+
+        <main class="viewer" id="viewerArea">
+            <div style="position:absolute; top:20px; left:20px; z-index:200; background:#111; padding:10px; border-radius:8px; border:1px solid #333; display:flex; gap:10px; align-items:center;">
+                <span style="font-size:10px; color:#888; font-family:sans-serif; font-weight:bold;">COLOR MESA:</span>
+                <input type="color" id="artboardBg" value="#080808" oninput="changeArtboardBg(this.value)" style="cursor:pointer; height:25px; width:30px; padding:0; border:none; background:none; margin:0;">
+            </div>
+            <div id="zoom-container" style="display:none;"><canvas id="canvas-standard"></canvas></div>
+            <div id="selection-box"></div>
+            <div class="canvas-container" id="cParent" style="display:none;"><canvas id="mainCanvas"></canvas></div>
+        </main>
     </div>
 
-    <script>
-        const MACRO_URL = "https://script.google.com/macros/s/AKfycbww-tmvkep-6ClaCH8j6Uqr-aPYrNwWGY219F6h1exL67LYMmNYwGEXm2xjz--mFfbQnw/exec";
+    <!-- MODAL RECORTE DE IMÁGENES -->
+    <div id="cropModal"><div class="crop-container"><h3 style="color:var(--accent); font-size:14px; margin-bottom:10px;">AJUSTAR IMAGEN</h3><div class="crop-viewport" id="cropViewport"><img id="cropImgUI" src=""></div><button class="btn-p" onclick="applyCrop()">CONFIRMAR RECORTE</button></div></div>
+    <input type="file" id="fileIn" hidden accept="image/*, image/svg+xml">
 
-        document.addEventListener("DOMContentLoaded", () => {
-            const loginModal = document.getElementById("loginModal");
-            const mainApp = document.getElementById("mainApp");
-            const loginBtn = document.getElementById("loginBtn");
-            const phoneInput = document.getElementById("phoneInput");
-            const errorMsg = document.getElementById("errorMsg");
-            const logoutBtn = document.getElementById("logoutBtn");
+<script>
+    const canvasStandard = document.getElementById('canvas-standard'), ctxStandard = canvasStandard.getContext('2d', {willReadFrequently:true});
+    const canvas = document.getElementById('mainCanvas'), ctx = canvas.getContext('2d', {willReadFrequently:true});
+    const fileIn = document.getElementById('fileIn'), viewport = document.getElementById('viewerArea'), zoomContainer = document.getElementById('zoom-container');
+    const upload = document.getElementById('upload'), selectionBox = document.getElementById('selection-box');
+    const brushCursor = document.getElementById('brush-cursor');
+    
+    let originalImg = null, liveSnapshot = null, initialSnapshot = null; 
+    let stdScale = 1, stdPosX = 0, stdPosY = 0, targetRGB = [255,255,255];
+    let isPanning = false, isSelecting = false, startX_PX = 0, startY_PX = 0, startCX = 0, startCY = 0, selectArea = null, currentTool = '', pSX, pSY;
+    
+    let designerLoopId = null; const EXPORT_W = 4134, EXPORT_H = 4961; 
+    let VISUAL_SCALE = 1, W = 1, H = 1; let elements = [], selectedEl = null, isDragging = false, dragOffset = {x:0,y:0}, resizeMode = null;
+    let cropScale = 1, cropPos = {x:0,y:0}, isDraggingCrop = false, tempImg = null, freeMode = false, pSX_Crop, pSY_Crop;
+    const HANDLE_SIZE = 10, PX_TO_CM = 118.1102362205;
+    
+    // Controles de Pinceles y Goteros
+    let isEraserMode = false;
+    let isColorBrushMode = false;
+    let isLayerEyedropper = false; 
+    let isMasterEyedropper = false;
+    let isBgEyedropper = false;
+    
+    // URL DE GOOGLE APPS SCRIPT
+    const MACRO_URL = "https://script.google.com/macros/s/AKfycbww-tmvkep-6ClaCH8j6Uqr-aPYrNwWGY219F6h1exL67LYMmNYwGEXm2xjz--mFfbQnw/exec";
 
-            // Validar sesión temporal por pestaña
-            if (sessionStorage.getItem("jj_logged_in") === "true") {
-                loginModal.style.display = "none";
-                mainApp.style.display = "block";
+    window.onload = () => {
+        const sessionUser = localStorage.getItem('jj_user_name');
+        if(sessionUser) { document.getElementById('user-display').innerText = `J&J STUDIO - ${sessionUser.toUpperCase()}`; }
+        
+        const elFontSelect = document.getElementById('elFont');
+        if(elFontSelect) {
+            elFontSelect.innerHTML = `
+            <option value="Arial Black">Arial Black (Defecto)</option>
+            <option value="Permanent Marker">Permanent Marker (Urbano)</option>
+            <optgroup label="FAMOSAS / CARTOON">
+                <option value="Comfortaa">Comfortaa (Estilo Disney)</option>
+                <option value="Fredoka One">Fredoka One (Infantil)</option>
+                <option value="Luckiest Guy">Luckiest Guy (Comic)</option>
+                <option value="Bangers">Bangers (Marvel)</option>
+                <option value="Spicy Rice">Spicy Rice (Retro)</option>
+            </optgroup>
+            <optgroup label="URBAN & GRAFFITI">
+                <option value="Lacquer">Lacquer Drip</option>
+                <option value="Rubik Glitch">Glitch Digital</option>
+                <option value="Nosifer">Nosifer Terror</option>
+                <option value="Barrio">Barrio Graffiti</option>
+            </optgroup>
+            <optgroup label="STYLE / NEON">
+                <option value="Bungee Spice">Bungee Colores</option>
+                <option value="Honk">Honk Neon</option>
+                <option value="Monoton">Neon Lines</option>
+                <option value="Nabla">Nabla 3D Iso</option>
+            </optgroup>
+            <optgroup label="GÓTICAS Y RETRO">
+                <option value="Grenze Gotisch">Grenze Gotisch</option>
+                <option value="Pirata One">Pirata Gothic</option>
+                <option value="Cinzel Decorative">Cinzel Luxury</option>
+            </optgroup>`;
+        }
+    };
+
+    function salirApp() {
+        if(confirm("¿Estás seguro de que deseas salir y cerrar la sesión actual?")) {
+            localStorage.removeItem('jj_session_perm');
+            localStorage.removeItem('jj_session_time');
+            localStorage.removeItem('jj_user_name');
+            location.reload();
+        }
+    }
+
+    function recalcularMedidasCanvas() {
+        const vH = viewport.clientHeight; if (!vH || vH < 100) return false;
+        VISUAL_SCALE = (vH * 0.85) / EXPORT_H; W = EXPORT_W * VISUAL_SCALE; H = EXPORT_H * VISUAL_SCALE; return true;
+    }
+
+    function apagarPincelesYResetear() {
+        isEraserMode = false;
+        isColorBrushMode = false;
+        isLayerEyedropper = false; 
+        isMasterEyedropper = false;
+        isBgEyedropper = false;
+        
+        document.getElementById('btn-eraser').style.background = '#444';
+        document.getElementById('btn-eraser').innerText = 'ACTIVAR PINCEL BORRADOR';
+        
+        document.getElementById('btn-color-brush').style.background = '#444';
+        document.getElementById('btn-color-brush').innerText = 'ACTIVAR PINCEL DE COLOR';
+
+        canvasStandard.style.cursor = 'default';
+        canvas.style.cursor = 'default';
+        brushCursor.style.display = 'none';
+        selectionBox.style.display = 'none';
+        selectArea = null;
+    }
+
+    function initTool(t) { 
+        currentTool = t; document.getElementById('view-home').style.display = 'none'; document.getElementById('view-tool').classList.add('active-view');
+        const isDesigner = (t === 'designer');
+        document.getElementById('zoom-container').style.display = isDesigner ? 'none' : 'flex';
+        document.getElementById('cParent').style.display = isDesigner ? 'flex' : 'none';
+        document.getElementById('panel-carga').style.display = isDesigner ? 'none' : 'block';
+        
+        document.getElementById('panel-color').style.display = (t === 'color') ? 'block' : 'none';
+        document.getElementById('panel-bg').style.display = (t === 'bg') ? 'block' : 'none';
+        document.getElementById('panel-designer').style.display = isDesigner ? 'flex' : 'none';
+        document.getElementById('editPanel').style.display = 'none';
+        selectedEl = null;
+
+        apagarPincelesYResetear();
+        
+        setTimeout(() => {
+            if(isDesigner) {
+                if(!recalcularMedidasCanvas()) { setTimeout(() => initTool(t), 50); return; }
+                canvas.width = W; canvas.height = H;
+                if(elements.length === 0) resetElementsDefaults();
+                if(!designerLoopId) runDesignerRender();
+            } else { if(originalImg !== null) stdResetTransform(); }
+        }, 50);
+    }
+
+    function resetElementsDefaults() {
+        recalcularMedidasCanvas(); canvas.width = W; canvas.height = H;
+        elements = [
+            { type:'text', val:'ONLY YOU', x:W/2, y:H*0.10, size:W*0.14, baseSize:W*0.14, color:'#FFFFFF', font:'Permanent Marker', tracking:0, fill:true, stroke:false, strokeWidth:4, strokeColor:'#FFF' },
+            { type:'text', val:'ONLY YOU', x:W/2, y:H*0.20, size:W*0.14, baseSize:W*0.14, color:'#FFFFFF', font:'Permanent Marker', tracking:0, fill:false, stroke:true, strokeWidth:3, strokeColor:'#FFF' },
+            { type:'text', val:'ONLY YOU', x:W/2, y:H*0.30, size:W*0.14, baseSize:W*0.14, color:'#FFFFFF', font:'Permanent Marker', tracking:0, fill:false, stroke:true, strokeWidth:3, strokeColor:'#FFF' }
+        ];
+        elements.forEach(el => { el.w = W*0.6; el.h = el.size; });
+        for(let i=0; i<6; i++) { elements.push({ type:'image', x:W*0.08+(i%3)*(W*0.3), y:H*0.45 + Math.floor(i/3)*(H*0.22), w:W*0.24, h:W*0.24, baseW:W*0.24, baseH:W*0.24, ratio:1, img:null, stroke:false, strokeWidth:4, strokeColor:'#FFFFFF' }); }
+    }
+
+    function globalReset() {
+        if(currentTool === 'designer') {
+            if(!confirm("¿Seguro? Se borrarán todos los textos e imágenes añadidos.")) return;
+            resetElementsDefaults(); selectedEl = null; document.getElementById('editPanel').style.display = 'none';
+        } else {
+            if(!originalImg) return; if(!confirm("¿Seguro? La imagen base volverá a su estado original sin recortes.")) return;
+            ctxStandard.putImageData(initialSnapshot, 0, 0); liveSnapshot = ctxStandard.getImageData(0,0,canvasStandard.width,canvasStandard.height); stdResetTransform();
+            apagarPincelesYResetear();
+        }
+    }
+
+    function goBack() { 
+        if(designerLoopId) { cancelAnimationFrame(designerLoopId); designerLoopId = null; }
+        elements = []; selectedEl = null; ctx.clearRect(0,0,W,H); originalImg = null; 
+        ctxStandard.clearRect(0,0,canvasStandard.width,canvasStandard.height);
+        upload.value = ''; fileIn.value = '';
+        document.getElementById('editPanel').style.display = 'none'; 
+        
+        apagarPincelesYResetear();
+        document.getElementById('view-tool').classList.remove('active-view'); document.getElementById('view-home').style.display = 'flex';
+    }
+
+    function changeArtboardBg(color) { document.getElementById('cParent').style.backgroundColor = color; document.getElementById('viewerArea').style.backgroundColor = color; }
+
+    function solicitarVerificacionVIP() { 
+        const sessionPerm = localStorage.getItem('jj_session_perm');
+        const sessionTime = localStorage.getItem('jj_session_time');
+        const now = new Date().getTime();
+
+        if(sessionPerm === 'active' && sessionTime && (now - parseInt(sessionTime) < 86400000)) {
+            downloadPNG();
+            return;
+        }
+
+        document.getElementById('download-lock-modal').style.display = 'flex'; 
+        document.getElementById('vip-error-panel').style.display = 'none';
+        document.getElementById('download-phone').style.display = 'block';
+        document.getElementById('btn-verify-download').style.display = 'block';
+        document.getElementById('download-phone').value = '';
+    }
+    
+    function cerrarPopupDescarga() { document.getElementById('download-lock-modal').style.display = 'none'; }
+    
+    function verificarYDescargar() {
+        const u = document.getElementById('download-phone').value.toString().replace(/\D/g,'');
+        if(!u) return; const btn = document.getElementById('btn-verify-download'); btn.innerText = "VERIFICANDO...";
+        const oldScript = document.getElementById('jsonp-engine'); if(oldScript) oldScript.remove();
+        
+        window.procesarRetornoGoogle = function(data) { 
+            btn.innerText = "Validar e Iniciar Descarga";
+            if(data.access === true) { 
+                localStorage.setItem('jj_session_perm', 'active'); 
+                localStorage.setItem('jj_user_name', data.nombre); 
+                localStorage.setItem('jj_session_time', new Date().getTime().toString());
+                document.getElementById('user-display').innerText = `J&J STUDIO - ${data.nombre.toUpperCase()}`; 
+                cerrarPopupDescarga(); downloadPNG(); 
+            } else { 
+                document.getElementById('vip-error-panel').style.display = 'block';
+                document.getElementById('download-phone').style.display = 'none';
+                btn.style.display = 'none';
+            }
+        };
+        
+        // Petición JSONP pasando el parámetro ?user= requerido por tu Google Apps Script
+        const script = document.createElement('script'); 
+        script.id = 'jsonp-engine'; 
+        script.src = MACRO_URL + '?user=' + encodeURIComponent(u) + '&prefix=procesarRetornoGoogle'; 
+        document.body.appendChild(script);
+    }
+
+    function updateStandardTransform() { canvasStandard.style.transform = `translate(-50%, -50%) translate(${stdPosX}px, ${stdPosY}px) scale(${stdScale})`; }
+
+    upload.onchange = (e) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const img = new Image();
+            img.onload = () => {
+                stdScale = 1; stdPosX = 0; stdPosY = 0; targetRGB = [255,255,255];
+                apagarPincelesYResetear();
+                
+                if(currentTool !== 'designer') {
+                    canvasStandard.width = img.width; canvasStandard.height = img.height;
+                    ctxStandard.drawImage(img, 0, 0); originalImg = img;
+                    liveSnapshot = ctxStandard.getImageData(0,0,canvasStandard.width,canvasStandard.height);
+                    initialSnapshot = ctxStandard.getImageData(0,0,canvasStandard.width,canvasStandard.height);
+                    stdResetTransform();
+                }
+            };
+            img.src = ev.target.result;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+        e.target.value = ''; 
+    };
+
+    function stdResetTransform() { 
+        if(!originalImg) return; 
+        const vW = viewport.clientWidth - 100, vH = viewport.clientHeight - 100;
+        let sW = (vW > 0 ? vW : 800) / originalImg.width, sH = (vH > 0 ? vH : 800) / originalImg.height;
+        stdScale = Math.min(sW, sH); if(stdScale > 1) stdScale = 1;
+        stdPosX = 0; stdPosY = 0; updateStandardTransform(); 
+    }
+
+    function applyContractLoop(imgData, iterations) {
+        let w = imgData.width, h = imgData.height;
+        let d1 = new Uint8ClampedArray(imgData.data);
+        let d2 = new Uint8ClampedArray(imgData.data);
+        
+        for(let iter = 0; iter < iterations; iter++) {
+            let src = (iter % 2 === 0) ? d1 : d2;
+            let dst = (iter % 2 === 0) ? d2 : d1;
+            dst.set(src);
+            for (let y = 1; y < h - 1; y++) {
+                for (let x = 1; x < w - 1; x++) {
+                    let i = (y * w + x) * 4;
+                    if (src[i + 3] > 0) { 
+                        if (src[i - 4 + 3] === 0 || src[i + 4 + 3] === 0 || src[i - w * 4 + 3] === 0 || src[i + w * 4 + 3] === 0) {
+                            dst[i + 3] = 0; 
+                        }
+                    }
+                }
+            }
+        }
+        imgData.data.set((iterations % 2 === 0) ? d1 : d2);
+        return imgData;
+    }
+
+    function contractEdgesBg() {
+        if(!liveSnapshot || !originalImg) return;
+        const amount = parseInt(document.getElementById('bgContract').value) || 1;
+        
+        const c = document.createElement('canvas'); c.width = canvasStandard.width; c.height = canvasStandard.height;
+        const t = c.getContext('2d', {willReadFrequently:true});
+        t.putImageData(liveSnapshot, 0, 0);
+
+        let d = t.getImageData(0,0,c.width,c.height);
+        d = applyContractLoop(d, amount);
+        t.putImageData(d, 0, 0);
+
+        const ni = new Image();
+        ni.onload = () => { 
+            originalImg = ni; 
+            liveSnapshot = ctxStandard.getImageData(0,0,c.width,c.height); 
+            ctxStandard.clearRect(0,0,c.width,c.height); 
+            ctxStandard.drawImage(ni,0,0); 
+        };
+        ni.src = c.toDataURL();
+    }
+
+    function contractLayerEdges() {
+        if(!selectedEl || !selectedEl.img) return;
+        const amount = parseInt(document.getElementById('layerContract').value) || 1;
+
+        const c = document.createElement('canvas'); c.width = selectedEl.img.width; c.height = selectedEl.img.height;
+        const t = c.getContext('2d', {willReadFrequently:true});
+        t.drawImage(selectedEl.img, 0, 0);
+        
+        let d = t.getImageData(0,0,c.width,c.height);
+        d = applyContractLoop(d, amount);
+        t.putImageData(d, 0, 0);
+        
+        const ni = new Image();
+        ni.onload = () => { selectedEl.img = ni; };
+        ni.src = c.toDataURL();
+    }
+
+    function activateMasterEyedropper() {
+        isMasterEyedropper = true;
+        canvasStandard.style.cursor = 'crosshair';
+        if (isColorBrushMode) toggleColorBrush();
+    }
+
+    function activateBgEyedropper() {
+        isBgEyedropper = true;
+        canvasStandard.style.cursor = 'crosshair';
+        if (isEraserMode) toggleEraser();
+    }
+
+    function activateLayerEyedropper() {
+        isLayerEyedropper = true;
+        canvas.style.cursor = 'crosshair';
+    }
+
+    function toggleColorBrush() {
+        isColorBrushMode = !isColorBrushMode;
+        const btn = document.getElementById('btn-color-brush');
+        if (isColorBrushMode) {
+            btn.style.background = '#ff3366'; btn.innerText = 'DESACTIVAR PINCEL DE COLOR';
+            canvasStandard.style.cursor = `none`; 
+        } else {
+            btn.style.background = '#444'; btn.innerText = 'ACTIVAR PINCEL DE COLOR';
+            canvasStandard.style.cursor = `default`;
+            brushCursor.style.display = 'none';
+        }
+    }
+
+    function applyColorStroke(e) {
+        const pStd = getStandardMouseCoords(e);
+        const size = parseInt(document.getElementById('colorBrushSize').value);
+        const tol = parseInt(document.getElementById('colorBrushTol').value);
+        const tolSq = tol * tol;
+        const sizeSq = size * size;
+        
+        const hex = document.getElementById('custom-picker').value;
+        const rNew = parseInt(hex.slice(1,3),16), gNew = parseInt(hex.slice(3,5),16), bNew = parseInt(hex.slice(5,7),16);
+        const tR = targetRGB[0], tG = targetRGB[1], tB = targetRGB[2];
+
+        const startX = Math.floor(pStd.x - size);
+        const startY = Math.floor(pStd.y - size);
+        const boxW = size * 2;
+        const boxH = size * 2;
+
+        const drawX = Math.max(0, startX);
+        const drawY = Math.max(0, startY);
+        const drawW = Math.min(canvasStandard.width - drawX, startX + boxW - drawX);
+        const drawH = Math.min(canvasStandard.height - drawY, startY + boxH - drawY);
+
+        if(drawW <= 0 || drawH <= 0) return;
+
+        const imgData = ctxStandard.getImageData(drawX, drawY, drawW, drawH);
+        const data = imgData.data;
+
+        for (let y = 0; y < drawH; y++) {
+            for (let x = 0; x < drawW; x++) {
+                const canvasX = drawX + x;
+                const canvasY = drawY + y;
+                const dx = canvasX - pStd.x;
+                const dy = canvasY - pStd.y;
+                
+                if (dx * dx + dy * dy <= sizeSq) {
+                    const i = (y * drawW + x) * 4;
+                    if (data[i+3] > 0) { 
+                        const distSq = (data[i]-tR)*(data[i]-tR) + (data[i+1]-tG)*(data[i+1]-tG) + (data[i+2]-tB)*(data[i+2]-tB);
+                        if (distSq <= tolSq) {
+                            data[i] = rNew;
+                            data[i+1] = gNew;
+                            data[i+2] = bNew;
+                        }
+                    }
+                }
+            }
+        }
+        ctxStandard.putImageData(imgData, drawX, drawY);
+    }
+
+    function applyColor(isGlobal) {
+        if(!originalImg) return;
+        const area = (isGlobal || !selectArea) ? {x:0, y:0, w:canvasStandard.width, h:canvasStandard.height} : selectArea;
+        const id = ctxStandard.getImageData(area.x, area.y, area.w, area.h); const d = id.data;
+        const hex = document.getElementById('custom-picker').value;
+        const tol = parseInt(document.getElementById('colorBrushTol').value);
+        const tolSq = tol * tol;
+        const rN = parseInt(hex.slice(1,3),16), gN = parseInt(hex.slice(3,5),16), bN = parseInt(hex.slice(5,7),16);
+        const tR = targetRGB[0], tG = targetRGB[1], tB = targetRGB[2];
+
+        for(let i=0; i<d.length; i+=4) {
+            if(d[i+3] < 10) continue; 
+            const distSq = (d[i]-tR)*(d[i]-tR) + (d[i+1]-tG)*(d[i+1]-tG) + (d[i+2]-tB)*(d[i+2]-tB);
+            if(distSq <= tolSq) { 
+                d[i]=rN; d[i+1]=gN; d[i+2]=bN; 
+            }
+        }
+        ctxStandard.putImageData(id, area.x, area.y);
+        const ni = new Image(); ni.onload = () => { originalImg = ni; liveSnapshot = ctxStandard.getImageData(0,0,canvasStandard.width,canvasStandard.height); };
+        ni.src = canvasStandard.toDataURL(); selectionBox.style.display='none'; selectArea = null;
+    }
+
+    function toggleEraser() {
+        isEraserMode = !isEraserMode;
+        const btn = document.getElementById('btn-eraser');
+        if (isEraserMode) {
+            btn.style.background = '#ff3366'; btn.innerText = 'DESACTIVAR PINCEL';
+            canvasStandard.style.cursor = `none`;
+        } else {
+            btn.style.background = '#444'; btn.innerText = 'ACTIVAR PINCEL';
+            canvasStandard.style.cursor = `default`;
+            brushCursor.style.display = 'none';
+        }
+    }
+
+    function applyEraserStroke(e) {
+        const pStd = getStandardMouseCoords(e);
+        const size = parseInt(document.getElementById('eraserSize').value);
+        const colorLock = document.getElementById('eraserColorLock').checked;
+        const sizeSq = size * size;
+
+        if (!colorLock) {
+            ctxStandard.save();
+            ctxStandard.globalCompositeOperation = 'destination-out';
+            ctxStandard.beginPath();
+            ctxStandard.arc(pStd.x, pStd.y, size, 0, Math.PI * 2);
+            ctxStandard.fill();
+            ctxStandard.restore();
+        } else {
+            const tol = parseInt(document.getElementById('bg-tolerance').value);
+            const tolSq = tol * tol; 
+            const tR = targetRGB[0], tG = targetRGB[1], tB = targetRGB[2];
+
+            const startX = Math.floor(pStd.x - size);
+            const startY = Math.floor(pStd.y - size);
+            const boxW = size * 2;
+            const boxH = size * 2;
+
+            const drawX = Math.max(0, startX);
+            const drawY = Math.max(0, startY);
+            const drawW = Math.min(canvasStandard.width - drawX, startX + boxW - drawX);
+            const drawH = Math.min(canvasStandard.height - drawY, startY + boxH - drawY);
+
+            if(drawW <= 0 || drawH <= 0) return;
+
+            const imgData = ctxStandard.getImageData(drawX, drawY, drawW, drawH);
+            const data = imgData.data;
+
+            for (let y = 0; y < drawH; y++) {
+                for (let x = 0; x < drawW; x++) {
+                    const canvasX = drawX + x;
+                    const canvasY = drawY + y;
+                    const dx = canvasX - pStd.x;
+                    const dy = canvasY - pStd.y;
+                    
+                    if (dx * dx + dy * dy <= sizeSq) {
+                        const i = (y * drawW + x) * 4;
+                        if (data[i+3] > 0) { 
+                            const distSq = (data[i]-tR)*(data[i]-tR) + (data[i+1]-tG)*(data[i+1]-tG) + (data[i+2]-tB)*(data[i+2]-tB);
+                            if (distSq <= tolSq) {
+                                data[i+3] = 0; 
+                            }
+                        }
+                    }
+                }
+            }
+            ctxStandard.putImageData(imgData, drawX, drawY);
+        }
+    }
+
+    function removeLayerColorExact() {
+        if(!selectedEl || !selectedEl.img) return;
+        const hex = document.getElementById('layerBgColor').value;
+        const tol = parseInt(document.getElementById('layerBgTol').value);
+        const tolSq = tol * tol;
+        const rN = parseInt(hex.slice(1,3),16), gN = parseInt(hex.slice(3,5),16), bN = parseInt(hex.slice(5,7),16);
+
+        const c = document.createElement('canvas'); c.width = selectedEl.img.width; c.height = selectedEl.img.height;
+        const t = c.getContext('2d', {willReadFrequently:true});
+        t.drawImage(selectedEl.img, 0, 0);
+        const d = t.getImageData(0,0,c.width,c.height);
+
+        for(let i=0; i<d.data.length; i+=4) {
+            if(d.data[i+3] === 0) continue;
+            const distSq = (d.data[i]-rN)*(d.data[i]-rN) + (d.data[i+1]-gN)*(d.data[i+1]-gN) + (d.data[i+2]-bN)*(d.data[i+2]-bN);
+            if(distSq <= tolSq) {
+                d.data[i+3] = 0; 
+            }
+        }
+        t.putImageData(d,0,0);
+        const ni = new Image();
+        ni.onload = () => { selectedEl.img = ni; };
+        ni.src = c.toDataURL();
+    }
+
+    function removeBackgroundAutoMath() {
+        if(!originalImg) return;
+        const btn = document.getElementById('btn-auto-bg-ia');
+        btn.style.background = '#222'; btn.style.color = '#888'; document.getElementById('ia-text').innerText = 'PROCESANDO...';
+        
+        setTimeout(() => {
+            const c = document.createElement('canvas'); c.width = canvasStandard.width; c.height = canvasStandard.height;
+            const t = c.getContext('2d', {willReadFrequently:true}); 
+            t.drawImage(originalImg, 0, 0, c.width, c.height); 
+            const d = t.getImageData(0,0,c.width,c.height);
+            
+            for(let i=0; i<d.data.length; i+=4) { 
+                if((d.data[i]+d.data[i+1]+d.data[i+2])/3 > 215) d.data[i+3]=0; 
+            }
+            
+            t.putImageData(d,0,0); 
+            const ni = new Image(); 
+            ni.onload = () => { 
+                originalImg = ni; 
+                liveSnapshot = ctxStandard.getImageData(0,0,canvasStandard.width,canvasStandard.height); 
+                ctxStandard.clearRect(0,0,canvasStandard.width,canvasStandard.height);
+                ctxStandard.drawImage(ni,0,0); 
+                
+                btn.style.background = '#fff'; btn.style.color = '#000'; document.getElementById('ia-text').innerText = 'Borrar Fondos Claros Auto';
+            }; 
+            ni.src = c.toDataURL();
+        }, 50); 
+    }
+
+    function updateBGColorTarget(hex) { 
+        targetRGB[0] = parseInt(hex.slice(1,3),16); targetRGB[1] = parseInt(hex.slice(3,5),16); targetRGB[2] = parseInt(hex.slice(5,7),16); 
+        document.getElementById('bg-color-indicator').style.backgroundColor = hex;
+    }
+    function updateBGTolerance() { document.getElementById('val-tol').innerText = document.getElementById('bg-tolerance').value; }
+    
+    function removeSpecificColor() {
+        if(!liveSnapshot) return;
+        const tol = parseInt(document.getElementById('bg-tolerance').value);
+        const tolSq = tol * tol;
+        const tid = new ImageData(new Uint8ClampedArray(liveSnapshot.data), canvasStandard.width, canvasStandard.height); const d = tid.data;
+        const tR = targetRGB[0], tG = targetRGB[1], tB = targetRGB[2];
+        for(let i=0; i<d.length; i+=4) { 
+            if(d[i+3] === 0) continue; 
+            const distSq = (d[i]-tR)*(d[i]-tR) + (d[i+1]-tG)*(d[i+1]-tG) + (d[i+2]-tB)*(d[i+2]-tB);
+            if(distSq <= tolSq) d[i+3] = 0; 
+        }
+        ctxStandard.putImageData(tid, 0, 0);
+        const ni = new Image(); ni.onload = () => { originalImg = ni; liveSnapshot = ctxStandard.getImageData(0,0,canvasStandard.width,canvasStandard.height); };
+        ni.src = canvasStandard.toDataURL();
+    }
+
+    function crearGradienteEstilo(ctxObj, el, x, y, ancho, alto) {
+        let rad = (el.angle || 90) * Math.PI / 180; let cx = x, cy = y;
+        let rX = Math.abs(Math.cos(rad) * ancho / 2), rY = Math.abs(Math.sin(rad) * alto / 2);
+        let g = ctxObj.createLinearGradient(cx - rX, cy - rY, cx + rX, cy + rY);
+        g.addColorStop(0, el.g1 || "#00ffcc"); g.addColorStop(1, el.g2 || "#0066ff"); return g;
+    }
+
+    function applyOverlay() { if(selectedEl && selectedEl.type === 'image') selectedEl.overlayColor = document.getElementById('overlayColor').value; }
+    function clearOverlay() { if(selectedEl && selectedEl.type === 'image') selectedEl.overlayColor = null; }
+
+    let TW = 0;
+    function runDesignerRender() {
+        if (currentTool !== 'designer') return; ctx.clearRect(0,0,W,H);
+        elements.forEach(el => {
+            ctx.save();
+            if(el.type === 'text') {
+                ctx.font = `bold ${el.size}px "${el.font}"`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                let chars = el.val.split(''), tw = 0; chars.forEach(c => tw += ctx.measureText(c).width + (el.tracking || 0));
+                TW = tw; ctx.translate(el.x, el.y); 
+                let curX = -tw/2;
+                chars.forEach(c => {
+                    let cw = ctx.measureText(c).width;
+                    if(el.stroke) { ctx.save(); ctx.lineWidth=el.strokeWidth; ctx.strokeStyle=(el.strokeType==='custom')?crearGradienteEstilo(ctx, el, 0, 0, el.w, el.h):el.strokeColor; ctx.strokeText(c, curX+cw/2, 0); ctx.restore(); }
+                    if(el.fill) { ctx.save(); ctx.fillStyle=(el.fillType==='custom')?crearGradienteEstilo(ctx, el, 0, 0, el.w, el.h):el.color; ctx.fillText(c, curX+cw/2, 0); ctx.restore(); }
+                    curX += cw + (el.tracking || 0);
+                });
+            } else if(el.type === 'image') {
+                if(el.img) {
+                    if(el.overlayColor) {
+                        let tmpC = document.createElement('canvas'); tmpC.width = el.w; tmpC.height = el.h;
+                        let tCtx = tmpC.getContext('2d');
+                        tCtx.drawImage(el.img, 0, 0, el.w, el.h);
+                        tCtx.globalCompositeOperation = "source-in";
+                        tCtx.fillStyle = el.overlayColor;
+                        tCtx.fillRect(0, 0, el.w, el.h);
+                        ctx.drawImage(tmpC, el.x, el.y, el.w, el.h);
+                    } else {
+                        ctx.drawImage(el.img, el.x, el.y, el.w, el.h);
+                    }
+                    if(el.stroke) {
+                        ctx.save(); ctx.lineWidth = el.strokeWidth;
+                        ctx.strokeStyle = (el.strokeType === 'custom') ? crearGradienteEstilo(ctx, el, el.x+el.w/2, el.y+el.h/2, el.w, el.h) : el.strokeColor;
+                        ctx.strokeRect(el.x, el.y, el.w, el.h); ctx.restore();
+                    }
+                } else {
+                    ctx.fillStyle = '#111'; ctx.fillRect(el.x, el.y, el.w, el.h);
+                    if(el.stroke) {
+                        ctx.lineWidth = el.strokeWidth; ctx.strokeStyle = (el.strokeType === 'custom') ? crearGradienteEstilo(ctx, el, el.x+el.w/2, el.y+el.h/2, el.w, el.h) : el.strokeColor;
+                        ctx.strokeRect(el.x, el.y, el.w, el.h);
+                    } else { ctx.strokeStyle = selectedEl === el ? '#00ffcc' : '#333'; ctx.lineWidth = 2; ctx.setLineDash([6,6]); ctx.strokeRect(el.x, el.y, el.w, el.h); }
+                    ctx.fillStyle = '#666'; ctx.font = '10px Arial'; ctx.textAlign = 'center'; ctx.fillText('+ CLIC PARA FOTO', el.x + el.w/2, el.y + el.h/2);
+                }
+            }
+            if(selectedEl === el) { 
+                ctx.restore(); ctx.save(); ctx.strokeStyle = '#00ffcc'; ctx.lineWidth = 2; const box = getBoxCoords(el); ctx.strokeRect(box.x1, box.y1, box.x2 - box.x1, box.y2 - box.y1); 
+                if(el.type === 'image' || el.type === 'text') { ctx.fillStyle = '#ffffff'; ctx.fillRect(box.x2 - HANDLE_SIZE/2, box.y2 - HANDLE_SIZE/2, HANDLE_SIZE, HANDLE_SIZE); ctx.strokeRect(box.x2 - HANDLE_SIZE/2, box.y2 - HANDLE_SIZE/2, HANDLE_SIZE, HANDLE_SIZE); } 
+                let cmW = ((box.x2 - box.x1) / VISUAL_SCALE / PX_TO_CM).toFixed(1); let cmH = ((box.y2 - box.y1) / VISUAL_SCALE / PX_TO_CM).toFixed(1); 
+                ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; 
+                ctx.fillStyle = 'rgba(0, 255, 204, 0.2)'; ctx.fillRect(box.x1, box.y1 - 22, box.x2 - box.x1, 16); ctx.fillStyle = '#00ffcc'; ctx.fillText(`${cmW} cm`, box.x1 + (box.x2 - box.x1)/2, box.y1 - 14); 
+                ctx.fillStyle = 'rgba(0, 255, 204, 0.2)'; ctx.fillRect(box.x1 - 65, box.y1, 60, box.y2 - box.y1); ctx.fillStyle = '#00ffcc'; ctx.fillText(`${cmH} cm`, box.x1 - 35, box.y1 + (box.y2 - box.y1)/2);
+            }
+            ctx.restore();
+        });
+        designerLoopId = requestAnimationFrame(runDesignerRender);
+    }
+
+    document.getElementById('inpGlobalScale').oninput = (e) => {
+        if (!selectedEl) return; const scaleVal = parseFloat(e.target.value) / 100; document.getElementById('vScaleLabel').innerText = e.target.value + '%';
+        if (selectedEl.type === 'text') { if (!selectedEl.baseSize) selectedEl.baseSize = selectedEl.size; selectedEl.size = selectedEl.baseSize * scaleVal; selectedEl.w=TW; selectedEl.h=selectedEl.size;} 
+        else { if (!selectedEl.baseW) { selectedEl.baseW = selectedEl.w; selectedEl.baseH = selectedEl.h; } selectedEl.w = selectedEl.baseW * scaleVal; selectedEl.h = document.getElementById('keepRatio').checked ? selectedEl.w / (selectedEl.ratio || 1) : selectedEl.baseH * scaleVal; }
+    };
+    document.getElementById('elTracking').oninput = (e) => { if (selectedEl && selectedEl.type === 'text') { selectedEl.tracking = parseInt(e.target.value); document.getElementById('trackVal').innerText = e.target.value; selectedEl.w = TW; } };
+    document.getElementById('elText').oninput = (e) => { if (selectedEl && selectedEl.type === 'text') selectedEl.val = e.target.value; };
+    document.getElementById('elFont').onchange = (e) => { if (selectedEl && selectedEl.type === 'text') selectedEl.font = e.target.value; };
+    document.getElementById('fillType').onchange = (e) => { if(selectedEl) { selectedEl.fillType = e.target.value; toggleGradControls(); } };
+    document.getElementById('strokeType').onchange = (e) => { if(selectedEl) { selectedEl.strokeType = e.target.value; toggleGradControls(); } };
+    document.getElementById('elColor').oninput = (e) => { if (selectedEl) selectedEl.color = e.target.value; };
+    document.getElementById('gradColor1').oninput = (e) => { if (selectedEl) selectedEl.g1 = e.target.value; };
+    document.getElementById('gradColor2').oninput = (e) => { if (selectedEl) selectedEl.g2 = e.target.value; };
+    document.getElementById('elAngle').oninput = (e) => { if (selectedEl) { selectedEl.angle = parseInt(e.target.value); document.getElementById('angleVal').innerText = e.target.value + '°'; } };
+    document.getElementById('hasFill').onchange = (e) => { if (selectedEl) selectedEl.fill = e.target.checked; };
+    document.getElementById('hasStroke').onchange = (e) => { if (selectedEl) { selectedEl.stroke = e.target.checked; document.getElementById('strokeSub').style.display = e.target.checked ? 'block' : 'none'; toggleGradControls(); } };
+    document.getElementById('strokeWidth').oninput = (e) => { if (selectedEl) selectedEl.strokeWidth = parseInt(e.target.value); };
+    document.getElementById('strokeColor').oninput = (e) => { if (selectedEl) selectedEl.strokeColor = e.target.value; };
+
+    function updateUI(el) {
+        if(!el) return; document.getElementById('editPanel').style.display = 'block'; const isI = el.type === 'image';
+        document.getElementById('textEditor').style.display = isI ? 'none' : 'block'; document.getElementById('imageEditor').style.display = isI ? 'block' : 'none';
+        document.getElementById('fillControlGroup').style.display = isI ? 'none' : 'block';
+
+        if (el.type === 'text') { document.getElementById('inpGlobalScale').value = Math.round((el.size / (el.baseSize || W*0.14)) * 100); }
+        else { document.getElementById('inpGlobalScale').value = Math.round((el.w / (el.baseW || W*0.24)) * 100); }
+        document.getElementById('vScaleLabel').innerText = document.getElementById('inpGlobalScale').value + '%';
+        
+        document.getElementById('hasStroke').checked = el.stroke; 
+        document.getElementById('strokeWidth').value = el.strokeWidth || 4; document.getElementById('strokeColor').value = el.strokeColor || '#FFFFFF'; 
+        document.getElementById('strokeSub').style.display = el.stroke ? 'block' : 'none';
+        document.getElementById('strokeType').value = el.strokeType || 'solid';
+
+        if(!isI) { 
+            document.getElementById('elText').value = el.val; document.getElementById('elFont').value = el.font; 
+            document.getElementById('fillType').value = el.fillType || 'solid'; document.getElementById('hasFill').checked = el.fill; 
+            document.getElementById('elColor').value = el.color || '#FFFFFF'; 
+            document.getElementById('elTracking').value = el.tracking || 0; document.getElementById('trackVal').innerText = el.tracking || 0;
+        } else {
+            if(el.overlayColor) document.getElementById('overlayColor').value = el.overlayColor;
+        }
+        document.getElementById('gradColor1').value = el.g1 || '#00ffcc'; document.getElementById('gradColor2').value = el.g2 || '#0066ff'; 
+        document.getElementById('elAngle').value = el.angle || 90; document.getElementById('angleVal').innerText = (el.angle || 90) + '°'; 
+        toggleGradControls(); 
+    }
+
+    function getDesignerMouse(e) { const r = canvas.getBoundingClientRect(); return { x: (e.clientX - r.left) * (W / r.width), y: (e.clientY - r.top) * (H / r.height) }; }
+    function getStandardMouseCoords(e) { const r = canvasStandard.getBoundingClientRect(); return { x: (e.clientX - r.left) * (canvasStandard.width / r.width), y: (e.clientY - r.top) * (canvasStandard.height / r.height) }; }
+
+    viewport.addEventListener('mousemove', (e) => {
+        if (currentTool !== 'designer' && (isEraserMode || isColorBrushMode)) {
+            brushCursor.style.display = 'block';
+            let activeSize = isEraserMode ? document.getElementById('eraserSize').value : document.getElementById('colorBrushSize').value;
+            let screenRadius = activeSize * stdScale;
+            brushCursor.style.width = (screenRadius * 2) + 'px';
+            brushCursor.style.height = (screenRadius * 2) + 'px';
+            brushCursor.style.left = e.clientX + 'px';
+            brushCursor.style.top = e.clientY + 'px';
+        } else {
+            brushCursor.style.display = 'none';
+        }
+    });
+
+    viewport.addEventListener('mouseleave', () => {
+        brushCursor.style.display = 'none';
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if(currentTool === 'designer') {
+            const m = getDesignerMouse(e);
+            if(isDragging && selectedEl) { selectedEl.x = m.x - dragOffset.x; selectedEl.y = m.y - dragOffset.y; }
+            else if(resizeMode && selectedEl) {
+                if(selectedEl.type === 'image') { 
+                    let newW = Math.max(30, m.x - selectedEl.x); let newH = Math.max(30, m.y - selectedEl.y); 
+                    selectedEl.w = newW;
+                    if(document.getElementById('keepRatio').checked) selectedEl.h = newW / (selectedEl.ratio || 1); else selectedEl.h = newH;
+                }
+                else if(selectedEl.type === 'text') { 
+                    let dist = Math.max(10, (m.x - selectedEl.x) * 2 / 4.5); 
+                    selectedEl.size = dist; 
+                    ctx.save(); ctx.font = `bold ${dist}px "${selectedEl.font}"`;
+                    let tw = 0; selectedEl.val.split('').forEach(c => tw += ctx.measureText(c).width + (selectedEl.tracking || 0));
+                    ctx.restore();
+                    selectedEl.w = tw; selectedEl.h = dist; TW = tw; 
+                }
+            } return;
+        }
+
+        if(currentTool === 'bg' && isEraserMode && e.buttons === 1 && originalImg) {
+            applyEraserStroke(e);
+            return;
+        }
+
+        if(currentTool === 'color' && isColorBrushMode && e.buttons === 1 && originalImg) {
+            applyColorStroke(e);
+            return;
+        }
+
+        if (isPanning && !isEraserMode && !isColorBrushMode && !isMasterEyedropper && !isBgEyedropper) { stdPosX = e.clientX - pSX; stdPosY = e.clientY - pSY; updateStandardTransform(); }
+        
+        if (isSelecting && !isEraserMode && !isColorBrushMode && !isMasterEyedropper && !isBgEyedropper) {
+            const mS = getStandardMouseCoords(e); let curX = e.clientX, curY = e.clientY;
+            selectionBox.style.left = Math.min(startCX, curX) + 'px'; selectionBox.style.top = Math.min(startCY, curY) + 'px';
+            selectionBox.style.width = Math.abs(curX - startCX) + 'px'; selectionBox.style.height = Math.abs(curY - startCY) + 'px';
+            selectArea = { x: Math.min(startX_PX, mS.x), y: Math.min(startY_PX, mS.y), w: Math.abs(mS.x - startX_PX), h: Math.abs(mS.y - startY_PX) };
+        }
+    });
+
+    window.addEventListener('mouseup', () => { 
+        if(isEraserMode && currentTool === 'bg') {
+            liveSnapshot = ctxStandard.getImageData(0,0,canvasStandard.width,canvasStandard.height);
+            const ni = new Image();
+            ni.onload = () => { originalImg = ni; };
+            ni.src = canvasStandard.toDataURL();
+        }
+        if(isColorBrushMode && currentTool === 'color') {
+            liveSnapshot = ctxStandard.getImageData(0,0,canvasStandard.width,canvasStandard.height);
+            const ni = new Image();
+            ni.onload = () => { originalImg = ni; };
+            ni.src = canvasStandard.toDataURL();
+        }
+        isSelecting = isPanning = isDragging = resizeMode = false; 
+    });
+
+    viewport.addEventListener('mousedown', (e) => {
+        if(currentTool === 'designer') {
+            const m = getDesignerMouse(e);
+            
+            if(isLayerEyedropper) {
+                const pD = ctx.getImageData(Math.floor(m.x), Math.floor(m.y), 1, 1).data;
+                const hex = "#" + ((1 << 24) + (pD[0] << 16) + (pD[1] << 8) + pD[2]).toString(16).slice(1);
+                document.getElementById('layerBgColor').value = hex;
+                isLayerEyedropper = false; canvas.style.cursor = 'default'; return;
             }
 
-            loginBtn.addEventListener("click", async () => {
-                const phone = phoneInput.value.trim();
+            if(selectedEl) { const box = getBoxCoords(selectedEl); if(m.x >= box.x2 - HANDLE_SIZE && m.x <= box.x2 + HANDLE_SIZE && m.y >= box.y2 - HANDLE_SIZE && m.y <= box.y2 + HANDLE_SIZE) { resizeMode = true; return; } }
+            for(let i=elements.length-1; i>=0; i--){ 
+                const box=getBoxCoords(elements[i]); 
+                if(m.x>=box.x1 && m.x<=box.x2 && m.y>=box.y1 && m.y<=box.y2){ 
+                    selectedEl=elements[i]; updateUI(selectedEl); 
+                    if(selectedEl.type === 'image' && !selectedEl.img) { freeMode=false; fileIn.click(); }
+                    else { isDragging=true; dragOffset={x:m.x-selectedEl.x, y:m.y-selectedEl.y}; } return; 
+                } 
+            }
+            selectedEl=null; document.getElementById('editPanel').style.display='none'; return;
+        }
+
+        if(!originalImg) return; const pStd = getStandardMouseCoords(e);
+        
+        if(currentTool === 'color' && isMasterEyedropper && e.button === 0) {
+            const pD = ctxStandard.getImageData(Math.floor(pStd.x), Math.floor(pStd.y), 1, 1).data; 
+            targetRGB = [pD[0], pD[1], pD[2]];
+            const hex = "#" + ((1 << 24) + (pD[0] << 16) + (pD[1] << 8) + pD[2]).toString(16).slice(1);
+            document.getElementById('color-old').style.backgroundColor = hex;
+            isMasterEyedropper = false; canvasStandard.style.cursor = 'default'; return;
+        }
+
+        if(currentTool === 'bg' && isBgEyedropper && e.button === 0) {
+            const pD = ctxStandard.getImageData(Math.floor(pStd.x), Math.floor(pStd.y), 1, 1).data; 
+            targetRGB = [pD[0], pD[1], pD[2]];
+            const hex = "#" + ((1 << 24) + (pD[0] << 16) + (pD[1] << 8) + pD[2]).toString(16).slice(1);
+            document.getElementById('bg-color-picker').value = hex; document.getElementById('bg-color-indicator').style.backgroundColor = hex;
+            isBgEyedropper = false; canvasStandard.style.cursor = 'default'; return;
+        }
+
+        if(currentTool === 'bg' && isEraserMode && e.button === 0) { applyEraserStroke(e); return; }
+        if(currentTool === 'color' && isColorBrushMode && e.button === 0) { applyColorStroke(e); return; }
+
+        if (e.button === 0 && !isEraserMode && !isColorBrushMode && !isMasterEyedropper && !isBgEyedropper) {
+            isSelecting = true; 
+            startX_PX = pStd.x; startY_PX = pStd.y; 
+            startCX = e.clientX; startCY = e.clientY; 
+            selectionBox.style.display = 'block'; 
+            selectionBox.style.left = startCX + 'px'; 
+            selectionBox.style.top = startCY + 'px'; 
+            selectionBox.style.width = '0px'; 
+            selectionBox.style.height = '0px'; 
+        } else if (e.button !== 0) { 
+            isPanning = true; pSX = e.clientX - stdPosX; pSY = e.clientY - stdPosY; 
+        }
+    });
+
+    viewport.addEventListener('wheel', (e) => {
+        if (currentTool === 'designer' || !originalImg) return; e.preventDefault(); 
+        const zoomIntensity = 0.1; const wheel = e.deltaY < 0 ? 1 : -1; stdScale *= Math.exp(wheel * zoomIntensity); updateStandardTransform();
+        
+        if ((isEraserMode || isColorBrushMode) && brushCursor.style.display === 'block') {
+            let activeSize = isEraserMode ? document.getElementById('eraserSize').value : document.getElementById('colorBrushSize').value;
+            let screenRadius = activeSize * stdScale;
+            brushCursor.style.width = (screenRadius * 2) + 'px';
+            brushCursor.style.height = (screenRadius * 2) + 'px';
+        }
+    }, {passive: false});
+
+    fileIn.onchange = (e) => {
+        if(!e.target.files.length) return; const r=new FileReader();
+        r.onload=(ev)=>{ 
+            const i=new Image(); i.crossOrigin="anonymous"; 
+            i.onload=()=>{ 
+                tempImg = i; 
+                const uiImg = document.getElementById('cropImgUI');
+                uiImg.src = i.src; 
+                document.getElementById('cropModal').style.display = 'flex'; 
                 
-                if (!phone) {
-                    errorMsg.textContent = "Por favor, ingresa tu número.";
-                    return;
+                const vP = document.getElementById('cropViewport');
+                cropScale = Math.max(vP.offsetWidth / i.width, vP.offsetHeight / i.height); 
+                cropPos = {x:0, y:0}; updateCropUI(); 
+            }; 
+            i.src=ev.target.result; 
+        }; 
+        r.readAsDataURL(e.target.files[0]);
+        e.target.value = ''; 
+    };
+    
+    document.getElementById('cropViewport').onmousedown = (e) => { isDraggingCrop = true; pSX_Crop = e.clientX - cropPos.x; pSY_Crop = e.clientY - cropPos.y; };
+    window.addEventListener('mousemove', (e) => { if(isDraggingCrop) { cropPos.x = e.clientX - pSX_Crop; cropPos.y = e.clientY - pSY_Crop; updateCropUI(); } });
+    window.addEventListener('mouseup', () => isDraggingCrop = false );
+    document.getElementById('cropViewport').onwheel = (e) => { e.preventDefault(); cropScale *= e.deltaY > 0 ? 0.9 : 1.1; updateCropUI(); };
+    function updateCropUI() { document.getElementById('cropImgUI').style.transform = `translate(calc(-50% + ${cropPos.x}px), calc(-50% + ${cropPos.y}px)) scale(${cropScale})`; }
+
+    function applyCrop() {
+        const tC = document.createElement('canvas'); tC.width = 1200; tC.height = 1200; const tCtx = tC.getContext('2d');
+        tCtx.drawImage(tempImg, (tempImg.width/2)-(350/cropScale/2)-(cropPos.x/cropScale), (tempImg.height/2)-(350/cropScale/2)-(cropPos.y/cropScale), 350/cropScale, 350/cropScale, 0, 0, 1200, 1200);
+        const finalImg = new Image(); finalImg.onload = () => { 
+            let rAtio = finalImg.width / finalImg.height;
+            if(freeMode) { const ni = {type:'image', x:W/2-100, y:H/2-100, w:300, h:300 / rAtio, baseW:300, baseH: 300 / rAtio, ratio: rAtio, img:finalImg, stroke:false, strokeWidth:4, strokeColor:'#FFFFFF'}; elements.push(ni); selectedEl = ni; freeMode = false; }
+            else if(selectedEl) { selectedEl.img = finalImg; selectedEl.ratio = finalImg.width / finalImg.height; selectedEl.baseW = selectedEl.w; selectedEl.baseH = selectedEl.w / selectedEl.ratio; selectedEl.h = selectedEl.baseH; }
+            document.getElementById('cropModal').style.display = 'none'; updateUI(selectedEl);
+        }; finalImg.src = tC.toDataURL();
+    }
+
+    function applyMonochrome() {
+        if(!selectedEl || !selectedEl.img) return; const c = document.createElement('canvas'); c.width = selectedEl.img.width; c.height = selectedEl.img.height;
+        const t = c.getContext('2d'); t.drawImage(selectedEl.img, 0, 0); const d = t.getImageData(0,0,c.width,c.height);
+        for(let i=0; i<d.data.length; i+=4) { let v = 0.2126*d.data[i] + 0.7152*d.data[i+1] + 0.0722*d.data[i+2]; d.data[i] = d.data[i+1] = d.data[i+2] = v; }
+        t.putImageData(d,0,0); const ni = new Image(); ni.onload = () => { selectedEl.img = ni; }; ni.src = c.toDataURL();
+    }
+
+    function addText() { const fireplace={type:'text', val:'NUEVO TEXTO', x:W/2, y:H/2, size:W*0.08, baseSize:W*0.08, color:'#FFFFFF', font:'Permanent Marker', tracking:0, fill:true, stroke:false, strokeWidth:2, strokeColor:'#FFF'};fireplace.w = W*0.3; fireplace.h = W*0.08; elements.push(fireplace); selectedEl=fireplace; updateUI(fireplace); }
+    function triggerFreeImage() { freeMode=true; fileIn.click(); }
+    function getBoxCoords(el) { if(el.type==='image') return {x1:el.x, y1:el.y, x2:el.x+el.w, y2:el.y+el.h}; return {x1:el.x-el.w/2, y1:el.y-el.h/2, x2:el.x+el.w/2, y2:el.y+el.h/2}; }
+    function deleteEl() { elements=elements.filter(e=>e!==selectedEl); selectedEl=null; document.getElementById('editPanel').style.display='none'; }
+    function toggleGradControls() { if(!selectedEl || !document.getElementById('fillType')) return; const fT = document.getElementById('fillType') ? document.getElementById('fillType').value : 'solid'; const sT = document.getElementById('strokeType').value; document.getElementById('gradUI').style.display = (fT==='custom'||sT==='custom')?'block':'none'; }
+
+    async function downloadPNG() {
+        try {
+            if(currentTool === 'designer') {
+                let expW = EXPORT_W; let expH = EXPORT_H;
+                let eC = document.createElement('canvas'); eC.width = expW; eC.height = expH;
+                let eCtx = eC.getContext('2d');
+                if(!eCtx) {
+                    expW = Math.floor(EXPORT_W / 2); expH = Math.floor(EXPORT_H / 2);
+                    eC.width = expW; eC.height = expH; eCtx = eC.getContext('2d');
                 }
+                if(!eCtx) { alert("Tu dispositivo no soporta descargar imágenes tan pesadas."); return; }
 
-                loginBtn.textContent = "Verificando...";
-                loginBtn.disabled = true;
-                errorMsg.textContent = "";
-
-                try {
-                    const response = await fetch(`${MACRO_URL}?phone=${encodeURIComponent(phone)}`);
-                    const data = await response.json();
-
-                    // Adaptado exactamente al formato que arrojó tu Google Script: "access: true"
-                    if (data.access === true || data.status === "success" || data.valid === true) {
-                        sessionStorage.setItem("jj_logged_in", "true"); 
-                        loginModal.style.display = "none";
-                        mainApp.style.display = "block";
-                    } else {
-                        errorMsg.textContent = "Número no autorizado o no encontrado.";
-                        loginBtn.textContent = "Ingresar";
-                        loginBtn.disabled = false;
+                const s = expW / W; 
+                eCtx.clearRect(0,0,expW,expH);
+                
+                elements.forEach(el => {
+                    eCtx.save();
+                    if(el.type==='text'){
+                        eCtx.font=`bold ${el.size*s}px "${el.font}"`; eCtx.textAlign='center'; eCtx.textBaseline='middle';
+                        let tw = 0; eCtx.font=`bold ${el.size*s}px "${el.font}"`; el.val.split('').forEach(c => tw += eCtx.measureText(c).width + (el.tracking*s));
+                        eCtx.translate(el.x*s, el.y*s);
+                        let curX = -tw/2;
+                        el.val.split('').forEach(c => {
+                            let cw = eCtx.measureText(c).width;
+                            if(el.stroke) { eCtx.save(); eCtx.lineWidth = el.strokeWidth * s; eCtx.strokeStyle = (el.strokeType === 'custom') ? crearGradienteEstilo(eCtx, el, 0, 0, el.w*s, el.h*s) : el.strokeColor; eCtx.strokeText(c, curX+cw/2, 0); eCtx.restore(); }
+                            if(el.fill) { eCtx.save(); eCtx.fillStyle = (el.fillType === 'custom') ? crearGradienteEstilo(eCtx, el, 0, 0, el.w*s, el.h*s) : el.color; eCtx.fillText(c, curX+cw/2, 0); eCtx.restore(); }
+                            curX += cw + (el.tracking*s);
+                        });
+                    } else if(el.type==='image' && el.img) { 
+                        if(el.overlayColor) {
+                            let tmpC = document.createElement('canvas'); tmpC.width = el.w*s; tmpC.height = el.h*s;
+                            let tCtx = tmpC.getContext('2d'); tCtx.drawImage(el.img, 0, 0, el.w*s, el.h*s);
+                            tCtx.globalCompositeOperation = "source-in"; tCtx.fillStyle = el.overlayColor; tCtx.fillRect(0, 0, el.w*s, el.h*s);
+                            eCtx.drawImage(tmpC, el.x*s, el.y*s, el.w*s, el.h*s);
+                        } else {
+                            eCtx.drawImage(el.img, el.x*s, el.y*s, el.w*s, el.h*s); 
+                        }
+                        if(el.stroke) { eCtx.save(); eCtx.lineWidth = el.strokeWidth * s; eCtx.strokeStyle = (el.strokeType === 'custom') ? crearGradienteEstilo(eCtx, el, (el.x+el.w/2)*s, (el.y+el.h/2)*s, el.w*s, el.h*s) : el.strokeColor; eCtx.strokeRect(el.x*s, el.y*s, el.w*s, el.h*s); eCtx.restore(); }
                     }
-                } catch (error) {
-                    errorMsg.textContent = "Error al conectar. Verifica que tu script de Google sea Público.";
-                    loginBtn.textContent = "Ingresar";
-                    loginBtn.disabled = false;
-                }
-            });
+                    eCtx.restore();
+                });
+                
+                eC.toBlob((blob) => {
+                    if(!blob) { alert("Error al generar la descarga."); return; }
+                    const reader = new FileReader(); 
+                    reader.onload = () => {
+                        const arrayBuffer = reader.result; 
+                        const physBlock = new Uint8Array([0x00,0x00,0x00,0x09,0x70,0x48,0x59,0x73,0x00,0x00,0x2E,0x23,0x00,0x00,0x2E,0x23,0x01,0xDD,0x7A,0xF1,0x18]);
+                        const newBlob = new Blob([arrayBuffer.slice(0, 33), physBlock, arrayBuffer.slice(33)], {type: 'image/png'});
+                        const link = document.createElement('a'); link.download = 'J&J_STUDIO_DISENO.png'; link.href = URL.createObjectURL(newBlob); link.click();
+                    }; 
+                    reader.readAsArrayBuffer(blob);
+                }, 'image/png', 1.0); 
+                return;
+            }
             
-            logoutBtn.addEventListener("click", () => {
-                sessionStorage.removeItem("jj_logged_in");
-                mainApp.style.display = "none";
-                loginModal.style.display = "flex";
-                phoneInput.value = "";
-            });
-        });
-    </script>
+            if (!originalImg) return; 
+            
+            canvasStandard.toBlob((blob) => {
+                if(!blob) { alert("Error de memoria."); return; }
+                const reader = new FileReader(); 
+                reader.onload = () => {
+                    const buffer = reader.result; 
+                    const uint8 = new Uint8Array(buffer); 
+                    const pHYs = new Uint8Array(21); pHYs.set([0, 0, 0, 9, 112, 72, 89, 115]); 
+                    const view = new DataView(pHYs.buffer);
+                    view.setUint32(8, 11811); view.setUint32(12, 11811); view.setUint8(16, 1);
+                    const table = (function() { const t = new Int32Array(256); for (let i = 0; i < 256; i++) { let c = i; for (let j = 0; j < 8; j++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); t[i] = c; } return t; })();
+                    let crc = 0xFFFFFFFF; for (let i = 4; i < 17; i++) crc = table[(crc ^ pHYs[i]) & 0xFF] ^ (crc >>> 1); view.setUint32(17, crc ^ 0xFFFFFFFF);
+                    const final = new Uint8Array(uint8.length + 21); final.set(uint8.slice(0, 33)); final.set(pHYs, 33); final.set(uint8.slice(33), 54);
+                    const a = document.createElement('a'); a.download = `J&J_MASTER_PRO.png`; a.href = URL.createObjectURL(new Blob([final], {type: 'image/png'})); a.click();
+                }; 
+                reader.readAsArrayBuffer(blob);
+            }, 'image/png', 1.0); 
+            
+        } catch(e) { alert("Error del sistema al descargar: " + e.message); console.error(e); }
+    }
+</script>
 </body>
 </html>
