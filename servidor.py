@@ -151,7 +151,6 @@ def style_list():
     try: return jsonify(requests.get(url, timeout=15).json())
     except: return jsonify({"error": True}), 500
 
-# RUTA PROXY PARA DESCARGA DIRECTA (EVITA BLOQUEOS DE CORS EN EL NAVEGADOR)
 @app.route("/download")
 def proxy_download():
     image_url = request.args.get("url")
@@ -189,7 +188,6 @@ def run_model(slug):
                 if f.get("name") == field_name: return f.get("resize_max")
             return None
 
-        # 1. Archivos Normales
         for key, file_obj in request.files.items():
             if file_obj and file_obj.filename:
                 max_d = get_resize_max(key)
@@ -200,7 +198,6 @@ def run_model(slug):
                     api_key = "image"
                 files[api_key] = (fname, buf, mime)
 
-        # 2. Enlaces HTTP (Acciones Rápidas)
         for key, value in request.form.items():
             if value:
                 if key in ["input_image", "model_image", "input_image_0"] and value.startswith("http"):
