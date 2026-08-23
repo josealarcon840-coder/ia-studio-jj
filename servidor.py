@@ -87,7 +87,6 @@ MODELS = [
     {"slug": "generate-zimage", "label": L("Crear: Z-Image (Texto)", "Create: Z-Image (Text)"), "icon": "fa-rocket", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Crea imagen rápida.", "Create image fast."), "endpoint": "/v1/images/generates/zimage", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "select", "label": L("Proporción", "Ratio"), "options": [{"value": "1:1", "label": L("1:1", "1:1")}, {"value": "16:9", "label": L("16:9", "16:9")}, {"value": "9:16", "label": L("9:16", "9:16")}]}]},
     {"slug": "generate-qwen", "label": L("Crear: Qwen (Texto)", "Create: Qwen (Text)"), "icon": "fa-brain", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Motor HD realista.", "HD realistic engine."), "endpoint": "/v1/images/generates/qwen", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "select", "label": L("Proporción", "Ratio"), "options": [{"value": "1:1", "label": L("1:1", "1:1")}, {"value": "16:9", "label": L("16:9", "16:9")}, {"value": "9:16", "label": L("9:16", "9:16")}]}]},
     {"slug": "fairy-art", "label": L("Retrato a Arte", "Portrait to Art"), "icon": "fa-wand-magic-sparkles", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Convierte fotos a Anime/3D.", "Convert photos to Anime/3D."), "endpoint": "/v1/images/generates/art", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "style", "type": "select", "label": L("Estilo", "Style"), "required": True, "options_url": "https://storage.googleapis.com/assets.snapedit.app/fairyai/anime_styles_6mar25.json"}]},
-    # 🔥 REGRESO A LA RUTA ORIGINAL QUE FUNCIONABA BIEN ANTES
     {"slug": "generate-background", "label": L("Generar Fondo Nuevo", "Generate Background"), "icon": "fa-image", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Fondo para productos.", "Background for products."), "endpoint": "/v1/images/generates-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Descripción del fondo", "Background prompt"), "required": True}]},
     {"slug": "headshot", "label": L("Foto Perfil Profesional", "Professional Headshot"), "icon": "fa-user-tie", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Viste a la persona con IA.", "Dress the person with AI."), "endpoint": "/v1/images/generates/headshot", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Atuendo/Fondo", "Outfit/Background"), "required": True}]},
     {"slug": "sticker", "label": L("Crear Sticker", "Create Sticker"), "icon": "fa-note-sticky", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Haz un sticker de tu foto.", "Make a sticker from photo."), "endpoint": "/v1/images/generates/sticker", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Estilo (Ej: Zombie)", "Style (e.g. Zombie)"), "required": True}]},
@@ -178,7 +177,6 @@ def run_model(slug):
                 max_d = get_resize_max(key)
                 buf, fname, mime = resize_if_needed(file_obj.read(), slug, file_obj.filename)
                 
-                # Ajuste para APIs específicas
                 api_key = key
                 if key == "input_image" and any(x in model["endpoint"] for x in ["generates-background", "pose-suggest", "outpaint"]):
                     api_key = "image"
@@ -206,7 +204,7 @@ def run_model(slug):
                     data[key] = value
 
         # ---------------------------------------------------------
-        # FLUJO DE ENVÍO DE DATOS LIMPIO Y ORIGINAL
+        # FLUJO DE ENVÍO DE DATOS CORREGIDO PARA GENERACIÓN Y EDICIÓN
         # ---------------------------------------------------------
         if slug in ["detect-text", "detect-wires"]:
             r1 = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files, timeout=120)
@@ -236,8 +234,13 @@ def run_model(slug):
             else:
                 response = r1
         else:
-            # Flujo universal y nativo
-            response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
+            # Envío como JSON si es generación por texto puro (zimage o qwen)
+            if model.get("needs_image") is False:
+                json_headers = HEADERS.copy()
+                json_headers["Content-Type"] = "application/json"
+                response = requests.post(BASE + model["endpoint"], headers=json_headers, json=data, timeout=300)
+            else:
+                response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
         
         content_type = response.headers.get("Content-Type", "")
         if "application/json" in content_type: return jsonify(response.json()), response.status_code
@@ -252,4 +255,4 @@ def task_status(slug, task_id):
     except Exception as e: return jsonify({"error": True, "message": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    app.run(debug=True, port=5000)
