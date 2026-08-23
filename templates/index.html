@@ -301,7 +301,7 @@ function setLang(lang) {
 }
 document.querySelectorAll(".lang-switch").forEach(sw => { sw.querySelectorAll("button").forEach(btn => { btn.addEventListener("click", () => setLang(btn.dataset.lang)); }); });
 
-// VERIFICACIÓN CONECTADA A LA MACRO (JSONP Y SESSIONSTORAGE - SE BORRA AL CERRAR PESTAÑA)
+// VERIFICACIÓN CONECTADA A LA MACRO (JSONP Y SESSIONSTORAGE)
 const MACRO_URL = "https://script.google.com/macros/s/AKfycbww-tmvkep-6ClaCH8j6Uqr-aPYrNwWGY219F6h1exL67LYMmNYwGEXm2xjz--mFfbQnw/exec";
 const gate = document.getElementById("gate"); const appEl = document.getElementById("app"); const phoneInput = document.getElementById("phoneInput"); const verifyBtn = document.getElementById("verifyBtn"); const gateError = document.getElementById("gateError"); const userLabel = document.getElementById("userLabel");
 
@@ -672,33 +672,16 @@ async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
     }
 }
 
-// FUNCIÓN DE DESCARGA FORZADA PARA GUARDAR EL ARCHIVO DIRECTAMENTE
+// PROXY DE DESCARGA CONFIGURADO PARA FORZAR EL GUARDADO DIRECTO
 function processFinalUrl(url) {
     urlResultMemoria = url; mainResultImg.src = url;
     statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
     
-    btnDownloadResult.href = url; 
+    const proxyUrl = "/download?url=" + encodeURIComponent(url);
+    btnDownloadResult.href = proxyUrl;
     btnDownloadResult.setAttribute("download", "JJ_Studio_IA_" + Date.now() + ".png");
     btnDownloadResult.style.display = "block";
-    
-    btnDownloadResult.onclick = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await fetch(url);
-            const blob = await response.blob();
-            const blobUrl = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = blobUrl;
-            a.download = "JJ_Studio_IA_" + Date.now() + ".png";
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(blobUrl);
-            a.remove();
-        } catch (err) {
-            window.open(url, '_blank');
-        }
-    };
+    btnDownloadResult.onclick = null;
     
     renderQuickActions(currentSlug);
     quickActionsBar.style.display = "block"; 
