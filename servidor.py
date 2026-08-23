@@ -234,11 +234,9 @@ def run_model(slug):
             else:
                 response = r1
         else:
-            # Envío como JSON si es generación por texto puro (zimage o qwen)
+            # Corrección para Z-Image y Qwen: enviar como datos de formulario estándar
             if model.get("needs_image") is False:
-                json_headers = HEADERS.copy()
-                json_headers["Content-Type"] = "application/json"
-                response = requests.post(BASE + model["endpoint"], headers=json_headers, json=data, timeout=300)
+                response = requests.post(BASE + model["endpoint"], headers=HEADERS, data=data, timeout=300)
             else:
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
         
