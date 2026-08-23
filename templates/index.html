@@ -301,15 +301,14 @@ function setLang(lang) {
 }
 document.querySelectorAll(".lang-switch").forEach(sw => { sw.querySelectorAll("button").forEach(btn => { btn.addEventListener("click", () => setLang(btn.dataset.lang)); }); });
 
-// VERIFICACIÓN CONECTADA CON TU ID EXACTO Y ?user= (JSONP)
+// VERIFICACIÓN CONECTADA A LA MACRO (JSONP Y SESSIONSTORAGE - SE BORRA AL CERRAR PESTAÑA)
 const MACRO_URL = "https://script.google.com/macros/s/AKfycbww-tmvkep-6ClaCH8j6Uqr-aPYrNwWGY219F6h1exL67LYMmNYwGEXm2xjz--mFfbQnw/exec";
-const SESSION_HOURS = 24;
 const gate = document.getElementById("gate"); const appEl = document.getElementById("app"); const phoneInput = document.getElementById("phoneInput"); const verifyBtn = document.getElementById("verifyBtn"); const gateError = document.getElementById("gateError"); const userLabel = document.getElementById("userLabel");
 
 function checkSession() {
-  const perm = localStorage.getItem("jj_session_perm"); const time = localStorage.getItem("jj_session_time"); const name = localStorage.getItem("jj_user_name");
-  const now = new Date().getTime();
-  if (perm === "active" && time && (now - parseInt(time) < SESSION_HOURS * 3600 * 1000)) { showApp(name); return true; }
+  const perm = sessionStorage.getItem("jj_session_perm"); 
+  const name = sessionStorage.getItem("jj_user_name");
+  if (perm === "active") { showApp(name); return true; }
   return false;
 }
 function showApp(name) { gate.style.display = "none"; appEl.style.display = "block"; userLabel.textContent = name ? name.toUpperCase() : ""; loadModels(); }
@@ -323,7 +322,8 @@ verifyBtn.addEventListener("click", () => {
   window.procesarRetornoGoogle = function (data) {
     verifyBtn.disabled = false; verifyBtn.innerHTML = t("gate_btn");
     if (data.access === true) {
-      localStorage.setItem("jj_session_perm", "active"); localStorage.setItem("jj_user_name", data.nombre || "Socio"); localStorage.setItem("jj_session_time", new Date().getTime().toString());
+      sessionStorage.setItem("jj_session_perm", "active"); 
+      sessionStorage.setItem("jj_user_name", data.nombre || "Socio"); 
       showApp(data.nombre || "Socio");
     } else { gateError.classList.add("show"); }
   };
@@ -332,7 +332,11 @@ verifyBtn.addEventListener("click", () => {
 });
 
 phoneInput.addEventListener("keydown", (e) => { if (e.key === "Enter") verifyBtn.click(); });
-document.getElementById("logoutBtn").addEventListener("click", () => { if (!confirm(t("logout_confirm"))) return; localStorage.clear(); location.reload(); });
+document.getElementById("logoutBtn").addEventListener("click", () => { 
+  if (!confirm(t("logout_confirm"))) return; 
+  sessionStorage.clear(); 
+  location.reload(); 
+});
 
 let MODELS = []; let currentSlug = null; let currentImageData = null;
 let urlOriginalMemoria = ""; let urlResultMemoria = "";
