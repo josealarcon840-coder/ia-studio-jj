@@ -672,10 +672,33 @@ async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
     }
 }
 
+// FUNCIÓN DE DESCARGA FORZADA PARA GUARDAR EL ARCHIVO DIRECTAMENTE
 function processFinalUrl(url) {
     urlResultMemoria = url; mainResultImg.src = url;
     statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
-    btnDownloadResult.href = url; btnDownloadResult.style.display = "block";
+    
+    btnDownloadResult.href = url; 
+    btnDownloadResult.setAttribute("download", "JJ_Studio_IA_" + Date.now() + ".png");
+    btnDownloadResult.style.display = "block";
+    
+    btnDownloadResult.onclick = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = blobUrl;
+            a.download = "JJ_Studio_IA_" + Date.now() + ".png";
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(blobUrl);
+            a.remove();
+        } catch (err) {
+            window.open(url, '_blank');
+        }
+    };
     
     renderQuickActions(currentSlug);
     quickActionsBar.style.display = "block"; 
