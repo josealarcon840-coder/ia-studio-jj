@@ -1,783 +1,159 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Comunidad J&J | Master Edition</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-<style>
-  :root {
-    --bg-a: #1a0000; --bg-b: #050505; --panel: #111111; --panel-raised: #1f0a0a;
-    --border: #3a141480; --red: #d81e2c; --red-bright: #ff2d3a; --red-dim: #7a0d14;
-    --text: #f5eeee; --text-dim: #b99; --text-faint: #7a5c5c; --ok: #00ffcc; --danger: #ff5252;
-    --font-display: "Anton", sans-serif; --font-body: "Inter", sans-serif;
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 15% 0%, var(--bg-a) 0%, var(--bg-b) 55%); color: var(--text); font-family: var(--font-body); line-height: 1.5; }
-  ::selection { background: var(--red); color: #fff; }
-  button { font-family: inherit; color: inherit; cursor: pointer; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J&J Studio - IA</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f4f9; }
+        
+        /* --- ESTILOS DEL LOGIN --- */
+        #loginModal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex; justify-content: center; align-items: center; z-index: 1000;
+        }
+        .login-box {
+            background: white; padding: 35px; border-radius: 12px;
+            text-align: center; width: 90%; max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .login-box h2 { margin-top: 0; color: #333; font-size: 24px;}
+        .login-box p { color: #666; font-size: 15px; margin-bottom: 20px; }
+        .login-box input {
+            width: 100%; padding: 12px; margin: 15px 0;
+            border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;
+            font-size: 16px; text-align: center;
+        }
+        .login-box button {
+            background: #25D366; color: white; border: none;
+            padding: 12px 20px; font-size: 16px; border-radius: 8px;
+            cursor: pointer; width: 100%; font-weight: bold;
+        }
+        .login-box button:hover { background: #1ebd5a; }
+        .error-msg { color: #d93025; font-size: 14px; margin-top: 15px; font-weight: 500;}
 
-  /* Lang switch */
-  .lang-switch { display: inline-flex; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
-  .lang-switch button { background: none; border: none; color: var(--text-faint); font-size: 0.74rem; font-weight: 700; padding: 6px 11px; transition: 0.2s ease; }
-  .lang-switch button.active { background: var(--red); color: #fff; }
-
-  /* Logo */
-  .brand-mark { width: 80px; height: 80px; margin: 0 auto 18px; border-radius: 18px; background: linear-gradient(135deg, #111, #300); border: 2px solid var(--red-bright); display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 1.5rem; color: #fff; box-shadow: 0 0 20px rgba(255,45,58,0.5), inset 0 0 15px rgba(122,13,20,0.8); text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-  .brand-mark i { font-size: 0.6em; color: #ffd700; margin-bottom: -2px; }
-
-  /* Login */
-  #gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; position: relative; }
-  .gate-lang { position: absolute; top: 20px; right: 20px; }
-  .gate-card { width: 100%; max-width: 380px; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 36px 30px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
-  .gate-card h1 { font-family: var(--font-display); font-size: 1.8rem; letter-spacing: 0.02em; margin: 0 0 6px; text-transform: uppercase; color: var(--text); }
-  .gate-card p.sub { color: var(--text-dim); font-size: 0.86rem; margin: 0 0 24px; }
-  .gate-card input { width: 100%; background: #000; border: 1px solid var(--border); color: var(--text); padding: 13px 14px; border-radius: 8px; font-size: 1rem; text-align: center; font-weight: 600; margin-bottom: 12px; }
-  .gate-card input:focus { outline: none; border-color: var(--red); box-shadow: 0 0 10px rgba(255,45,58,0.3);}
-  
-  .btn-primary { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--red-bright), var(--red-dim)); color: #fff; border: none; border-radius: 8px; font-weight: 900; font-size: 0.9rem; text-transform: uppercase; cursor: pointer; transition: 0.2s ease; box-shadow: 0 5px 15px rgba(255,45,58,0.3); margin-top: 15px;}
-  .btn-primary:hover:not(:disabled) { transform: scale(1.02); filter: brightness(1.15); }
-  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  .btn-restart { background: #222; border: 1px solid #444; color: #fff; box-shadow: none; margin-top: 10px; }
-  .btn-restart:hover:not(:disabled) { background: #333; border-color: #555; }
-
-  .gate-error { color: var(--danger); font-size: 0.82rem; font-weight: 600; margin: 12px 0 0; display: none; }
-  .gate-error.show { display: block; }
-  .gate-links { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
-  .gate-links p { font-size: 0.76rem; color: var(--text-faint); text-transform: uppercase; font-weight: 700; margin: 0 0 4px; }
-  .wa-link { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.82rem; text-transform: uppercase; transition: 0.2s;}
-  .wa-link:hover { filter: brightness(1.2);}
-  .wa-subscribe { background: #25D366; color: #05310f; }
-  .wa-renew { background: #222; color: var(--text); border: 1px solid var(--border); }
-
-  /* App shell */
-  #app { display: none; min-height: 100vh; }
-  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 28px; border-bottom: 1px solid var(--border); background: rgba(10,4,4,0.9); position: sticky; top: 0; z-index: 20; flex-wrap: wrap; box-shadow: 0 4px 20px rgba(0,0,0,0.5);}
-  .topbar-brand { display: flex; align-items: center; gap: 12px; }
-  .topbar-brand .brand-mark { width: 40px; height: 40px; margin: 0; font-size: 0.85rem; border-radius: 10px; border-width: 1px;}
-  .topbar-brand h1 { font-family: var(--font-display); font-size: 1.25rem; letter-spacing: 0.05em; text-transform: uppercase; margin: 0; color: var(--text); }
-  .topbar-right { display: flex; align-items: center; gap: 14px; }
-  .topbar-user { font-size: 0.82rem; color: var(--ok); font-weight: bold;}
-  .logout-btn { background: #222; border: 1px solid var(--border); color: var(--text-dim); padding: 7px 13px; border-radius: 7px; font-size: 0.78rem; transition: 0.2s ease; }
-  .logout-btn:hover { border-color: var(--red); background: var(--red-dim); color: #fff;}
-
-  main { padding: 32px 28px 70px; max-width: 1200px; margin: 0 auto; }
-
-  /* Home */
-  .home-title { font-family: var(--font-display); font-size: 2.2rem; text-transform: uppercase; letter-spacing: 0.02em; margin: 0 0 4px; color: var(--text); }
-  .home-sub { color: var(--text-dim); font-size: 1rem; margin: 0 0 30px; }
-  .cat-heading { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--red-bright); font-weight: 800; margin: 40px 0 15px; border-bottom: 1px solid var(--border); padding-bottom: 8px;}
-  .cat-heading:first-of-type { margin-top: 0; }
-
-  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 18px; }
-  .tool-card { background: var(--panel); border: 1px solid #333; border-radius: 14px; padding: 25px 20px; text-align: center; cursor: pointer; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.5);}
-  .tool-card i { font-size: 2.5rem; color: var(--red-bright); margin-bottom: 15px; transition: 0.3s; }
-  .tool-card:hover { transform: translateY(-5px); border-color: var(--red-bright); background: var(--panel-raised); box-shadow: 0 12px 30px rgba(216,30,44,0.2); }
-  .tool-card:hover i { transform: scale(1.1); text-shadow: 0 0 15px var(--red-bright); }
-  .tool-card h3 { font-size: 1.1rem; font-weight: 800; margin: 0 0 8px; color: var(--text); text-transform: uppercase;}
-  .tool-card p { font-size: 0.85rem; color: var(--text-dim); margin: 0; line-height: 1.4; }
-
-  /* Tool detail */
-  #toolView { display: none; }
-  .back-btn { display: inline-flex; align-items: center; gap: 8px; background: #111; border: 1px solid #333; color: #aaa; font-size: 0.85rem; font-weight: bold; cursor: pointer; padding: 10px 18px; border-radius: 8px; margin-bottom: 25px; transition: 0.2s; text-transform: uppercase;}
-  .back-btn:hover { color: #fff; border-color: var(--red-bright); background: var(--red-dim); }
-
-  .tool-title { font-family: var(--font-display); font-size: 2rem; text-transform: uppercase; margin: 0 0 8px; color: var(--red-bright); }
-  .tool-desc { color: var(--text-dim); font-size: 1rem; margin: 0 0 30px; font-weight: 500;}
-
-  .workspace-layout { display: flex; flex-direction: row; gap: 30px; align-items: flex-start;}
-  .form-container { flex: 1; min-width: 350px; max-width: 400px; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); position: sticky; top: 90px;}
-  .canvas-container { flex: 2; display: flex; flex-direction: column; width: 100%;}
-
-  .field { margin-bottom: 22px; }
-  .field label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; color: #ccc; text-transform: uppercase; letter-spacing: 0.5px;}
-  .field label .req { color: var(--red-bright); margin-left: 3px; font-size: 1.1em;}
-
-  input[type="text"], input[type="number"], select, textarea { width: 100%; background: #050505; border: 1px solid #444; color: var(--text); padding: 12px 14px; border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; transition: 0.2s;}
-  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--red-bright); box-shadow: 0 0 8px rgba(255,45,58,0.3); }
-  textarea { min-height: 100px; resize: vertical; }
-
-  .dropzone { position: relative; border: 2px dashed #444; border-radius: 12px; padding: 25px 20px; text-align: center; cursor: pointer; background: #080808; transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 10px;}
-  .dropzone i { font-size: 2.5rem; color: #555; transition: 0.2s; }
-  .dropzone:hover { border-color: var(--red-bright); background: #1a0505;}
-  .dropzone:hover i { color: var(--red-bright); transform: scale(1.1); }
-  .dropzone.has-file { border-style: solid; border-color: var(--ok); background: rgba(0, 255, 204, 0.05);}
-  .dropzone.has-file i { color: var(--ok); }
-  .dropzone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-  .dropzone .dz-text { font-size: 0.9rem; font-weight: bold; color: #888; }
-  .dropzone.has-file .dz-text { color: var(--ok); }
-
-  .checkbox-row { display: flex; align-items: center; gap: 10px; cursor: pointer;}
-  .checkbox-row input { width: 18px; height: 18px; accent-color: var(--red-bright); cursor: pointer;}
-  .checkbox-row label { margin: 0; font-size: 0.95rem; color: #eee; cursor: pointer; text-transform: none;}
-
-  .status-line { margin-top: 20px; font-size: 0.9rem; font-weight: bold; color: var(--text-dim); display: none; align-items: center; justify-content: center; gap: 10px; padding: 15px; border-radius: 8px; background: #111; border: 1px solid #333; text-align: center;}
-  .status-line.show { display: flex; }
-  .status-line.error { color: var(--danger); border-color: var(--danger); background: rgba(255,82,82,0.1);}
-  .status-line.ok { color: var(--ok); border-color: var(--ok); background: rgba(0,255,204,0.1);}
-  .pulse-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red-bright); animation: pulse 1s infinite ease-in-out; flex-shrink: 0; }
-  @keyframes pulse { 0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--red-bright);} 50% { opacity: 0.3; } }
-
-  /* Visor Zoomable */
-  .checkerboard { background-image: linear-gradient(45deg, #111 25%, transparent 25%), linear-gradient(-45deg, #111 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #111 75%), linear-gradient(-45deg, transparent 75%, #111 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
-  .viewer-container { width: 100%; min-height: 450px; height: 100%; border-radius: 16px; border: 1px solid #333; overflow: hidden; position: relative; background: #080808; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); cursor: grab; }
-  .viewer-container:active { cursor: grabbing; }
-  #viewerWrapper { transform-origin: center center; transition: transform 0.1s ease-out; position: relative; display: inline-block;}
-  #mainResultImg { display: block; max-width: 90vw; max-height: 70vh; object-fit: contain; border-radius: 8px;}
-  
-  /* Botones sobre el visor */
-  .btn-visor { position: absolute; z-index: 200; background: rgba(0,0,0,0.8); color: #fff; border: 1px solid #555; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-family: sans-serif; font-size: 0.8rem; cursor: pointer; transition: 0.2s;}
-  .btn-visor:hover { background: #333; border-color: #777;}
-  
-  /* Etiquetas del borrador mágico */
-  #magicTagsPanel { background: #000; border: 1px solid #500; border-radius: 8px; padding: 15px; margin-top: 20px; display: none; text-align: center;}
-  .ai-tag { display: inline-block; padding: 6px 12px; margin: 4px; font-size: 12px; border: 1px solid #500; cursor: pointer; border-radius: 6px; color: #aaa; font-weight: bold; transition: 0.2s; background: #111;}
-  .ai-tag.selected { background: var(--red-bright); color: #fff; border-color: var(--red-bright); box-shadow: 0 0 10px rgba(255,45,58,0.5);}
-  .ai-box { position: absolute; border: 2px solid transparent; border-radius: 6px; pointer-events: none; transition: 0.2s; }
-  .ai-box.selected { border-color: var(--red-bright); background: rgba(255,45,58,0.2); box-shadow: 0 0 15px rgba(255,45,58,0.6); }
-
-  /* 🚀 ACCIONES RÁPIDAS (Botonera Inteligente) */
-  .quick-actions-bar { margin-top: 15px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; animation: rise 0.4s ease;}
-  .quick-actions-bar h4 { margin: 0 0 15px; font-size: 0.9rem; color: var(--ok); text-transform: uppercase; font-weight: 800; letter-spacing: 0.1em;}
-  .qa-buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-  .btn-qa { background: #111; color: #fff; border: 1px solid #444; padding: 12px 15px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: 0.2s; flex: 1; min-width: 140px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);}
-  .btn-qa:hover { background: var(--red-dim); border-color: var(--red-bright); transform: translateY(-2px);}
-
-  .btn-download { display: inline-block; margin-top: 20px; padding: 15px 30px; background: var(--ok); color: #000; text-decoration: none; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 1rem; transition: 0.2s; text-align: center; width: 100%; box-shadow: 0 5px 15px rgba(0,255,204,0.3);}
-  .btn-download:hover { transform: scale(1.02); background: #fff; }
-
-  /* JSON Viewer Box (Para texto crudo, oculto por defecto) */
-  #jsonViewer { background: #000; color: var(--ok); border: 1px solid #333; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; width: 100%; height: 250px; overflow-y: auto; text-align: left; resize: none; margin-top: 15px; display: none; }
-
-  @media (max-width: 900px) {
-    .workspace-layout { flex-direction: column; }
-    .form-container { max-width: 100%; position: relative; top: 0; }
-    .canvas-container { width: 100%; }
-  }
-</style>
+        /* --- ESTILOS DE LA PLATAFORMA (J&J) --- */
+        #mainApp { display: none; padding: 20px; text-align: center; }
+        .header { background: #111; color: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
+        .header h1 { margin: 0; font-size: 26px; }
+        .header p { margin: 5px 0 0 0; color: #ccc; }
+        
+        .editor-container {
+            background: white; padding: 30px; border-radius: 12px;
+            max-width: 600px; margin: auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .file-upload { margin: 20px 0; }
+        .process-btn {
+            background: #007BFF; color: white; border: none;
+            padding: 12px 25px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold;
+        }
+        .process-btn:hover { background: #0056b3; }
+        
+        /* Botón de cerrar sesión */
+        .logout-btn {
+            background: #dc3545; color: white; border: none;
+            padding: 8px 15px; border-radius: 5px; cursor: pointer;
+            margin-top: 20px; font-size: 14px;
+        }
+    </style>
 </head>
 <body>
 
-<div id="gate">
-  <div class="gate-lang">
-    <div class="lang-switch" id="gateLangSwitch">
-      <button data-lang="es">ES</button>
-      <button data-lang="en">EN</button>
-    </div>
-  </div>
-  <div class="gate-card">
-    <div class="brand-mark"><i class="fa-solid fa-crown"></i><span>J&J</span></div>
-    <h1>Comunidad J&J</h1>
-    <p class="sub" data-i18n="gate_sub"></p>
-    <input type="tel" id="phoneInput" inputmode="numeric">
-    <button class="btn-primary" id="verifyBtn" data-i18n="gate_btn"></button>
-    <p class="gate-error" id="gateError" data-i18n="gate_error"></p>
-    <div class="gate-links">
-      <p data-i18n="gate_no_access"></p>
-      <a href="https://wa.me/51916689969" target="_blank" class="wa-link wa-subscribe" data-i18n="gate_subscribe"></a>
-      <a href="https://wa.me/51904503246" target="_blank" class="wa-link wa-renew" data-i18n="gate_renew"></a>
-    </div>
-  </div>
-</div>
-
-<div id="app">
-  <div class="topbar">
-    <div class="topbar-brand">
-      <div class="brand-mark" style="width: 40px; height: 40px; font-size: 0.8rem; border-radius: 8px; border-width: 1px;">
-        <i class="fa-solid fa-crown" style="font-size: 0.7em;"></i>
-        <span>J&J</span>
-      </div>
-      <h1>IA STUDIO</h1>
-    </div>
-    <div class="topbar-right">
-      <div class="lang-switch" id="appLangSwitch">
-        <button data-lang="es">ES</button>
-        <button data-lang="en">EN</button>
-      </div>
-      <span class="topbar-user" id="userLabel"></span>
-      <button class="logout-btn" id="logoutBtn" data-i18n="logout"></button>
-    </div>
-  </div>
-
-  <main>
-    <div id="homeView">
-      <h2 class="home-title" data-i18n="home_title"></h2>
-      <p class="home-sub" data-i18n="home_sub"></p>
-      <div id="catContainer"></div>
+    <!-- PANTALLA DE SEGURIDAD (LOGIN) -->
+    <div id="loginModal">
+        <div class="login-box">
+            <h2>Comunidad Premium J&J</h2>
+            <p>Ingresa tu número de WhatsApp para usar el Studio IA.</p>
+            <input type="text" id="phoneInput" placeholder="Ej: 51999999999">
+            <button id="loginBtn">Ingresar</button>
+            <div id="errorMsg" class="error-msg"></div>
+        </div>
     </div>
 
-    <div id="toolView">
-      <button class="back-btn" id="backBtn"><i class="fa-solid fa-arrow-left"></i> <span data-i18n="back"></span></button>
-      <h2 class="tool-title" id="toolTitle"></h2>
-      <p class="tool-desc" id="toolDesc"></p>
-
-      <div class="workspace-layout">
-        <!-- Izquierda: Formulario -->
-        <div class="form-container">
-          <form id="form"></form>
-          
-          <button type="button" id="btnRestart" class="btn-primary btn-restart" style="display:none;" onclick="reiniciarHerramienta(true)">
-             <i class="fa-solid fa-rotate-left mr-2"></i> <span data-i18n="restart_btn">Reiniciar Todo</span>
-          </button>
-          
-          <div id="magicTagsPanel">
-             <span style="font-size:12px; font-weight:bold; color:var(--ok);" data-i18n="magic_tags_title"></span>
-             <div id="tagsContainer" style="margin-top:10px;"></div>
-             <button type="button" id="btnExecuteErase" class="btn-primary" style="margin-top: 15px; display: none;">
-                 <i class="fa-solid fa-eraser mr-2"></i> <span data-i18n="magic_btn_apply"></span>
-             </button>
-          </div>
-
-          <div class="status-line" id="status"><span class="pulse-dot"></span><span id="statusText"></span></div>
-          
-          <a href="#" id="btnDownloadResult" class="btn-download" style="display:none;" target="_blank">
-             <i class="fa-solid fa-download mr-2"></i> <span data-i18n="download_btn"></span>
-          </a>
+    <!-- PLATAFORMA PRINCIPAL (SE MUESTRA AL VALIDAR) -->
+    <div id="mainApp">
+        <div class="header">
+            <h1>J&J Studio IA</h1>
+            <p>Edición Inteligente con SnapEdit</p>
         </div>
 
-        <!-- Derecha: Visor -->
-        <div class="canvas-container" id="tray" style="display:none;">
-          <div class="viewer-container checkerboard" id="visorContenedor">
-              
-              <button id="btnAntes" class="btn-visor" style="top:20px; right:20px; display:none;" onmousedown="mostrar(true)" onmouseup="mostrar(false)" onmouseleave="mostrar(false)">
-                  <i class="fa-solid fa-eye mr-2"></i> Mantén: Ver Antes
-              </button>
-              
-              <button class="btn-visor" style="bottom:20px; right:20px;" onclick="resetearZoom()" id="btnCentrar">
-                  <i class="fa-solid fa-expand mr-2"></i> Centrar
-              </button>
-              
-              <span class="btn-visor" style="bottom:20px; left:20px; background:#000; cursor:default;" id="btnZoomLabel">
-                  Zoom: <span id="lblZoom">100%</span>
-              </span>
-
-              <div id="viewerWrapper">
-                  <div id="imgContainer" style="position:relative; display:inline-block; line-height:0;">
-                      <img id="mainResultImg" src="" alt="Resultado">
-                      <div id="boxesContainer" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
-                  </div>
-              </div>
-
-              <!-- CONTENEDOR PARA TEXTOS (JSON Oculto) -->
-              <textarea id="jsonViewer" readonly></textarea>
-
-          </div>
-
-          <!-- 🚀 BOTONES DE ACCIONES RÁPIDAS -->
-          <div class="quick-actions-bar" id="quickActionsBar" style="display:none;">
-              <h4 id="qa-title"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Sugerencias de la IA</h4>
-              <div class="qa-buttons">
-                  <!-- Los botones se inyectan aquí con JS -->
-              </div>
-          </div>
+        <div class="editor-container">
+            <h3>Sube una imagen para editar</h3>
+            <!-- Formulario conectado a tu servidor Flask (servidor.py) -->
+            <form action="/upload" method="POST" enctype="multipart/form-data">
+                <input type="file" name="image" class="file-upload" accept="image/*" required>
+                <br><br>
+                <button type="submit" class="process-btn">Procesar con IA</button>
+            </form>
+            
+            <br><br>
+            <button id="logoutBtn" class="logout-btn">Cerrar Sesión</button>
         </div>
-      </div>
     </div>
-  </main>
-</div>
 
-<script>
-const UI = {
-  es: {
-    gate_sub: "Ingresa tu número registrado para acceder.", gate_phone_placeholder: "Número de celular", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Ingresar", gate_btn_verifying: "<i class='fa-solid fa-circle-notch fa-spin mr-2'></i> Verificando...", gate_error: "Número no registrado o membresía vencida.", gate_no_access: "¿Aún no tienes acceso?", gate_subscribe: "<i class='fa-brands fa-whatsapp'></i> Suscribirse", gate_renew: "<i class='fa-solid fa-rotate'></i> Renovar", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "¿Cerrar sesión?", home_title: "Panel Premium", home_sub: "Selecciona una herramienta para comenzar.", back: "Volver", run_btn: "Procesar con IA", restart_btn: "Reiniciar Todo", processing: "La IA está procesando...", processing_task: "Tarea asíncrona, espere...", processing_pct: (p) => `Trabajando... (${p}%)`, done: "¡Completado exitosamente!", error_prefix: "Error: ", generic_error: "Fallo de conexión.", task_failed: "La tarea ha fallado.", conn_error: "Error de red: ", conn_error_task: "Error al consultar la tarea.", dropzone_text: "Haz clic o arrastra una imagen", loading_options: "Descargando de internet...", select_placeholder: "Selecciona...", load_error: "Error de red", magic_tags_title: "✨ Toca las etiquetas para borrar:", magic_btn_apply: "Borrar Seleccionados", download_btn: "Descargar Imagen"
-  },
-  en: {
-    gate_sub: "Enter your registered number to access.", gate_phone_placeholder: "Phone number", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Login", gate_btn_verifying: "<i class='fa-solid fa-circle-notch fa-spin mr-2'></i> Verifying...", gate_error: "Number not registered or expired.", gate_no_access: "Don't have access yet?", gate_subscribe: "<i class='fa-brands fa-whatsapp'></i> Subscribe", gate_renew: "<i class='fa-solid fa-rotate'></i> Renew", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "Log out?", home_title: "Premium Dashboard", home_sub: "Select a tool to begin.", back: "Back", run_btn: "Run AI", restart_btn: "Reset All", processing: "AI is processing...", processing_task: "Async task, wait...", processing_pct: (p) => `Working... (${p}%)`, done: "Successfully completed!", error_prefix: "Error: ", generic_error: "Connection failed.", task_failed: "Task failed.", conn_error: "Network error: ", conn_error_task: "Error checking task.", dropzone_text: "Click or drag an image here", loading_options: "Downloading from cloud...", select_placeholder: "Select...", load_error: "Network error", magic_tags_title: "✨ Tap tags to erase:", magic_btn_apply: "Erase Selected", download_btn: "Download Image"
-  }
-};
+    <script>
+        // AQUÍ ESTÁ TU ENLACE REAL DE GOOGLE APPS SCRIPT
+        const MACRO_URL = "https://script.google.com/macros/s/AKfycbww-tmvkep-6ClaCH8j6Uqr-aPYrNwWGY219F6h1exL67LYMmNYwGEXm2xjz--mFfbQnw/exec";
 
-let currentLang = localStorage.getItem("jj_lang") || "es";
-function t(key, ...args) { const val = UI[currentLang][key]; return typeof val === "function" ? val(...args) : val; }
-function tl(obj) { if (!obj) return ""; return obj[currentLang] || obj.es || ""; }
-function applyStaticText() {
-  document.querySelectorAll("[data-i18n]").forEach(el => { el.innerHTML = t(el.getAttribute("data-i18n")); });
-  document.getElementById("phoneInput").placeholder = t("gate_phone_placeholder");
-  document.documentElement.lang = currentLang;
-}
-function setLang(lang) {
-  currentLang = lang; localStorage.setItem("jj_lang", lang);
-  document.querySelectorAll(".lang-switch button").forEach(btn => { btn.classList.toggle("active", btn.dataset.lang === lang); });
-  applyStaticText();
-  if (MODELS.length) { buildHome(MODELS); if (currentSlug) openTool(currentSlug); }
-}
-document.querySelectorAll(".lang-switch").forEach(sw => { sw.querySelectorAll("button").forEach(btn => { btn.addEventListener("click", () => setLang(btn.dataset.lang)); }); });
+        document.addEventListener("DOMContentLoaded", () => {
+            const loginModal = document.getElementById("loginModal");
+            const mainApp = document.getElementById("mainApp");
+            const loginBtn = document.getElementById("loginBtn");
+            const phoneInput = document.getElementById("phoneInput");
+            const errorMsg = document.getElementById("errorMsg");
+            const logoutBtn = document.getElementById("logoutBtn");
 
-// --------------------------------------------------------------------------------------
-// 🔐 SISTEMA DE SESIÓN TEMPORAL (sessionStorage)
-// --------------------------------------------------------------------------------------
-// URL del Script de Google Apps Script (Reemplazar con la real al desplegar)
-const MACRO_URL = `https://script.google.com/macros/s/AKfycbwY4NfI_yWv25D3S5fD5.../exec`;
-const gate = document.getElementById("gate"); const appEl = document.getElementById("app"); const phoneInput = document.getElementById("phoneInput"); const verifyBtn = document.getElementById("verifyBtn"); const gateError = document.getElementById("gateError"); const userLabel = document.getElementById("userLabel");
+            // 1. Verificar si ya hay una sesión temporal activa en esta pestaña
+            if (sessionStorage.getItem("jj_logged_in") === "true") {
+                loginModal.style.display = "none";
+                mainApp.style.display = "block";
+            }
 
-/**
- * 🔥 SOLUCIÓN A TU PREGUNTA 2:
- * Cambiamos 'localStorage' por 'sessionStorage'. 
- * sessionStorage se borra automáticamente cuando el usuario cierra la pestaña o el navegador.
- */
-function checkSession() {
-  const perm = sessionStorage.getItem("jj_session_perm"); const name = sessionStorage.getItem("jj_user_name");
-  // Si existen los datos en sessionStorage, está logueado dentro de ESTA sesión actual.
-  if (perm === "active" && name) { showApp(name); return true; }
-  return false;
-}
+            // 2. Acción del botón Ingresar
+            loginBtn.addEventListener("click", async () => {
+                const phone = phoneInput.value.trim();
+                
+                if (!phone) {
+                    errorMsg.textContent = "Por favor, ingresa tu número.";
+                    return;
+                }
 
-function showApp(name) { gate.style.display = "none"; appEl.style.display = "block"; userLabel.textContent = name ? name.toUpperCase() : ""; loadModels(); }
+                loginBtn.textContent = "Verificando...";
+                loginBtn.disabled = true;
+                errorMsg.textContent = "";
 
-verifyBtn.addEventListener("click", () => {
-  const num = phoneInput.value.replace(/\D/g, ""); if (!num) return;
-  verifyBtn.disabled = true; verifyBtn.innerHTML = t("gate_btn_verifying"); gateError.classList.remove("show");
-  const oldScript = document.getElementById("jsonp-engine"); if (oldScript) oldScript.remove();
-  
-  // Función que llama el script de Google
-  window.procesarRetornoGoogle = function (data) {
-    verifyBtn.disabled = false; verifyBtn.innerHTML = t("gate_btn");
-    if (data.access === true) {
-      // 🔥 Guardamos en sessionStorage (temporal)
-      sessionStorage.setItem("jj_session_perm", "active"); 
-      sessionStorage.setItem("jj_user_name", data.nombre); 
-      showApp(data.nombre);
-    } else { gateError.classList.add("show"); }
-  };
-  
-  const script = document.createElement("script"); script.id = "jsonp-engine"; script.src = MACRO_URL + "?user=" + encodeURIComponent(num) + "&prefix=procesarRetornoGoogle"; document.body.appendChild(script);
-});
+                try {
+                    // Consulta a tu Google Sheet
+                    const response = await fetch(`${MACRO_URL}?phone=${encodeURIComponent(phone)}`);
+                    const data = await response.json();
 
-phoneInput.addEventListener("keydown", (e) => { if (e.key === "Enter") verifyBtn.click(); });
-document.getElementById("logoutBtn").addEventListener("click", () => { if (!confirm(t("logout_confirm"))) return; sessionStorage.clear(); location.reload(); });
-
-// HERRAMIENTAS Y FRONTEND
-let MODELS = []; let currentSlug = null; let currentImageData = null;
-let urlOriginalMemoria = ""; let urlResultMemoria = "";
-
-const homeView = document.getElementById("homeView"); const toolView = document.getElementById("toolView"); const catContainer = document.getElementById("catContainer"); const form = document.getElementById("form"); const statusLine = document.getElementById("status"); const statusText = document.getElementById("statusText"); const tray = document.getElementById("tray"); const mainResultImg = document.getElementById("mainResultImg"); const toolTitle = document.getElementById("toolTitle"); const toolDesc = document.getElementById("toolDesc"); const btnDownloadResult = document.getElementById("btnDownloadResult"); const btnRestart = document.getElementById("btnRestart");
-const jsonViewer = document.getElementById("jsonViewer");
-
-let aiSessionId = ""; let aiObjects = []; let aiSelected = new Set();
-const magicTagsPanel = document.getElementById("magicTagsPanel"); const tagsContainer = document.getElementById("tagsContainer"); const boxesContainer = document.getElementById("boxesContainer"); const btnExecuteErase = document.getElementById("btnExecuteErase");
-const quickActionsBar = document.getElementById("quickActionsBar");
-const qaTitle = document.getElementById("qa-title");
-
-function loadModels() { if (MODELS.length) { buildHome(MODELS); return; } fetch("/models").then(r => r.json()).then(models => { MODELS = models; buildHome(models); }); }
-
-function buildHome(models) {
-  const categories = {};
-  models.forEach(m => { const catName = tl(m.category); categories[catName] = categories[catName] || []; categories[catName].push(m); });
-  catContainer.innerHTML = "";
-  Object.keys(categories).forEach(cat => {
-    const heading = document.createElement("div"); heading.className = "cat-heading"; heading.innerHTML = `<i class="fa-solid fa-caret-right mr-2"></i> ${cat}`; catContainer.appendChild(heading);
-    const grid = document.createElement("div"); grid.className = "card-grid";
-    categories[cat].forEach(m => {
-      const card = document.createElement("button"); card.type = "button"; card.className = "tool-card";
-      const icon = m.icon ? m.icon : "fa-wand-magic-sparkles";
-      card.innerHTML = `<i class="fa-solid ${icon}"></i><h3>${tl(m.label).split('|')[0].trim()}</h3><p>${tl(m.desc).split('|')[0].trim()}</p>`;
-      card.addEventListener("click", () => openTool(m.slug)); grid.appendChild(card);
-    });
-    catContainer.appendChild(grid);
-  });
-}
-
-function openTool(slug) {
-  currentSlug = slug; const model = MODELS.find(m => m.slug === slug);
-  homeView.style.display = "none"; toolView.style.display = "block";
-  const icon = model.icon ? model.icon : "fa-wand-magic-sparkles";
-  toolTitle.innerHTML = `<i class="fa-solid ${icon} mr-3"></i> ${tl(model.label).split('|')[0].trim()}`; toolDesc.textContent = tl(model.desc).split('|')[0].trim();
-  reiniciarHerramienta(true);
-}
-
-function reiniciarHerramienta(keepTool = false) {
-    form.reset();
-    tray.style.display = "none"; mainResultImg.src = ""; currentImageData = null;
-    urlOriginalMemoria = ""; urlResultMemoria = "";
-    statusLine.classList.remove("show", "error", "ok");
-    btnDownloadResult.style.display = "none"; btnRestart.style.display = "none";
-    magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; quickActionsBar.style.display = "none";
-    
-    document.getElementById('btnAntes').style.display = 'none';
-    document.getElementById('imgContainer').style.display = 'inline-block';
-    document.getElementById('btnCentrar').style.display = 'block';
-    document.getElementById('btnZoomLabel').style.display = 'block';
-    jsonViewer.style.display = "none";
-    
-    document.querySelectorAll('.dropzone').forEach(dz => {
-        dz.classList.remove("has-file");
-        dz.querySelector('i').className = "fa-solid fa-cloud-arrow-up";
-        dz.querySelector('.dz-text').textContent = t("dropzone_text");
-    });
-    if (currentSlug && keepTool) renderForm(MODELS.find(m => m.slug === currentSlug));
-    resetearZoom();
-}
-
-document.getElementById("backBtn").addEventListener("click", () => { toolView.style.display = "none"; homeView.style.display = "block"; currentSlug = null; });
-
-function renderForm(model) {
-  form.innerHTML = "";
-  model.fields.forEach(field => {
-    const wrap = document.createElement("div"); wrap.className = "field";
-    if (field.type === "checkbox") {
-      const row = document.createElement("div"); row.className = "checkbox-row";
-      const input = document.createElement("input"); input.type = "checkbox"; input.id = "field_" + field.name; input.name = field.name; input.checked = field.default !== undefined ? field.default : false;
-      const label = document.createElement("label"); label.htmlFor = input.id; label.textContent = tl(field.label).split('|')[0].trim();
-      row.appendChild(input); row.appendChild(label); wrap.appendChild(row); form.appendChild(wrap); return;
-    }
-    const label = document.createElement("label"); label.htmlFor = "field_" + field.name; label.textContent = tl(field.label).split('|')[0].trim();
-    if (field.required) { const req = document.createElement("span"); req.className = "req"; req.textContent = "*"; label.appendChild(req); }
-    wrap.appendChild(label);
-
-    if (field.type === "image" || field.type === "mask") {
-      const dz = document.createElement("div"); dz.className = "dropzone";
-      const dzIcon = document.createElement("i"); dzIcon.className = "fa-solid fa-cloud-arrow-up";
-      const dzText = document.createElement("div"); dzText.className = "dz-text"; dzText.textContent = t("dropzone_text");
-      const input = document.createElement("input"); input.type = "file"; input.accept = "image/*"; input.id = "field_" + field.name; input.name = field.name;
-      if (field.required) input.required = true;
-      input.addEventListener("change", () => {
-        if (input.files[0]) {
-          dz.classList.add("has-file"); dzIcon.className = "fa-solid fa-file-circle-check"; dzText.textContent = input.files[0].name;
-          if(field.name === "input_image" || field.name === "model_image" || field.name === "input_image_0") {
-              currentImageData = input.files[0]; 
-              urlOriginalMemoria = URL.createObjectURL(input.files[0]);
-              urlResultMemoria = urlOriginalMemoria; 
-              mainResultImg.src = urlOriginalMemoria;
-              tray.style.display = "block"; btnDownloadResult.style.display = "none"; btnRestart.style.display = "block"; quickActionsBar.style.display = "none";
-              magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; document.getElementById('btnAntes').style.display = 'none';
-              resetearZoom();
-              document.getElementById('imgContainer').style.display = 'inline-block';
-              document.getElementById('btnCentrar').style.display = 'block';
-              document.getElementById('btnZoomLabel').style.display = 'block';
-              jsonViewer.style.display = "none";
-          }
-        } else {
-          dz.classList.remove("has-file"); dzIcon.className = "fa-solid fa-cloud-arrow-up"; dzText.textContent = t("dropzone_text");
-        }
-      });
-      dz.appendChild(dzIcon); dz.appendChild(dzText); dz.appendChild(input); wrap.appendChild(dz); form.appendChild(wrap); return;
-    }
-
-    let input;
-    if (field.type === "textarea") { input = document.createElement("textarea"); } 
-    else if (field.type === "select") {
-      input = document.createElement("select"); const placeholder = document.createElement("option"); placeholder.value = ""; placeholder.textContent = field.options_url ? t("loading_options") : t("select_placeholder"); input.appendChild(placeholder);
-      if (field.options) { field.options.forEach(opt => { const o = document.createElement("option"); o.value = opt.value; o.textContent = tl(opt.label).split('|')[0].trim(); input.appendChild(o); }); } 
-      else if (field.options_url) {
-        fetch("/style-list?url=" + encodeURIComponent(field.options_url)).then(r => r.json()).then(data => {
-            const items = Array.isArray(data) ? data : (data.styles || data.data || []); input.innerHTML = "";
-            items.forEach(item => { const id = typeof item === "string" ? item : (item.id || item.style_id || item.value); const name = typeof item === "string" ? item : (item.name || item.label || id); const o = document.createElement("option"); o.value = id; o.textContent = name + (item.premium ? " 💎 PRO" : ""); input.appendChild(o); });
-          }).catch(() => { input.innerHTML = `<option value="">${t("load_error")}</option>`; });
-      }
-    } else if (field.type === "number") { input = document.createElement("input"); input.type = "number"; if (field.default !== undefined) input.value = field.default; } 
-    else { input = document.createElement("input"); input.type = "text"; }
-
-    input.id = "field_" + field.name; input.name = field.name; if (field.required) input.required = true;
-    wrap.appendChild(input); form.appendChild(wrap);
-  });
-
-  const submitBtn = document.createElement("button"); submitBtn.type = "submit"; submitBtn.className = "btn-primary"; submitBtn.id = "btnMainSubmit";
-  submitBtn.innerHTML = `<i class="fa-solid fa-bolt mr-2"></i> ${t("run_btn")}`; form.appendChild(submitBtn);
-}
-
-// CEREBRO DE CONCORDANCIA: ACCIONES RÁPIDAS
-function renderQuickActions(slug) {
-    const qaContainer = document.querySelector('.qa-buttons');
-    qaContainer.innerHTML = '';
-    const isEs = currentLang === 'es';
-    
-    // Diccionario de acciones
-    const actionsDict = {
-        "remove-bg": { slug: "remove-background", label: isEs ? "Quitar Fondo" : "Remove BG", icon: "fa-user-slash text-red-500", params: {} },
-        "extract-logo": { slug: "remove-background-graphic", label: isEs ? "Extraer Logo" : "Extract Logo", icon: "fa-shapes text-orange-500", params: {} },
-        "upscale-8x": { slug: "enhance", label: isEs ? "Escalar Máx (8x)" : "Upscale Max (8x)", icon: "fa-rocket text-purple-500", params: {zoom_factor: "8"} },
-        "upscale-faces": { slug: "enhance-pro", label: isEs ? "Mejorar Rostros" : "Enhance Faces", icon: "fa-user-check text-blue-500", params: {zoom_factor: "2"} },
-        "magic-eraser": { slug: "detect-objects", label: isEs ? "Borrador Mágico" : "Magic Eraser", icon: "fa-magic text-yellow-500", params: {erase_mode: "ultra"} },
-        "colorize": { slug: "colorize-pro", label: isEs ? "Colorear Foto" : "Colorize", icon: "fa-palette text-green-500", params: {} },
-        "restore": { slug: "restore-pro", label: isEs ? "Restaurar Daños" : "Restore Damage", icon: "fa-hammer text-orange-500", params: {} },
-        "light": { slug: "light-restore", label: isEs ? "Corregir Luz" : "Fix Light", icon: "fa-sun text-yellow-400", params: {} },
-        "gen-bg": { slug: "generate-background", label: isEs ? "Fondo con IA" : "AI Background", icon: "fa-image text-emerald-500", params: {prompt: "Fondo de estudio fotográfico profesional, iluminación perfecta, alta calidad"} }
-    };
-
-    let keys = [];
-
-    // 🔥 REGLA DE ORO: Si ya usaste Escalar, no sugiere botones, avisa que está lista.
-    if (slug.includes("enhance")) {
-        qaTitle.innerHTML = `<i class="fa-solid fa-check-circle text-ok mr-2"></i> Imagen Maximizada`;
-        qaContainer.innerHTML = `<p style="color:var(--text-dim); font-size:0.85rem; margin:0;">La imagen está en su calidad máxima absoluta. ¡Lista para descargar o imprimir!</p>`;
-        return; 
-    }
-
-    qaTitle.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Sugerencias de la IA`;
-
-    // LÓGICA DE CONCORDANCIA
-    if (slug.includes("restore") || slug === "light-restore" || slug === "night-flash" || slug === "backlit-fix") {
-        keys = ["colorize", "upscale-faces", "magic-eraser", "light"];
-    } else if (slug.includes("colorize")) {
-        keys = ["restore", "upscale-faces", "magic-eraser"];
-    } else if (slug.includes("remove-background")) {
-        keys = ["upscale-8x", "gen-bg", "magic-eraser"];
-    } else if (slug.includes("generate") || slug.includes("fairy") || slug.includes("sticker")) {
-        keys = ["upscale-8x", "remove-bg", "extract-logo"];
-    } else if (slug === "detect-objects" || slug === "remove-objects" || slug === "erase-text" || slug === "erase-wires") {
-        keys = ["upscale-8x", "remove-bg", "light"];
-    } else {
-        keys = ["upscale-8x", "remove-bg", "magic-eraser"];
-    }
-
-    keys.forEach(k => {
-        const act = actionsDict[k];
-        const btn = document.createElement('button');
-        btn.className = "btn-qa";
-        btn.innerHTML = `<i class="fa-solid ${act.icon} mb-1 block text-lg"></i> ${act.label}`;
-        btn.onclick = () => ejecutarAccionRapida(act.slug, act.params);
-        qaContainer.appendChild(btn);
-    });
-}
-
-// EJECUCIÓN PRINCIPAL DE IA
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const model = MODELS.find(m => m.slug === currentSlug);
-  const submitBtn = document.getElementById("btnMainSubmit"); submitBtn.disabled = true;
-
-  statusLine.className = "status-line show"; statusText.textContent = t("processing");
-  btnDownloadResult.style.display = "none"; btnRestart.style.display = "block"; quickActionsBar.style.display = "none";
-  magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; document.getElementById('btnAntes').style.display = 'none';
-  mainResultImg.classList.add("opacity-50", "blur-sm");
-  jsonViewer.style.display = "none";
-
-  const formData = new FormData();
-  model.fields.forEach(field => {
-    const el = document.getElementById("field_" + field.name);
-    if (!el) return;
-    if (field.type === "checkbox") { formData.append(field.name, el.checked ? "true" : "false"); } 
-    else if (field.type === "image" || field.type === "mask") { if (el.files[0]) formData.append(field.name, el.files[0]); } 
-    else if (el.value !== "") { formData.append(field.name, el.value); }
-  });
-
-  try {
-    const res = await fetch(`/run/${model.slug}`, { method: "POST", body: formData });
-    mainResultImg.classList.remove("opacity-50", "blur-sm");
-    const contentType = res.headers.get("content-type");
-    
-    if (contentType && contentType.includes("application/json")) {
-        const data = await res.json();
-        if (!res.ok || data.error) {
-            statusLine.className = "status-line show error"; statusText.textContent = t("error_prefix") + (data.message || data.detalle || t("generic_error"));
-        } 
-        else if (model.slug === "detect-objects" && data.detected_objects) {
-            statusLine.classList.remove("show"); aiSessionId = data.session_id; aiObjects = data.detected_objects; aiSelected.clear();
-            magicTagsPanel.style.display = "block"; tagsContainer.innerHTML = ""; boxesContainer.innerHTML = ""; btnExecuteErase.style.display = "none";
-            const natW = mainResultImg.naturalWidth; const natH = mainResultImg.naturalHeight;
-            aiObjects.forEach((obj, i) => {
-                const tag = document.createElement("span"); tag.className = "ai-tag"; tag.textContent = obj.object_description; tag.onclick = () => toggleAiObject(i, tag); tagsContainer.appendChild(tag);
-                if(obj.box && natW) {
-                    const [xmin, ymin, xmax, ymax] = obj.box; const box = document.createElement('div'); box.id = `box_ai_${i}`; box.className = "ai-box";
-                    box.style.left = `${(xmin / natW) * 100}%`; box.style.top = `${(ymin / natH) * 100}%`; box.style.width = `${((xmax - xmin) / natW) * 100}%`; box.style.height = `${((ymax - ymin) / natH) * 100}%`; boxesContainer.appendChild(box);
+                    // Si el número existe en el Excel
+                    if (data.status === "success" || data.valid === true || data.mensaje === "Autorizado") {
+                        // Se guarda la sesión temporalmente
+                        sessionStorage.setItem("jj_logged_in", "true"); 
+                        loginModal.style.display = "none";
+                        mainApp.style.display = "block";
+                    } else {
+                        errorMsg.textContent = "Número no autorizado o no encontrado.";
+                        loginBtn.textContent = "Ingresar";
+                        loginBtn.disabled = false;
+                    }
+                } catch (error) {
+                    errorMsg.textContent = "Error al conectar. Verifica que tu script de Google sea Público.";
+                    loginBtn.textContent = "Ingresar";
+                    loginBtn.disabled = false;
                 }
             });
-            tray.style.display = "block"; 
-            renderQuickActions(currentSlug);
-            quickActionsBar.style.display = "block";
-            document.getElementById('imgContainer').style.display = 'inline-block';
-            document.getElementById('btnCentrar').style.display = 'block';
-            document.getElementById('btnZoomLabel').style.display = 'block';
-        }
-        else if (model.response_type === "task") { statusText.textContent = t("processing_task"); pollTask(model.slug, data.task_id); } 
-        else if (data.data || data.url) {
-            let urlF = data.data && Array.isArray(data.data) ? data.data[0].url : (data.data && data.data.url ? data.data.url : data.url);
-            if(urlF) processFinalUrl(urlF);
-            else { 
-                statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
-                tray.style.display = "block";
-                document.getElementById('imgContainer').style.display = 'none';
-                document.getElementById('btnCentrar').style.display = 'none';
-                document.getElementById('btnZoomLabel').style.display = 'none';
-                jsonViewer.value = JSON.stringify(data.data || data, null, 2);
-                jsonViewer.style.display = "block";
-            }
-        } else {
-            statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
-            tray.style.display = "block";
-            document.getElementById('imgContainer').style.display = 'none';
-            document.getElementById('btnCentrar').style.display = 'none';
-            document.getElementById('btnZoomLabel').style.display = 'none';
-            jsonViewer.value = JSON.stringify(data, null, 2);
-            jsonViewer.style.display = "block";
-        }
-    } else {
-        const blob = await res.blob(); 
-        processFinalUrl(URL.createObjectURL(blob));
-    }
-  } catch (err) {
-    statusLine.className = "status-line show error"; statusText.textContent = t("conn_error") + err.message; mainResultImg.classList.remove("opacity-50", "blur-sm");
-  } finally { submitBtn.disabled = false; }
-});
-
-// MOTOR DE ACCIONES EN CADENA (Quick Actions)
-async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
-    if(!urlResultMemoria) return alert("Primero debes cargar o generar una imagen.");
-
-    // LA ADVERTENCIA PROFESIONAL ANTES DE ESCALAR
-    if (targetSlug.includes("enhance")) {
-        const msg = currentLang === 'es'
-            ? "⚠️ REGLA DE ORO DE DISEÑO:\n\nSi escalas la imagen a tamaño gigante ahora, ya no podrás quitarle el fondo o borrar objetos después por el límite de memoria de la IA.\n\nSiempre debes QUITAR EL FONDO PRIMERO y ESCALAR AL FINAL.\n\n¿Deseas proceder a escalar la imagen de todos modos?"
-            : "⚠️ DESIGN GOLDEN RULE:\n\nIf you upscale the image to a giant size now, you won't be able to remove the background later due to AI memory limits.\n\nAlways REMOVE BACKGROUND FIRST and UPSCALE LAST.\n\nDo you want to proceed with upscaling anyway?";
-        if (!confirm(msg)) return; 
-    }
-    
-    urlOriginalMemoria = urlResultMemoria; 
-    
-    statusLine.className = "status-line show"; statusText.textContent = t("processing");
-    mainResultImg.classList.add("opacity-50", "blur-sm");
-    magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; quickActionsBar.style.display = "none";
-    jsonViewer.style.display = "none";
-    document.getElementById('imgContainer').style.display = 'inline-block';
-    document.getElementById('btnCentrar').style.display = 'block';
-    document.getElementById('btnZoomLabel').style.display = 'block';
-    
-    try {
-        const targetModel = MODELS.find(m => m.slug === targetSlug);
-        const formData = new FormData();
-        const imgField = targetModel.fields.find(f => f.type === "image").name;
-        
-        if (urlResultMemoria.startsWith("blob:")) {
-            const blobReq = await fetch(urlResultMemoria); const blobData = await blobReq.blob();
-            formData.append(imgField, new File([blobData], "edit_chain.png", {type: "image/png"}));
-        } else {
-            formData.append(imgField, urlResultMemoria); 
-        }
-        
-        for(const [k, v] of Object.entries(extraParams)) formData.append(k, v);
-        
-        targetModel.fields.forEach(f => {
-            if(f.name !== imgField && !extraParams[f.name]) {
-                if(f.default) formData.append(f.name, f.default);
-                else if(f.type === "select" && f.options) formData.append(f.name, f.options[0].value);
-            }
-        });
-
-        const res = await fetch(`/run/${targetSlug}`, { method: "POST", body: formData });
-        mainResultImg.classList.remove("opacity-50", "blur-sm");
-        
-        const contentType = res.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-            const data = await res.json();
-            if(data.error) throw new Error(data.message);
             
-            if (targetSlug === "detect-objects" && data.detected_objects) {
-                currentSlug = "detect-objects";
-                statusLine.classList.remove("show"); aiSessionId = data.session_id; aiObjects = data.detected_objects; aiSelected.clear();
-                magicTagsPanel.style.display = "block"; tagsContainer.innerHTML = ""; boxesContainer.innerHTML = ""; btnExecuteErase.style.display = "none";
-                const natW = mainResultImg.naturalWidth; const natH = mainResultImg.naturalHeight;
-                aiObjects.forEach((obj, i) => {
-                    const tag = document.createElement("span"); tag.className = "ai-tag"; tag.textContent = obj.object_description; tag.onclick = () => toggleAiObject(i, tag); tagsContainer.appendChild(tag);
-                    if(obj.box && natW) {
-                        const [xmin, ymin, xmax, ymax] = obj.box; const box = document.createElement('div'); box.id = `box_ai_${i}`; box.className = "ai-box";
-                        box.style.left = `${(xmin / natW) * 100}%`; box.style.top = `${(ymin / natH) * 100}%`; box.style.width = `${((xmax - xmin) / natW) * 100}%`; box.style.height = `${((ymax - ymin) / natH) * 100}%`; boxesContainer.appendChild(box);
-                    }
-                });
-                renderQuickActions("detect-objects");
-                quickActionsBar.style.display = "block";
-            } else if(data.data || data.url) {
-                let urlF = data.data && Array.isArray(data.data) ? data.data[0].url : (data.data && data.data.url ? data.data.url : data.url);
-                if(urlF) { currentSlug = targetSlug; processFinalUrl(urlF); }
-            }
-        } else {
-            currentSlug = targetSlug;
-            const blobFinal = await res.blob(); 
-            processFinalUrl(URL.createObjectURL(blobFinal));
-        }
-    } catch(err) {
-        alert("Atención: La imagen generada puede ser demasiado grande para esta herramienta."); mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block";
-    }
-}
-
-function processFinalUrl(url) {
-    urlResultMemoria = url; mainResultImg.src = url;
-    statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
-    btnDownloadResult.href = url; btnDownloadResult.style.display = "block";
-    
-    // CEREBRO DE CONCORDANCIA
-    renderQuickActions(currentSlug);
-    quickActionsBar.style.display = "block"; 
-    
-    document.getElementById('btnAntes').style.display = 'block';
-    document.getElementById('imgContainer').style.display = 'inline-block';
-    document.getElementById('btnCentrar').style.display = 'block';
-    document.getElementById('btnZoomLabel').style.display = 'block';
-    jsonViewer.style.display = "none";
-    
-    resetearZoom();
-}
-
-// VISOR Y ZOOM CON SCROLL
-let escalaImg = 1, estaArrastrando = false, panX = 0, panY = 0, startX, startY;
-const contVisor = document.getElementById('visorContenedor'); const contZoom = document.getElementById('viewerWrapper'); const lblZoom = document.getElementById('lblZoom');
-
-function actualizarTransform() { contZoom.style.transform = `translate(${panX}px, ${panY}px) scale(${escalaImg})`; lblZoom.innerText = Math.round(escalaImg * 100) + '%'; }
-function resetearZoom() { escalaImg = 1; panX = 0; panY = 0; actualizarTransform(); }
-
-contVisor.addEventListener('wheel', (e) => {
-    if (!mainResultImg.src || jsonViewer.style.display === "block") return; e.preventDefault();
-    if (e.deltaY < 0) escalaImg += 0.15; else escalaImg -= 0.15;
-    escalaImg = Math.max(0.5, Math.min(escalaImg, 8)); if(escalaImg === 1) { panX = 0; panY = 0; } actualizarTransform();
-});
-contVisor.addEventListener('mousedown', (e) => { if (e.button !== 0 || !mainResultImg.src || jsonViewer.style.display === "block") return; estaArrastrando = true; startX = e.clientX - panX; startY = e.clientY - panY; });
-window.addEventListener('mousemove', (e) => { if (!estaArrastrando) return; panX = e.clientX - startX; panY = e.clientY - startY; actualizarTransform(); });
-window.addEventListener('mouseup', () => { estaArrastrando = false; });
-
-function mostrar(original) { if(!urlOriginalMemoria || !urlResultMemoria) return; mainResultImg.src = original ? urlOriginalMemoria : urlResultMemoria; document.getElementById('boxesContainer').style.opacity = original ? '0' : '1'; }
-
-// BORRADOR MÁGICO (Ejecución)
-function toggleAiObject(index, tagEl) {
-    const box = document.getElementById(`box_ai_${index}`);
-    if (aiSelected.has(index)) { aiSelected.delete(index); tagEl.classList.remove("selected"); if(box) box.classList.remove("selected"); } 
-    else { aiSelected.add(index); tagEl.classList.add("selected"); if(box) box.classList.add("selected"); }
-    btnExecuteErase.style.display = aiSelected.size > 0 ? "inline-block" : "none";
-}
-
-btnExecuteErase.addEventListener("click", async () => {
-    btnExecuteErase.disabled = true; btnExecuteErase.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Procesando...`;
-    mainResultImg.classList.add("opacity-50", "blur-sm"); quickActionsBar.style.display = "none";
-    const formData = new FormData(); 
-    if (urlResultMemoria.startsWith("blob:")) {
-        const blobReq = await fetch(urlResultMemoria); const blobData = await blobReq.blob();
-        formData.append("input_image", new File([blobData], "magic.png", {type: "image/png"}));
-    } else { formData.append("input_image", urlResultMemoria); }
-    formData.append("original_session_id", aiSessionId);
-    formData.append("erase_mode", "ultra");
-    const objectsToErase = []; aiSelected.forEach(i => objectsToErase.push(aiObjects[i])); formData.append("mask_objects", JSON.stringify(objectsToErase));
-    
-    try {
-        const res = await fetch(`/run/execute-magic-erase`, { method: "POST", body: formData });
-        mainResultImg.classList.remove("opacity-50", "blur-sm");
-        if(res.headers.get("content-type").includes("application/json")){
-            const json = await res.json();
-            if(json.error) throw new Error(json.message || json.detalle || "Parámetros incorrectos");
-            let urlF = json.data && Array.isArray(json.data) ? json.data[0].url : (json.data && json.data.url ? json.data.url : json.url);
-            if(urlF) processFinalUrl(urlF);
-        } else {
-            const blob = await res.blob(); processFinalUrl(URL.createObjectURL(blob));
-        }
-        magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = "";
-    } catch(err) { alert("Error al borrar: " + err.message); mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block"; } 
-    finally { btnExecuteErase.disabled = false; btnExecuteErase.innerHTML = `<i class="fa-solid fa-eraser mr-2"></i> ` + t("magic_btn_apply"); }
-});
-
-function pollTask(slug, taskId) {
-  const interval = setInterval(async () => {
-    try {
-      const res = await fetch(`/task-status/${slug}/${taskId}`); const data = await res.json();
-      if (data.status === "COMPLETED") {
-        clearInterval(interval); processFinalUrl(data.download_url);
-      } else if (data.status === "FAILED" || data.error) {
-        clearInterval(interval); statusLine.className = "status-line show error"; statusText.textContent = t("error_prefix") + (data.error_msg || data.message || t("task_failed"));
-      } else { statusText.textContent = t("processing_pct", data.progress || 0); }
-    } catch (err) { clearInterval(interval); statusLine.className = "status-line show error"; statusText.textContent = t("conn_error_task"); }
-  }, 2500);
-}
-
-document.querySelectorAll(".lang-switch button").forEach(btn => { btn.classList.toggle("active", btn.dataset.lang === currentLang); });
-applyStaticText(); checkSession();
-</script>
+            // 3. Acción del botón Cerrar Sesión
+            logoutBtn.addEventListener("click", () => {
+                sessionStorage.removeItem("jj_logged_in"); // Borra la memoria
+                mainApp.style.display = "none";
+                loginModal.style.display = "flex";
+                phoneInput.value = ""; // Limpia la casilla
+            });
+        });
+    </script>
 </body>
 </html>
