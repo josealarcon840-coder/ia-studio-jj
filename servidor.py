@@ -5,7 +5,7 @@ import requests
 from flask import Flask, render_template, request, jsonify, Response
 from PIL import Image
 
-# Sin límites de lectura para que no colapse con fotos gigantes (Escaladas a 8x)
+# Sin límites de lectura para fotos gigantes
 Image.MAX_IMAGE_PIXELS = None
 
 app = Flask(__name__)
@@ -151,6 +151,24 @@ def style_list():
     try: return jsonify(requests.get(url, timeout=15).json())
     except: return jsonify({"error": True}), 500
 
+# RUTA PROXY PARA DESCARGA DIRECTA (EVITA BLOQUEOS DE CORS EN EL NAVEGADOR)
+@app.route("/download")
+def proxy_download():
+    image_url = request.args.get("url")
+    if not image_url:
+        return "URL no proporcionada", 400
+    try:
+        r = requests.get(image_url, stream=True, timeout=30)
+        if r.status_code == 200:
+            return Response(
+                r.content,
+                mimetype=r.headers.get("content-type", "image/png"),
+                headers={"Content-Disposition": "attachment; filename=JJ_Studio_IA.png"}
+            )
+        return "No se pudo descargar la imagen", 400
+    except Exception as e:
+        return str(e), 500
+
 @app.route("/run/<slug>", methods=["POST"])
 def run_model(slug):
     model = MODELS_BY_SLUG.get(slug)
@@ -203,9 +221,6 @@ def run_model(slug):
                 else:
                     data[key] = value
 
-        # ---------------------------------------------------------
-        # FLUJO DE ENVÍO DE DATOS CORREGIDO PARA GENERACIÓN Y EDICIÓN
-        # ---------------------------------------------------------
         if slug in ["detect-text", "detect-wires"]:
             r1 = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files, timeout=120)
             if r1.status_code == 200:
@@ -234,7 +249,6 @@ def run_model(slug):
             else:
                 response = r1
         else:
-            # Corrección para Z-Image y Qwen: enviar como datos de formulario estándar
             if model.get("needs_image") is False:
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, data=data, timeout=300)
             else:
