@@ -301,7 +301,7 @@ function setLang(lang) {
 }
 document.querySelectorAll(".lang-switch").forEach(sw => { sw.querySelectorAll("button").forEach(btn => { btn.addEventListener("click", () => setLang(btn.dataset.lang)); }); });
 
-// VERIFICACIÓN CONECTADA A LA MACRO (JSONP Y SESSIONSTORAGE)
+// VERIFICACIÓN MODERNA CON FETCH (COMPATIBLE CON MÓVILES Y PC, EXPIRA AL CERRAR PESTAÑA)
 const MACRO_URL = "https://script.google.com/macros/s/AKfycbww-tmvkep-6ClaCH8j6Uqr-aPYrNwWGY219F6h1exL67LYMmNYwGEXm2xjz--mFfbQnw/exec";
 const gate = document.getElementById("gate"); const appEl = document.getElementById("app"); const phoneInput = document.getElementById("phoneInput"); const verifyBtn = document.getElementById("verifyBtn"); const gateError = document.getElementById("gateError"); const userLabel = document.getElementById("userLabel");
 
@@ -313,22 +313,27 @@ function checkSession() {
 }
 function showApp(name) { gate.style.display = "none"; appEl.style.display = "block"; userLabel.textContent = name ? name.toUpperCase() : ""; loadModels(); }
 
-verifyBtn.addEventListener("click", () => {
+verifyBtn.addEventListener("click", async () => {
   const num = phoneInput.value.replace(/\D/g, ""); if (!num) return;
   verifyBtn.disabled = true; verifyBtn.innerHTML = t("gate_btn_verifying"); gateError.classList.remove("show");
   
-  const oldScript = document.getElementById("jsonp-engine"); if (oldScript) oldScript.remove();
-  
-  window.procesarRetornoGoogle = function (data) {
+  try {
+    const response = await fetch(`${MACRO_URL}?user=${encodeURIComponent(num)}`);
+    const data = await response.json();
+
     verifyBtn.disabled = false; verifyBtn.innerHTML = t("gate_btn");
+
     if (data.access === true) {
       sessionStorage.setItem("jj_session_perm", "active"); 
       sessionStorage.setItem("jj_user_name", data.nombre || "Socio"); 
       showApp(data.nombre || "Socio");
-    } else { gateError.classList.add("show"); }
-  };
-  
-  const script = document.createElement("script"); script.id = "jsonp-engine"; script.src = MACRO_URL + "?user=" + encodeURIComponent(num) + "&prefix=procesarRetornoGoogle"; document.body.appendChild(script);
+    } else { 
+      gateError.classList.add("show"); 
+    }
+  } catch (error) {
+    verifyBtn.disabled = false; verifyBtn.innerHTML = t("gate_btn");
+    gateError.classList.add("show");
+  }
 });
 
 phoneInput.addEventListener("keydown", (e) => { if (e.key === "Enter") verifyBtn.click(); });
@@ -672,7 +677,6 @@ async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
     }
 }
 
-// PROXY DE DESCARGA CONFIGURADO PARA FORZAR EL GUARDADO DIRECTO
 function processFinalUrl(url) {
     urlResultMemoria = url; mainResultImg.src = url;
     statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
