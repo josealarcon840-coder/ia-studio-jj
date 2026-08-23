@@ -50,7 +50,6 @@
         }
         .process-btn:hover { background: #0056b3; }
         
-        /* Botón de cerrar sesión */
         .logout-btn {
             background: #dc3545; color: white; border: none;
             padding: 8px 15px; border-radius: 5px; cursor: pointer;
@@ -71,7 +70,7 @@
         </div>
     </div>
 
-    <!-- PLATAFORMA PRINCIPAL (SE MUESTRA AL VALIDAR) -->
+    <!-- PLATAFORMA PRINCIPAL -->
     <div id="mainApp">
         <div class="header">
             <h1>J&J Studio IA</h1>
@@ -80,7 +79,6 @@
 
         <div class="editor-container">
             <h3>Sube una imagen para editar</h3>
-            <!-- Formulario conectado a tu servidor Flask (servidor.py) -->
             <form action="/upload" method="POST" enctype="multipart/form-data">
                 <input type="file" name="image" class="file-upload" accept="image/*" required>
                 <br><br>
@@ -93,7 +91,6 @@
     </div>
 
     <script>
-        // AQUÍ ESTÁ TU ENLACE REAL DE GOOGLE APPS SCRIPT
         const MACRO_URL = "https://script.google.com/macros/s/AKfycbww-tmvkep-6ClaCH8j6Uqr-aPYrNwWGY219F6h1exL67LYMmNYwGEXm2xjz--mFfbQnw/exec";
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -104,13 +101,12 @@
             const errorMsg = document.getElementById("errorMsg");
             const logoutBtn = document.getElementById("logoutBtn");
 
-            // 1. Verificar si ya hay una sesión temporal activa en esta pestaña
+            // Validar sesión temporal por pestaña
             if (sessionStorage.getItem("jj_logged_in") === "true") {
                 loginModal.style.display = "none";
                 mainApp.style.display = "block";
             }
 
-            // 2. Acción del botón Ingresar
             loginBtn.addEventListener("click", async () => {
                 const phone = phoneInput.value.trim();
                 
@@ -124,13 +120,11 @@
                 errorMsg.textContent = "";
 
                 try {
-                    // Consulta a tu Google Sheet
                     const response = await fetch(`${MACRO_URL}?phone=${encodeURIComponent(phone)}`);
                     const data = await response.json();
 
-                    // Si el número existe en el Excel
-                    if (data.status === "success" || data.valid === true || data.mensaje === "Autorizado") {
-                        // Se guarda la sesión temporalmente
+                    // Adaptado exactamente al formato que arrojó tu Google Script: "access: true"
+                    if (data.access === true || data.status === "success" || data.valid === true) {
                         sessionStorage.setItem("jj_logged_in", "true"); 
                         loginModal.style.display = "none";
                         mainApp.style.display = "block";
@@ -146,12 +140,11 @@
                 }
             });
             
-            // 3. Acción del botón Cerrar Sesión
             logoutBtn.addEventListener("click", () => {
-                sessionStorage.removeItem("jj_logged_in"); // Borra la memoria
+                sessionStorage.removeItem("jj_logged_in");
                 mainApp.style.display = "none";
                 loginModal.style.display = "flex";
-                phoneInput.value = ""; // Limpia la casilla
+                phoneInput.value = "";
             });
         });
     </script>
