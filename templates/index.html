@@ -34,16 +34,7 @@
   .gate-card { width: 100%; max-width: 380px; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 36px 30px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
   .gate-card h1 { font-family: var(--font-display); font-size: 1.8rem; letter-spacing: 0.02em; margin: 0 0 6px; text-transform: uppercase; color: var(--text); }
   .gate-card p.sub { color: var(--text-dim); font-size: 0.86rem; margin: 0 0 24px; }
-  .gate-card input { width: 100%; background: #000; border: 1px solid var(--border); color: var(--text); padding: 13px 14px; border-radius: 8px; font-size: 1rem; text-align: center; font-weight: 600; margin-bottom: 12px; }
-  .gate-card input:focus { outline: none; border-color: var(--red); box-shadow: 0 0 10px rgba(255,45,58,0.3);}
   
-  .btn-primary { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--red-bright), var(--red-dim)); color: #fff; border: none; border-radius: 8px; font-weight: 900; font-size: 0.9rem; text-transform: uppercase; cursor: pointer; transition: 0.2s ease; box-shadow: 0 5px 15px rgba(255,45,58,0.3); margin-top: 15px;}
-  .btn-primary:hover:not(:disabled) { transform: scale(1.02); filter: brightness(1.15); }
-  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  .btn-restart { background: #222; border: 1px solid #444; color: #fff; box-shadow: none; margin-top: 10px; }
-  .btn-restart:hover:not(:disabled) { background: #333; border-color: #555; }
-
   .gate-error { color: var(--danger); font-size: 0.82rem; font-weight: 600; margin: 12px 0 0; display: none; }
   .gate-error.show { display: block; }
   .gate-links { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
@@ -51,7 +42,6 @@
   .wa-link { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.82rem; text-transform: uppercase; transition: 0.2s;}
   .wa-link:hover { filter: brightness(1.2);}
   .wa-subscribe { background: #25D366; color: #05310f; }
-  .wa-renew { background: #222; color: var(--text); border: 1px solid var(--border); }
 
   /* App shell */
   #app { display: none; min-height: 100vh; }
@@ -121,6 +111,12 @@
   .pulse-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red-bright); animation: pulse 1s infinite ease-in-out; flex-shrink: 0; }
   @keyframes pulse { 0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--red-bright);} 50% { opacity: 0.3; } }
 
+  .btn-primary { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--red-bright), var(--red-dim)); color: #fff; border: none; border-radius: 8px; font-weight: 900; font-size: 0.9rem; text-transform: uppercase; cursor: pointer; transition: 0.2s ease; box-shadow: 0 5px 15px rgba(255,45,58,0.3); margin-top: 15px;}
+  .btn-primary:hover:not(:disabled) { transform: scale(1.02); filter: brightness(1.15); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-restart { background: #222; border: 1px solid #444; color: #fff; box-shadow: none; margin-top: 10px; }
+  .btn-restart:hover:not(:disabled) { background: #333; border-color: #555; }
+
   /* Visor Zoomable */
   .checkerboard { background-image: linear-gradient(45deg, #111 25%, transparent 25%), linear-gradient(-45deg, #111 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #111 75%), linear-gradient(-45deg, transparent 75%, #111 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
   .viewer-container { width: 100%; min-height: 450px; height: 100%; border-radius: 16px; border: 1px solid #333; overflow: hidden; position: relative; background: #080808; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); cursor: grab; }
@@ -170,14 +166,24 @@
   <div class="gate-card">
     <div class="brand-mark"><i class="fa-solid fa-crown"></i><span>J&J</span></div>
     <h1>Comunidad J&J</h1>
-    <p class="sub" data-i18n="gate_sub"></p>
-    <input type="tel" id="phoneInput" inputmode="numeric">
-    <button class="btn-primary" id="verifyBtn" data-i18n="gate_btn"></button>
+    <p class="sub" data-i18n="gate_sub">Inicia sesión con Telegram para acceder.</p>
+    
+    <!-- 🚀 WIDGET OFICIAL DE TELEGRAM -->
+    <div style="margin-top:20px; margin-bottom: 20px; display:flex; justify-content:center;">
+        <script async src="https://telegram.org/js/telegram-widget.js?22" 
+                data-telegram-login="Comunidad_premiumbot" 
+                data-size="large" 
+                data-onauth="onTelegramAuth(user)" 
+                data-request-access="write"></script>
+    </div>
+
     <p class="gate-error" id="gateError" data-i18n="gate_error"></p>
+    
     <div class="gate-links">
-      <p data-i18n="gate_no_access"></p>
-      <a href="https://wa.me/51916689969" target="_blank" class="wa-link wa-subscribe" data-i18n="gate_subscribe"></a>
-      <a href="https://wa.me/51904503246" target="_blank" class="wa-link wa-renew" data-i18n="gate_renew"></a>
+      <p>¿AÚN NO ESTÁS EN EL GRUPO VIP?</p>
+      <a href="https://wa.me/51916689969" target="_blank" class="wa-link wa-subscribe">
+          <i class='fa-brands fa-whatsapp'></i> Contactar Soporte
+      </a>
     </div>
   </div>
 </div>
@@ -278,10 +284,10 @@
 <script>
 const UI = {
   es: {
-    gate_sub: "Ingresa tu número registrado para acceder.", gate_phone_placeholder: "Número de celular", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Ingresar", gate_btn_verifying: "<i class='fa-solid fa-circle-notch fa-spin mr-2'></i> Verificando...", gate_error: "Número no registrado o membresía vencida.", gate_no_access: "¿Aún no tienes acceso?", gate_subscribe: "<i class='fa-brands fa-whatsapp'></i> Suscribirse", gate_renew: "<i class='fa-solid fa-rotate'></i> Renovar", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "¿Cerrar sesión?", home_title: "Panel Premium", home_sub: "Selecciona una herramienta para comenzar.", back: "Volver", run_btn: "Procesar con IA", restart_btn: "Reiniciar Todo", processing: "La IA está procesando...", processing_task: "Tarea asíncrona, espere...", processing_pct: (p) => `Trabajando... (${p}%)`, done: "¡Completado exitosamente!", error_prefix: "Error: ", generic_error: "Fallo de conexión.", task_failed: "La tarea ha fallado.", conn_error: "Error de red: ", conn_error_task: "Error al consultar la tarea.", dropzone_text: "Haz clic o arrastra una imagen", loading_options: "Descargando de internet...", select_placeholder: "Selecciona...", load_error: "Error de red", magic_tags_title: "✨ Toca las etiquetas para borrar:", magic_btn_apply: "Borrar Seleccionados", download_btn: "Descargar Imagen"
+    gate_sub: "Inicia sesión con Telegram para verificar tu acceso.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Ingresar", gate_error: "No tienes acceso. ¡Asegúrate de estar en el grupo VIP!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "¿Cerrar sesión?", home_title: "Panel Premium", home_sub: "Selecciona una herramienta para comenzar.", back: "Volver", run_btn: "Procesar con IA", restart_btn: "Reiniciar Todo", processing: "La IA está procesando...", processing_task: "Tarea asíncrona, espere...", processing_pct: (p) => `Trabajando... (${p}%)`, done: "¡Completado exitosamente!", error_prefix: "Error: ", generic_error: "Fallo de conexión.", task_failed: "La tarea ha fallado.", conn_error: "Error de red: ", conn_error_task: "Error al consultar la tarea.", dropzone_text: "Haz clic o arrastra una imagen", loading_options: "Descargando de internet...", select_placeholder: "Selecciona...", load_error: "Error de red", magic_tags_title: "✨ Toca las etiquetas para borrar:", magic_btn_apply: "Borrar Seleccionados", download_btn: "Descargar Imagen"
   },
   en: {
-    gate_sub: "Enter your registered number to access.", gate_phone_placeholder: "Phone number", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Login", gate_btn_verifying: "<i class='fa-solid fa-circle-notch fa-spin mr-2'></i> Verifying...", gate_error: "Number not registered or expired.", gate_no_access: "Don't have access yet?", gate_subscribe: "<i class='fa-brands fa-whatsapp'></i> Subscribe", gate_renew: "<i class='fa-solid fa-rotate'></i> Renew", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "Log out?", home_title: "Premium Dashboard", home_sub: "Select a tool to begin.", back: "Back", run_btn: "Run AI", restart_btn: "Reset All", processing: "AI is processing...", processing_task: "Async task, wait...", processing_pct: (p) => `Working... (${p}%)`, done: "Successfully completed!", error_prefix: "Error: ", generic_error: "Connection failed.", task_failed: "Task failed.", conn_error: "Network error: ", conn_error_task: "Error checking task.", dropzone_text: "Click or drag an image here", loading_options: "Downloading from cloud...", select_placeholder: "Select...", load_error: "Network error", magic_tags_title: "✨ Tap tags to erase:", magic_btn_apply: "Erase Selected", download_btn: "Download Image"
+    gate_sub: "Login with Telegram to verify access.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Login", gate_error: "Access denied. Make sure you are in the VIP group!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "Log out?", home_title: "Premium Dashboard", home_sub: "Select a tool to begin.", back: "Back", run_btn: "Run AI", restart_btn: "Reset All", processing: "AI is processing...", processing_task: "Async task, wait...", processing_pct: (p) => `Working... (${p}%)`, done: "Successfully completed!", error_prefix: "Error: ", generic_error: "Connection failed.", task_failed: "Task failed.", conn_error: "Network error: ", conn_error_task: "Error checking task.", dropzone_text: "Click or drag an image here", loading_options: "Downloading from cloud...", select_placeholder: "Select...", load_error: "Network error", magic_tags_title: "✨ Tap tags to erase:", magic_btn_apply: "Erase Selected", download_btn: "Download Image"
   }
 };
 
@@ -290,7 +296,6 @@ function t(key, ...args) { const val = UI[currentLang][key]; return typeof val =
 function tl(obj) { if (!obj) return ""; return obj[currentLang] || obj.es || ""; }
 function applyStaticText() {
   document.querySelectorAll("[data-i18n]").forEach(el => { el.innerHTML = t(el.getAttribute("data-i18n")); });
-  document.getElementById("phoneInput").placeholder = t("gate_phone_placeholder");
   document.documentElement.lang = currentLang;
 }
 function setLang(lang) {
@@ -301,9 +306,7 @@ function setLang(lang) {
 }
 document.querySelectorAll(".lang-switch").forEach(sw => { sw.querySelectorAll("button").forEach(btn => { btn.addEventListener("click", () => setLang(btn.dataset.lang)); }); });
 
-// VERIFICACIÓN MODERNA CON FETCH (COMPATIBLE CON MÓVILES Y PC, EXPIRA AL CERRAR PESTAÑA)
-const MACRO_URL = "https://script.google.com/macros/s/AKfycbww-tmvkep-6ClaCH8j6Uqr-aPYrNwWGY219F6h1exL67LYMmNYwGEXm2xjz--mFfbQnw/exec";
-const gate = document.getElementById("gate"); const appEl = document.getElementById("app"); const phoneInput = document.getElementById("phoneInput"); const verifyBtn = document.getElementById("verifyBtn"); const gateError = document.getElementById("gateError"); const userLabel = document.getElementById("userLabel");
+const gate = document.getElementById("gate"); const appEl = document.getElementById("app"); const gateError = document.getElementById("gateError"); const userLabel = document.getElementById("userLabel");
 
 function checkSession() {
   const perm = sessionStorage.getItem("jj_session_perm"); 
@@ -313,30 +316,31 @@ function checkSession() {
 }
 function showApp(name) { gate.style.display = "none"; appEl.style.display = "block"; userLabel.textContent = name ? name.toUpperCase() : ""; loadModels(); }
 
-verifyBtn.addEventListener("click", async () => {
-  const num = phoneInput.value.replace(/\D/g, ""); if (!num) return;
-  verifyBtn.disabled = true; verifyBtn.innerHTML = t("gate_btn_verifying"); gateError.classList.remove("show");
-  
+// 🚀 AUTENTICACIÓN DIRECTA CON TELEGRAM Y FLASK
+async function onTelegramAuth(user) {
+  gateError.classList.remove("show");
   try {
-    const response = await fetch(`${MACRO_URL}?user=${encodeURIComponent(num)}`);
-    const data = await response.json();
-
-    verifyBtn.disabled = false; verifyBtn.innerHTML = t("gate_btn");
-
-    if (data.access === true) {
-      sessionStorage.setItem("jj_session_perm", "active"); 
-      sessionStorage.setItem("jj_user_name", data.nombre || "Socio"); 
-      showApp(data.nombre || "Socio");
-    } else { 
-      gateError.classList.add("show"); 
-    }
-  } catch (error) {
-    verifyBtn.disabled = false; verifyBtn.innerHTML = t("gate_btn");
-    gateError.classList.add("show");
+      const response = await fetch('/verify-telegram', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(user)
+      });
+      const data = await response.json();
+      
+      if (data.access) {
+          sessionStorage.setItem("jj_session_perm", "active"); 
+          sessionStorage.setItem("jj_user_name", data.nombre || user.first_name); 
+          showApp(data.nombre || user.first_name);
+      } else {
+          gateError.textContent = data.message || t("gate_error");
+          gateError.classList.add("show");
+      }
+  } catch(e) {
+      gateError.textContent = "Error de conexión con el servidor.";
+      gateError.classList.add("show");
   }
-});
+}
 
-phoneInput.addEventListener("keydown", (e) => { if (e.key === "Enter") verifyBtn.click(); });
 document.getElementById("logoutBtn").addEventListener("click", () => { 
   if (!confirm(t("logout_confirm"))) return; 
   sessionStorage.clear(); 
@@ -677,6 +681,7 @@ async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
     }
 }
 
+// DESCARGA POR PROXY
 function processFinalUrl(url) {
     urlResultMemoria = url; mainResultImg.src = url;
     statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
