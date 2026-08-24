@@ -4,10 +4,11 @@ import base64
 import requests
 import hashlib
 import hmac
+import gc  # 🚀 NUEVO: Importamos el Recolector de Basura para limpiar la RAM
 from flask import Flask, render_template, request, jsonify, Response
 from PIL import Image
 
-# Sin límites de lectura para fotos gigantes
+# Sin límites estrictos, pero con precaución
 Image.MAX_IMAGE_PIXELS = None
 
 app = Flask(__name__)
@@ -115,35 +116,38 @@ MODELS = [
 
 MODELS_BY_SLUG = {m["slug"]: m for m in MODELS}
 
+# 🚀 OPTIMIZACIÓN: Cierra las imágenes inmediatamente con "with" para no dejar la RAM ocupada
 def resize_if_needed(file_bytes, slug, original_filename="image.jpg"):
     try:
         max_dim = 1500 if "enhance" in slug else (512 if "pose" in slug else 3000)
-        img = Image.open(io.BytesIO(file_bytes))
-        img_format = (img.format or "JPEG").upper()
-        width, height = img.size
-        
-        needs_resize = (max(width, height) > max_dim)
-        needs_convert = (img_format == "JPEG" and img.mode in ("RGBA", "P"))
-        
-        if not needs_resize and not needs_convert:
-            return file_bytes, original_filename, f"image/{img_format.lower()}"
+        with Image.open(io.BytesIO(file_bytes)) as img:
+            img_format = (img.format or "JPEG").upper()
+            width, height = img.size
             
-        if needs_resize:
-            scale = max_dim / max(width, height)
-            img = img.resize((int(width * scale), int(height * scale)), Image.LANCZOS)
+            needs_resize = (max(width, height) > max_dim)
+            needs_convert = (img_format == "JPEG" and img.mode in ("RGBA", "P"))
             
-        if needs_convert: 
-            img = img.convert("RGB")
-            
-        buffer = io.BytesIO()
-        if img_format == "JPEG":
-            img.save(buffer, format=img_format, quality=100, subsampling=0)
-        else:
-            img.save(buffer, format=img_format)
-            
-        return buffer.getvalue(), original_filename, f"image/{img_format.lower()}"
+            if not needs_resize and not needs_convert:
+                return file_bytes, original_filename, f"image/{img_format.lower()}"
+                
+            if needs_resize:
+                scale = max_dim / max(width, height)
+                img = img.resize((int(width * scale), int(height * scale)), Image.LANCZOS)
+                
+            if needs_convert: 
+                img = img.convert("RGB")
+                
+            buffer = io.BytesIO()
+            if img_format == "JPEG":
+                img.save(buffer, format=img_format, quality=100, subsampling=0)
+            else:
+                img.save(buffer, format=img_format)
+                
+            return buffer.getvalue(), original_filename, f"image/{img_format.lower()}"
     except Exception:
         return file_bytes, original_filename, "image/jpeg"
+    finally:
+        gc.collect()  # 🚀 Forzamos la limpieza de la memoria RAM
 
 @app.route("/")
 def index(): return render_template("index.html")
@@ -186,7 +190,6 @@ def verify_telegram():
     if not data or 'hash' not in data:
         return jsonify({"access": False, "message": "Datos de Telegram inválidos"}), 400
 
-    # 1. Validar la firma criptográfica de Telegram
     data_check_arr = []
     for key, value in data.items():
         if key != 'hash':
@@ -209,7 +212,6 @@ def verify_telegram():
         resp = requests.get(url, params=params, timeout=10).json()
         if resp.get('ok'):
             status = resp['result']['status']
-            # Permitir administradores, creador o miembros vigentes
             if status in ['member', 'administrator', 'creator']:
                 return jsonify({"access": True, "nombre": first_name})
             else:
@@ -308,6 +310,8 @@ def run_model(slug):
 
     except Exception as e: 
         return jsonify({"error": True, "message": str(e)}), 500
+    finally:
+        gc.collect()  # 🚀 Limpieza final obligatoria de RAM después de cada petición
 
 @app.route("/task-status/<slug>/<task_id>")
 def task_status(slug, task_id):
