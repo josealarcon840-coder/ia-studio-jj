@@ -2,6 +2,8 @@ import os
 import io
 import base64
 import requests
+import hashlib
+import hmac
 from flask import Flask, render_template, request, jsonify, Response
 from PIL import Image
 
@@ -10,10 +12,17 @@ Image.MAX_IMAGE_PIXELS = None
 
 app = Flask(__name__)
 
+# ========================================================
+# 🚀 CONFIGURACIÓN DE TELEGRAM Y SNAPEDIT
+# ========================================================
 API_KEY = os.environ.get("SNAPEDIT_API_KEY", "sk-snap-uuh6Z0veQTW7z3DSQ7TUr5yuyaC7HIHAoUchqM_KrfI")
 BASE = "https://api.snapedit.app"
 HEADERS = {"api-key": API_KEY}
 ALLOWED_STYLE_DOMAINS = ("storage.googleapis.com",)
+
+# DATOS DE TU BOT Y TU GRUPO DE TELEGRAM:
+TELEGRAM_BOT_TOKEN = "8066431561:AAE4iCEkjw4ynw5VQC4OVsC0liH_lDv9mcY" 
+TELEGRAM_CHAT_ID = "-1002330690954"
 
 def L(es, en): return {"es": es, "en": en}
 
@@ -167,6 +176,48 @@ def proxy_download():
         return "No se pudo descargar la imagen", 400
     except Exception as e:
         return str(e), 500
+
+# ========================================================
+# 🚀 RUTA DE VERIFICACIÓN CON TELEGRAM
+# ========================================================
+@app.route("/verify-telegram", methods=["POST"])
+def verify_telegram():
+    data = request.json
+    if not data or 'hash' not in data:
+        return jsonify({"access": False, "message": "Datos de Telegram inválidos"}), 400
+
+    # 1. Validar la firma criptográfica de Telegram
+    data_check_arr = []
+    for key, value in data.items():
+        if key != 'hash':
+            data_check_arr.append(f'{key}={value}')
+    
+    data_check_string = '\n'.join(sorted(data_check_arr))
+    secret_key = hashlib.sha256(TELEGRAM_BOT_TOKEN.encode('utf-8')).digest()
+    hash_calc = hmac.new(secret_key, data_check_string.encode('utf-8'), hashlib.sha256).hexdigest()
+
+    if hash_calc != data['hash']:
+        return jsonify({"access": False, "message": "Firma no válida"}), 403
+
+    user_id = data.get('id')
+    first_name = data.get('first_name', 'Usuario')
+
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getChatMember"
+    params = {"chat_id": TELEGRAM_CHAT_ID, "user_id": user_id}
+    
+    try:
+        resp = requests.get(url, params=params, timeout=10).json()
+        if resp.get('ok'):
+            status = resp['result']['status']
+            # Permitir administradores, creador o miembros vigentes
+            if status in ['member', 'administrator', 'creator']:
+                return jsonify({"access": True, "nombre": first_name})
+            else:
+                return jsonify({"access": False, "message": "No eres miembro del grupo VIP."})
+        else:
+            return jsonify({"access": False, "message": "No se pudo verificar tu membresía."})
+    except Exception as e:
+        return jsonify({"access": False, "message": str(e)}), 500
 
 @app.route("/run/<slug>", methods=["POST"])
 def run_model(slug):
