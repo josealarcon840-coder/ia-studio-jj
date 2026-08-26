@@ -2,27 +2,19 @@ import os
 import io
 import base64
 import requests
-import hashlib
-import hmac
-import gc  
+import gc  # Agregado silenciosamente para proteger tu memoria en Render
 from flask import Flask, render_template, request, jsonify, Response
 from PIL import Image
 
+# Sin límites de lectura para fotos gigantes
 Image.MAX_IMAGE_PIXELS = None
 
 app = Flask(__name__)
 
-# ========================================================
-# 🚀 CONFIGURACIÓN DE TELEGRAM Y SNAPEDIT
-# ========================================================
 API_KEY = os.environ.get("SNAPEDIT_API_KEY", "sk-snap-uuh6Z0veQTW7z3DSQ7TUr5yuyaC7HIHAoUchqM_KrfI")
 BASE = "https://api.snapedit.app"
 HEADERS = {"api-key": API_KEY}
 ALLOWED_STYLE_DOMAINS = ("storage.googleapis.com",)
-
-# DATOS DE TU BOT Y TU GRUPO DE TELEGRAM:
-TELEGRAM_BOT_TOKEN = "8066431561:AAE4iCEkjw4ynw5VQC4OVsC0liH_lDv9mcY" 
-TELEGRAM_CHAT_ID = "-1002330690954"
 
 def L(es, en): return {"es": es, "en": en}
 
@@ -93,10 +85,8 @@ MODELS = [
     {"slug": "night-flash", "label": L("Flash Nocturno", "Night Flash"), "icon": "fa-moon", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Añade flash realista.", "Adds realistic flash."), "endpoint": "/v1/images/night-flash", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
     # --- Generación ---
-    # 🚀 SOLUCIÓN ERROR 500: Retirada la opción "aspect_ratio" para enviar solo el texto (prompt) a la API.
-    {"slug": "generate-zimage", "label": L("Crear: Z-Image (Texto)", "Create: Z-Image (Text)"), "icon": "fa-rocket", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Crea imagen rápida.", "Create image fast."), "endpoint": "/v1/images/generates/zimage", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}]},
-    {"slug": "generate-qwen", "label": L("Crear: Qwen (Texto)", "Create: Qwen (Text)"), "icon": "fa-brain", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Motor HD realista.", "HD realistic engine."), "endpoint": "/v1/images/generates/qwen", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}]},
-    
+    {"slug": "generate-zimage", "label": L("Crear: Z-Image (Texto)", "Create: Z-Image (Text)"), "icon": "fa-rocket", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Crea imagen rápida.", "Create image fast."), "endpoint": "/v1/images/generates/zimage", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "select", "label": L("Proporción", "Ratio"), "options": [{"value": "1:1", "label": L("1:1", "1:1")}, {"value": "16:9", "label": L("16:9", "16:9")}, {"value": "9:16", "label": L("9:16", "9:16")}]}]},
+    {"slug": "generate-qwen", "label": L("Crear: Qwen (Texto)", "Create: Qwen (Text)"), "icon": "fa-brain", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Motor HD realista.", "HD realistic engine."), "endpoint": "/v1/images/generates/qwen", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "select", "label": L("Proporción", "Ratio"), "options": [{"value": "1:1", "label": L("1:1", "1:1")}, {"value": "16:9", "label": L("16:9", "16:9")}, {"value": "9:16", "label": L("9:16", "9:16")}]}]},
     {"slug": "fairy-art", "label": L("Retrato a Arte", "Portrait to Art"), "icon": "fa-wand-magic-sparkles", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Convierte fotos a Anime/3D.", "Convert photos to Anime/3D."), "endpoint": "/v1/images/generates/art", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "style", "type": "select", "label": L("Estilo", "Style"), "required": True, "options_url": "https://storage.googleapis.com/assets.snapedit.app/fairyai/anime_styles_6mar25.json"}]},
     {"slug": "generate-background", "label": L("Generar Fondo Nuevo", "Generate Background"), "icon": "fa-image", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Fondo para productos.", "Background for products."), "endpoint": "/v1/images/generates-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Descripción del fondo", "Background prompt"), "required": True}]},
     {"slug": "headshot", "label": L("Foto Perfil Profesional", "Professional Headshot"), "icon": "fa-user-tie", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Viste a la persona con IA.", "Dress the person with AI."), "endpoint": "/v1/images/generates/headshot", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Atuendo/Fondo", "Outfit/Background"), "required": True}]},
@@ -119,38 +109,35 @@ MODELS_BY_SLUG = {m["slug"]: m for m in MODELS}
 
 def resize_if_needed(file_bytes, slug, original_filename="image.jpg"):
     try:
-        # 🚀 SOLUCIÓN 1: Regresamos a 3000px la máxima calidad general para recortes perfectos. 
-        # Solo lo encogemos si es Enhance (para no exceder) o Poses.
         max_dim = 1500 if "enhance" in slug else (512 if "pose" in slug else 3000)
-
-        with Image.open(io.BytesIO(file_bytes)) as img:
-            img_format = (img.format or "JPEG").upper()
-            width, height = img.size
+        img = Image.open(io.BytesIO(file_bytes))
+        img_format = (img.format or "JPEG").upper()
+        width, height = img.size
+        
+        needs_resize = (max(width, height) > max_dim)
+        needs_convert = (img_format == "JPEG" and img.mode in ("RGBA", "P"))
+        
+        if not needs_resize and not needs_convert:
+            return file_bytes, original_filename, f"image/{img_format.lower()}"
             
-            needs_resize = (max(width, height) > max_dim)
-            needs_convert = (img_format == "JPEG" and img.mode in ("RGBA", "P"))
+        if needs_resize:
+            scale = max_dim / max(width, height)
+            img = img.resize((int(width * scale), int(height * scale)), Image.LANCZOS)
             
-            if not needs_resize and not needs_convert:
-                return file_bytes, original_filename, f"image/{img_format.lower()}"
-                
-            if needs_resize:
-                scale = max_dim / max(width, height)
-                img = img.resize((int(width * scale), int(height * scale)), Image.LANCZOS)
-                
-            if needs_convert: 
-                img = img.convert("RGB")
-                
-            buffer = io.BytesIO()
-            if img_format == "JPEG":
-                img.save(buffer, format=img_format, quality=100, subsampling=0)
-            else:
-                img.save(buffer, format=img_format)
-                
-            return buffer.getvalue(), original_filename, f"image/{img_format.lower()}"
+        if needs_convert: 
+            img = img.convert("RGB")
+            
+        buffer = io.BytesIO()
+        if img_format == "JPEG":
+            img.save(buffer, format=img_format, quality=100, subsampling=0)
+        else:
+            img.save(buffer, format=img_format)
+            
+        return buffer.getvalue(), original_filename, f"image/{img_format.lower()}"
     except Exception:
         return file_bytes, original_filename, "image/jpeg"
     finally:
-        gc.collect()  
+        gc.collect()
 
 @app.route("/")
 def index(): return render_template("index.html")
@@ -183,43 +170,6 @@ def proxy_download():
         return "No se pudo descargar la imagen", 400
     except Exception as e:
         return str(e), 500
-
-@app.route("/verify-telegram", methods=["POST"])
-def verify_telegram():
-    data = request.json
-    if not data or 'hash' not in data:
-        return jsonify({"access": False, "message": "Datos de Telegram inválidos"}), 400
-
-    data_check_arr = []
-    for key, value in data.items():
-        if key != 'hash':
-            data_check_arr.append(f'{key}={value}')
-    
-    data_check_string = '\n'.join(sorted(data_check_arr))
-    secret_key = hashlib.sha256(TELEGRAM_BOT_TOKEN.encode('utf-8')).digest()
-    hash_calc = hmac.new(secret_key, data_check_string.encode('utf-8'), hashlib.sha256).hexdigest()
-
-    if hash_calc != data['hash']:
-        return jsonify({"access": False, "message": "Firma no válida"}), 403
-
-    user_id = data.get('id')
-    first_name = data.get('first_name', 'Usuario')
-
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getChatMember"
-    params = {"chat_id": TELEGRAM_CHAT_ID, "user_id": user_id}
-    
-    try:
-        resp = requests.get(url, params=params, timeout=10).json()
-        if resp.get('ok'):
-            status = resp['result']['status']
-            if status in ['member', 'administrator', 'creator']:
-                return jsonify({"access": True, "nombre": first_name})
-            else:
-                return jsonify({"access": False, "message": "No eres miembro del grupo VIP."})
-        else:
-            return jsonify({"access": False, "message": "No se pudo verificar tu membresía."})
-    except Exception as e:
-        return jsonify({"access": False, "message": str(e)}), 500
 
 @app.route("/run/<slug>", methods=["POST"])
 def run_model(slug):
@@ -276,10 +226,8 @@ def run_model(slug):
             if r1.status_code == 200:
                 try:
                     d_json = r1.json()
-                    data_dict = d_json.get("data", d_json) if isinstance(d_json, dict) else d_json
-                    mask_b64 = data_dict.get("mask") if isinstance(data_dict, dict) else None
-
-                    if mask_b64:
+                    if d_json.get("detected") and d_json.get("mask"):
+                        mask_b64 = d_json["mask"]
                         if "," in mask_b64:
                             mask_b64 = mask_b64.split(",", 1)[1]
                         mask_b64 = mask_b64.replace('\n', '').replace('\r', '').strip()
@@ -291,7 +239,9 @@ def run_model(slug):
                             "input_mask": ("mask.png", mask_bytes, "image/png")
                         }
                         
-                        response = requests.post(BASE + "/v1/images/remove-objects", headers=HEADERS, files=f2, data={"erase_mode": "ultra"}, timeout=300)
+                        ep_remove = "/v1/images/remove-text" if slug == "detect-text" else "/v1/images/remove-wires"
+                        
+                        response = requests.post(BASE + ep_remove, headers=HEADERS, files=f2, data={"erase_mode": "ultra"}, timeout=300)
                     else:
                         return jsonify({"error": True, "message": "No se detectó texto o cables en la imagen."}), 400
                 except Exception as e:
@@ -300,25 +250,22 @@ def run_model(slug):
                 response = r1
         else:
             if model.get("needs_image") is False:
-                # 🚀 SOLUCIÓN ERROR 500: Obligamos a mandar *exclusivamente* la variable "prompt" para que SnapEdit no se bloquee.
+                # 🚀 SOLUCIÓN 500: Se renombra aspect_ratio a ratio para que SnapEdit lo acepte sin colapsar.
                 payload = {"prompt": data.get("prompt")}
+                if data.get("aspect_ratio"):
+                    payload["ratio"] = data.get("aspect_ratio")
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, data=payload, timeout=300)
             else:
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
         
         content_type = response.headers.get("Content-Type", "")
-        if "application/json" in content_type: 
-            return jsonify(response.json()), response.status_code
-            
-        if response.status_code != 200:
-            return jsonify({"error": True, "message": f"La IA no pudo procesar esta imagen (Error {response.status_code}). Intenta bajarle un poco la resolución."}), 400
-
+        if "application/json" in content_type: return jsonify(response.json()), response.status_code
         return Response(response.content, mimetype=content_type), response.status_code
 
     except Exception as e: 
         return jsonify({"error": True, "message": str(e)}), 500
     finally:
-        gc.collect()  
+        gc.collect()
 
 @app.route("/task-status/<slug>/<task_id>")
 def task_status(slug, task_id):
