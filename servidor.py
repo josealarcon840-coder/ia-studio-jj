@@ -20,7 +20,6 @@ BASE = "https://api.snapedit.app"
 HEADERS = {"api-key": API_KEY}
 ALLOWED_STYLE_DOMAINS = ("storage.googleapis.com",)
 
-# DATOS DE TU BOT Y TU GRUPO DE TELEGRAM:
 TELEGRAM_BOT_TOKEN = "8066431561:AAE4iCEkjw4ynw5VQC4OVsC0liH_lDv9mcY" 
 TELEGRAM_CHAT_ID = "-1002330690954"
 
@@ -95,7 +94,6 @@ MODELS = [
     # --- Generación ---
     {"slug": "generate-zimage", "label": L("Crear: Z-Image (Texto)", "Create: Z-Image (Text)"), "icon": "fa-rocket", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Crea imagen rápida.", "Create image fast."), "endpoint": "/v1/images/generates/zimage", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}]},
     {"slug": "generate-qwen", "label": L("Crear: Qwen (Texto)", "Create: Qwen (Text)"), "icon": "fa-brain", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Motor HD realista.", "HD realistic engine."), "endpoint": "/v1/images/generates/qwen", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}]},
-    
     {"slug": "fairy-art", "label": L("Retrato a Arte", "Portrait to Art"), "icon": "fa-wand-magic-sparkles", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Convierte fotos a Anime/3D.", "Convert photos to Anime/3D."), "endpoint": "/v1/images/generates/art", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "style", "type": "select", "label": L("Estilo", "Style"), "required": True, "options_url": "https://storage.googleapis.com/assets.snapedit.app/fairyai/anime_styles_6mar25.json"}]},
     {"slug": "generate-background", "label": L("Generar Fondo Nuevo", "Generate Background"), "icon": "fa-image", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Fondo para productos.", "Background for products."), "endpoint": "/v1/images/generates-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Descripción del fondo", "Background prompt"), "required": True}]},
     {"slug": "headshot", "label": L("Foto Perfil Profesional", "Professional Headshot"), "icon": "fa-user-tie", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Viste a la persona con IA.", "Dress the person with AI."), "endpoint": "/v1/images/generates/headshot", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Atuendo/Fondo", "Outfit/Background"), "required": True}]},
@@ -118,8 +116,8 @@ MODELS_BY_SLUG = {m["slug"]: m for m in MODELS}
 
 def resize_if_needed(file_bytes, slug, original_filename="image.jpg"):
     try:
-        # 🚀 PUNTO DULCE: 2500px. Ultra HD, pero permite que el Borrador Mágico vea los objetos pequeños
-        max_dim = 1500 if "enhance" in slug else (512 if "pose" in slug else 2500)
+        # 🚀 Límite de 3000px restaurado para que siempre identifique el cojín y todo lo gráfico a la perfección.
+        max_dim = 1500 if "enhance" in slug else (512 if "pose" in slug else 3000)
         img = Image.open(io.BytesIO(file_bytes))
         img_format = (img.format or "JPEG").upper()
         width, height = img.size
@@ -247,7 +245,6 @@ def run_model(slug):
                 if key == "input_image" and any(x in model["endpoint"] for x in ["generates-background", "pose-suggest", "outpaint"]):
                     api_key = "image"
                 
-                # 🚀 TRUCO TELEGRAM APLICADO A LA WEB PARA HOMOLOGAR
                 ext = "png" if "png" in mime else "jpg"
                 files[api_key] = (f"imagen.{ext}", buf, mime)
 
@@ -300,8 +297,15 @@ def run_model(slug):
             else:
                 response = r1
         else:
+            # 🚀 SOLUCIÓN PARCHE DE BORRADOR MÁGICO
+            # Ocultamos la imagen encadenada a los ojos de la IA de borrado para obligarla
+            # a usar EXCLUSIVAMENTE su memoria caché original (session_id) sin descalibrar cajas.
+            if slug == "execute-magic-erase":
+                files = None
+                data.pop("input_image", None)
+                data.pop("image", None)
+
             if model.get("needs_image") is False:
-                # 🚀 SOLUCIÓN ERROR 500 CREAR IMAGEN: Formato JSON exacto y renombre de variable "ratio"
                 payload = {"prompt": data.get("prompt")}
                 if data.get("aspect_ratio"):
                     payload["ratio"] = data.get("aspect_ratio")
