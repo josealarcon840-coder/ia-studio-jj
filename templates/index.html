@@ -39,9 +39,9 @@
   .gate-error.show { display: block; }
   .gate-links { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
   .gate-links p { font-size: 0.76rem; color: var(--text-faint); text-transform: uppercase; font-weight: 700; margin: 0 0 4px; }
-  .wa-link { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.82rem; text-transform: uppercase; transition: 0.2s;}
+  .wa-link { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.82rem; text-transform: uppercase; transition: 0.2s; color: #fff;}
   .wa-link:hover { filter: brightness(1.2);}
-  .wa-subscribe { background: #25D366; color: #05310f; }
+  .wa-subscribe { background: #25D366; color: #05310f !important; }
 
   /* App shell */
   #app { display: none; min-height: 100vh; }
@@ -129,7 +129,14 @@
   .ai-box { position: absolute; border: 2px solid transparent; border-radius: 6px; pointer-events: none; transition: 0.2s; }
   .ai-box.selected { border-color: var(--red-bright); background: rgba(255,45,58,0.2); box-shadow: 0 0 15px rgba(255,45,58,0.6); }
 
-  /* 🚀 ACCIONES RÁPIDAS (Botonera Inteligente) */
+  /* 🚀 BOTONES ASEGURADOS (MANTIENEN SUS COLORES ORIGINALES) */
+  .btn-primary { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--red-bright), var(--red-dim)); color: #fff; border: none; border-radius: 8px; font-weight: 900; font-size: 0.9rem; text-transform: uppercase; cursor: pointer; transition: 0.2s ease; box-shadow: 0 5px 15px rgba(255,45,58,0.3); margin-top: 15px;}
+  .btn-primary:hover:not(:disabled) { transform: scale(1.02); filter: brightness(1.15); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-restart { background: #222; border: 1px solid #444; color: #fff; box-shadow: none; margin-top: 10px; }
+  .btn-restart:hover:not(:disabled) { background: #333; border-color: #555; }
+
   .quick-actions-bar { margin-top: 15px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; animation: rise 0.4s ease;}
   .quick-actions-bar h4 { margin: 0 0 15px; font-size: 0.9rem; color: var(--ok); text-transform: uppercase; font-weight: 800; letter-spacing: 0.1em;}
   .qa-buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
@@ -161,10 +168,8 @@
     <div class="brand-mark"><i class="fa-solid fa-crown"></i><span>J&J</span></div>
     <h1>Comunidad J&J</h1>
     
-    <!-- 🚀 REGRESA EL MENSAJE ORIGINAL -->
     <p class="sub" data-i18n="gate_sub">Inicia sesión con Telegram para acceder.</p>
     
-    <!-- 🚀 REGRESA EL BOTÓN OFICIAL DE TELEGRAM -->
     <div style="margin-top:20px; margin-bottom: 20px; display:flex; justify-content:center;">
         <script async src="https://telegram.org/js/telegram-widget.js?22" 
                 data-telegram-login="Comunidad_premiumbot" 
@@ -177,7 +182,6 @@
     
     <div class="gate-links">
       <p>¿AÚN NO ESTÁS EN EL GRUPO VIP?</p>
-      <!-- Enlace oficial a soporte -->
       <a href="https://wa.me/51904503246" target="_blank" class="wa-link wa-subscribe">
           <i class='fa-brands fa-whatsapp'></i> Contactar Soporte
       </a>
@@ -217,7 +221,6 @@
       <p class="tool-desc" id="toolDesc"></p>
 
       <div class="workspace-layout">
-        <!-- Izquierda: Formulario -->
         <div class="form-container">
           <form id="form"></form>
           
@@ -240,7 +243,6 @@
           </a>
         </div>
 
-        <!-- Derecha: Visor y Acciones en Cadena -->
         <div class="canvas-container" id="tray" style="display:none;">
           <div class="viewer-container checkerboard" id="visorContenedor">
               
@@ -267,7 +269,6 @@
 
           </div>
 
-          <!-- 🚀 ACCIONES RÁPIDAS -->
           <div class="quick-actions-bar" id="quickActionsBar" style="display:none;">
               <h4 id="qa-title"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Sugerencias de la IA</h4>
               <div class="qa-buttons"></div>
@@ -279,7 +280,6 @@
 </div>
 
 <script>
-// 🚀 DICCIONARIO RESTAURADO CON MENSAJES DE TELEGRAM
 const UI = {
   es: {
     gate_sub: "Inicia sesión con Telegram para verificar tu acceso.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Ingresar", gate_error: "No tienes acceso. ¡Asegúrate de estar en el grupo VIP!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "¿Cerrar sesión?", home_title: "Panel Premium", home_sub: "Selecciona una herramienta para comenzar.", back: "Volver", run_btn: "Procesar con IA", restart_btn: "Reiniciar Todo", processing: "La IA está procesando...", processing_task: "Tarea asíncrona, espere...", processing_pct: (p) => `Trabajando... (${p}%)`, done: "¡Completado exitosamente!", error_prefix: "Error: ", generic_error: "Fallo de conexión.", task_failed: "La tarea ha fallado.", conn_error: "Error de red: ", conn_error_task: "Error al consultar la tarea.", dropzone_text: "Haz clic o arrastra una imagen", loading_options: "Descargando de internet...", select_placeholder: "Selecciona...", load_error: "Error de red", magic_tags_title: "✨ Toca las etiquetas para borrar:", magic_btn_apply: "Borrar Seleccionados", download_btn: "Descargar Imagen"
@@ -314,7 +314,6 @@ function checkSession() {
 }
 function showApp(name) { gate.style.display = "none"; appEl.style.display = "block"; userLabel.textContent = name ? name.toUpperCase() : ""; loadModels(); }
 
-// 🚀 AUTENTICACIÓN CON TELEGRAM RESTAURADA
 async function onTelegramAuth(user) {
   gateError.classList.remove("show");
   try {
@@ -473,6 +472,7 @@ function renderForm(model) {
   submitBtn.innerHTML = `<i class="fa-solid fa-bolt mr-2"></i> ${t("run_btn")}`; form.appendChild(submitBtn);
 }
 
+// 🚀 REGLA ESPECIAL PARA ESCALAR ARTE (x2/x4 muestra Quitar Fondo. x8 lo oculta para no trabarse)
 function renderQuickActions(slug) {
     const qaContainer = document.querySelector('.qa-buttons');
     qaContainer.innerHTML = '';
@@ -491,15 +491,13 @@ function renderQuickActions(slug) {
     };
 
     let keys = [];
-
-    // Verificamos si se escaló a 8x para ocultar botones pesados
+    
     let is8x = false;
     const zoomEl = document.getElementById("field_zoom_factor");
     if (zoomEl && zoomEl.value === "8") {
         is8x = true;
     }
 
-    // 🚀 Lógica especial para Escalar Arte/Anime
     if (slug.includes("enhance")) {
         if (slug === "enhance-art" && !is8x) {
             qaTitle.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Acciones Sugeridas`;
