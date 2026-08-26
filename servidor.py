@@ -2,7 +2,6 @@ import os
 import io
 import base64
 import requests
-import gc  # Agregado silenciosamente para proteger tu memoria en Render
 from flask import Flask, render_template, request, jsonify, Response
 from PIL import Image
 
@@ -136,8 +135,6 @@ def resize_if_needed(file_bytes, slug, original_filename="image.jpg"):
         return buffer.getvalue(), original_filename, f"image/{img_format.lower()}"
     except Exception:
         return file_bytes, original_filename, "image/jpeg"
-    finally:
-        gc.collect()
 
 @app.route("/")
 def index(): return render_template("index.html")
@@ -250,11 +247,9 @@ def run_model(slug):
                 response = r1
         else:
             if model.get("needs_image") is False:
-                # 🚀 SOLUCIÓN 500: Se renombra aspect_ratio a ratio para que SnapEdit lo acepte sin colapsar.
-                payload = {"prompt": data.get("prompt")}
-                if data.get("aspect_ratio"):
-                    payload["ratio"] = data.get("aspect_ratio")
-                response = requests.post(BASE + model["endpoint"], headers=HEADERS, data=payload, timeout=300)
+                # 🚀 SOLUCIÓN ERROR 500: Obligamos a mandar como JSON a SnapEdit, y descartamos parámetros vacíos
+                payload = {k: v for k, v in data.items() if v}
+                response = requests.post(BASE + model["endpoint"], headers=HEADERS, json=payload, timeout=300)
             else:
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
         
@@ -264,8 +259,6 @@ def run_model(slug):
 
     except Exception as e: 
         return jsonify({"error": True, "message": str(e)}), 500
-    finally:
-        gc.collect()
 
 @app.route("/task-status/<slug>/<task_id>")
 def task_status(slug, task_id):
