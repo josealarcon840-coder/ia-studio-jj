@@ -20,6 +20,7 @@ BASE = "https://api.snapedit.app"
 HEADERS = {"api-key": API_KEY}
 ALLOWED_STYLE_DOMAINS = ("storage.googleapis.com",)
 
+# DATOS DE TU BOT Y TU GRUPO DE TELEGRAM:
 TELEGRAM_BOT_TOKEN = "8066431561:AAE4iCEkjw4ynw5VQC4OVsC0liH_lDv9mcY" 
 TELEGRAM_CHAT_ID = "-1002330690954"
 
@@ -114,9 +115,9 @@ MODELS = [
 
 MODELS_BY_SLUG = {m["slug"]: m for m in MODELS}
 
-# 🚀 IGUAL A TU CÓDIGO ORIGINAL (3000px de límite y nombres originales)
 def resize_if_needed(file_bytes, slug, original_filename="image.jpg"):
     try:
+        # 🚀 Mantenemos 3000px para que el cojín morado se borre perfecto.
         max_dim = 1500 if "enhance" in slug else (512 if "pose" in slug else 3000)
         img = Image.open(io.BytesIO(file_bytes))
         img_format = (img.format or "JPEG").upper()
@@ -245,8 +246,9 @@ def run_model(slug):
                 if key == "input_image" and any(x in model["endpoint"] for x in ["generates-background", "pose-suggest", "outpaint"]):
                     api_key = "image"
                 
-                # 🚀 USAMOS EXACTAMENTE EL COMPORTAMIENTO DE TU CÓDIGO (Sin renombrar forzosamente)
-                files[api_key] = (fname, buf, mime)
+                # 🚀 TRUCO TELEGRAM: Renombramos la imagen para que SnapEdit la lea igual que en Telegram
+                ext = "png" if "png" in mime else "jpg"
+                files[api_key] = (f"imagen.{ext}", buf, mime)
 
         for key, value in request.form.items():
             if value:
@@ -260,7 +262,8 @@ def run_model(slug):
                             api_key = key
                             if key == "input_image" and any(x in model["endpoint"] for x in ["generates-background", "pose-suggest", "outpaint"]):
                                 api_key = "image"
-                            files[api_key] = (fname, buf, mime)
+                            ext = "png" if "png" in mime else "jpg"
+                            files[api_key] = (f"imagen_encadenada.{ext}", buf, mime)
                         else:
                             return jsonify({"error": True, "message": "No se pudo conectar a SnapEdit para la foto previa."}), 400
                     except Exception as e:
@@ -297,7 +300,7 @@ def run_model(slug):
                 response = r1
         else:
             if model.get("needs_image") is False:
-                # 🚀 SOLUCIÓN 500 CREAR IMÁGENES: Formato JSON exacto y "ratio"
+                # 🚀 FIX ERROR 500: Formato JSON correcto y ratio traducido
                 payload = {"prompt": data.get("prompt")}
                 if data.get("aspect_ratio"):
                     payload["ratio"] = data.get("aspect_ratio")
