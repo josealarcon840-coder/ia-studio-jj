@@ -214,7 +214,6 @@
       <p class="tool-desc" id="toolDesc"></p>
 
       <div class="workspace-layout">
-        <!-- Izquierda: Formulario -->
         <div class="form-container">
           <form id="form"></form>
           
@@ -237,7 +236,6 @@
           </a>
         </div>
 
-        <!-- Derecha: Visor y Acciones en Cadena -->
         <div class="canvas-container" id="tray" style="display:none;">
           <div class="viewer-container checkerboard" id="visorContenedor">
               
@@ -264,7 +262,6 @@
 
           </div>
 
-          <!-- 🚀 ACCIONES RÁPIDAS -->
           <div class="quick-actions-bar" id="quickActionsBar" style="display:none;">
               <h4 id="qa-title"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Sugerencias de la IA</h4>
               <div class="qa-buttons"></div>
@@ -489,26 +486,40 @@ function renderQuickActions(slug) {
     };
 
     let keys = [];
-    if (slug.includes("enhance")) {
-        qaTitle.innerHTML = `<i class="fa-solid fa-check-circle text-ok mr-2"></i> Imagen Maximizada`;
-        qaContainer.innerHTML = `<p style="color:var(--text-dim); font-size:0.85rem; margin:0;">La imagen está en su calidad máxima absoluta. ¡Lista para descargar o imprimir!</p>`;
-        return; 
+
+    // Verificamos si se escaló a 8x para ocultar botones pesados
+    let is8x = false;
+    const zoomEl = document.getElementById("field_zoom_factor");
+    if (zoomEl && zoomEl.value === "8") {
+        is8x = true;
     }
 
-    qaTitle.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Sugerencias de la IA`;
-
-    if (slug.includes("restore") || slug === "light-restore" || slug === "night-flash" || slug === "backlit-fix") {
-        keys = ["colorize", "upscale-faces", "magic-eraser", "light"];
-    } else if (slug.includes("colorize")) {
-        keys = ["restore", "upscale-faces", "magic-eraser"];
-    } else if (slug.includes("remove-background")) {
-        keys = ["upscale-8x", "gen-bg", "magic-eraser"];
-    } else if (slug.includes("generate") || slug.includes("fairy") || slug.includes("sticker")) {
-        keys = ["upscale-8x", "remove-bg", "extract-logo"];
-    } else if (slug === "detect-objects" || slug === "remove-objects" || slug === "erase-text" || slug === "erase-wires") {
-        keys = ["upscale-8x", "remove-bg", "light"];
+    // 🚀 Lógica especial para Escalar Arte/Anime
+    if (slug.includes("enhance")) {
+        if (slug === "enhance-art" && !is8x) {
+            qaTitle.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Acciones Sugeridas`;
+            keys = ["extract-logo", "remove-bg"];
+        } else {
+            qaTitle.innerHTML = `<i class="fa-solid fa-check-circle text-ok mr-2"></i> Imagen Maximizada`;
+            qaContainer.innerHTML = `<p style="color:var(--text-dim); font-size:0.85rem; margin:0;">La imagen está en su calidad máxima absoluta. ¡Lista para descargar o imprimir!</p>`;
+            return; 
+        }
     } else {
-        keys = ["upscale-8x", "remove-bg", "magic-eraser"];
+        qaTitle.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Sugerencias de la IA`;
+
+        if (slug.includes("restore") || slug === "light-restore" || slug === "night-flash" || slug === "backlit-fix") {
+            keys = ["colorize", "upscale-faces", "magic-eraser", "light"];
+        } else if (slug.includes("colorize")) {
+            keys = ["restore", "upscale-faces", "magic-eraser"];
+        } else if (slug.includes("remove-background")) {
+            keys = ["upscale-8x", "gen-bg", "magic-eraser"];
+        } else if (slug.includes("generate") || slug.includes("fairy") || slug.includes("sticker")) {
+            keys = ["upscale-8x", "remove-bg", "extract-logo"];
+        } else if (slug === "detect-objects" || slug === "remove-objects" || slug === "erase-text" || slug === "erase-wires") {
+            keys = ["upscale-8x", "remove-bg", "light"];
+        } else {
+            keys = ["upscale-8x", "remove-bg", "magic-eraser"];
+        }
     }
 
     keys.forEach(k => {
