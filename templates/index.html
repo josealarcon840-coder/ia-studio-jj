@@ -168,7 +168,6 @@
     <h1>Comunidad J&J</h1>
     <p class="sub" data-i18n="gate_sub">Inicia sesión con Telegram para acceder.</p>
     
-    <!-- 🚀 WIDGET OFICIAL DE TELEGRAM -->
     <div style="margin-top:20px; margin-bottom: 20px; display:flex; justify-content:center;">
         <script async src="https://telegram.org/js/telegram-widget.js?22" 
                 data-telegram-login="Comunidad_premiumbot" 
@@ -181,7 +180,6 @@
     
     <div class="gate-links">
       <p>¿AÚN NO ESTÁS EN EL GRUPO VIP?</p>
-      <!-- AQUÍ ESTÁ ACTUALIZADO TU NUEVO ENLACE DE WHATSAPP -->
       <a href="https://wa.me/51904503246" target="_blank" class="wa-link wa-subscribe">
           <i class='fa-brands fa-whatsapp'></i> Contactar Soporte
       </a>
@@ -317,7 +315,6 @@ function checkSession() {
 }
 function showApp(name) { gate.style.display = "none"; appEl.style.display = "block"; userLabel.textContent = name ? name.toUpperCase() : ""; loadModels(); }
 
-// 🚀 AUTENTICACIÓN DIRECTA CON TELEGRAM Y FLASK
 async function onTelegramAuth(user) {
   gateError.classList.remove("show");
   try {
@@ -526,6 +523,7 @@ function renderQuickActions(slug) {
     });
 }
 
+// 🚀 REPARACIÓN: Control estricto de respuestas del servidor
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const model = MODELS.find(m => m.slug === currentSlug);
@@ -596,9 +594,11 @@ form.addEventListener("submit", async (e) => {
             jsonViewer.value = JSON.stringify(data, null, 2);
             jsonViewer.style.display = "block";
         }
-    } else {
+    } else if (res.ok) {  // 🚀 REPARACIÓN: Solo mostrar foto si no hay error de servidor
         const blob = await res.blob(); 
         processFinalUrl(URL.createObjectURL(blob));
+    } else {
+        throw new Error(t("error_prefix") + " " + res.statusText);
     }
   } catch (err) {
     statusLine.className = "status-line show error"; statusText.textContent = t("conn_error") + err.message; mainResultImg.classList.remove("opacity-50", "blur-sm");
@@ -672,23 +672,31 @@ async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
                 let urlF = data.data && Array.isArray(data.data) ? data.data[0].url : (data.data && data.data.url ? data.data.url : data.url);
                 if(urlF) { currentSlug = targetSlug; processFinalUrl(urlF); }
             }
-        } else {
+        } else if (res.ok) { // 🚀 REPARACIÓN
             currentSlug = targetSlug;
             const blobFinal = await res.blob(); 
             processFinalUrl(URL.createObjectURL(blobFinal));
+        } else {
+            throw new Error("El servidor falló al procesar la acción rápida.");
         }
     } catch(err) {
-        alert("Atención: La imagen generada puede ser demasiado grande para esta herramienta."); mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block";
+        statusLine.className = "status-line show error"; statusText.textContent = t("conn_error") + err.message; mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block";
     }
 }
 
-// DESCARGA POR PROXY
+// 🚀 REPARACIÓN: Enlaces de descarga sin fallas
 function processFinalUrl(url) {
     urlResultMemoria = url; mainResultImg.src = url;
     statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
     
-    const proxyUrl = "/download?url=" + encodeURIComponent(url);
-    btnDownloadResult.href = proxyUrl;
+    // Si la URL ya está en el navegador, descarga directo. Si es de SnapEdit, usa el Proxy.
+    if (url.startsWith("blob:")) {
+        btnDownloadResult.href = url;
+    } else {
+        const proxyUrl = "/download?url=" + encodeURIComponent(url);
+        btnDownloadResult.href = proxyUrl;
+    }
+    
     btnDownloadResult.setAttribute("download", "JJ_Studio_IA_" + Date.now() + ".png");
     btnDownloadResult.style.display = "block";
     btnDownloadResult.onclick = null;
@@ -755,8 +763,10 @@ btnExecuteErase.addEventListener("click", async () => {
             if(json.error) throw new Error(json.message || json.detalle || "Parámetros incorrectos");
             let urlF = json.data && Array.isArray(json.data) ? json.data[0].url : (json.data && json.data.url ? json.data.url : json.url);
             if(urlF) processFinalUrl(urlF);
-        } else {
+        } else if (res.ok) { // 🚀 REPARACIÓN
             const blob = await res.blob(); processFinalUrl(URL.createObjectURL(blob));
+        } else {
+            throw new Error("El servidor falló al procesar el borrado.");
         }
         magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = "";
     } catch(err) { alert("Error al borrar: " + err.message); mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block"; } 
