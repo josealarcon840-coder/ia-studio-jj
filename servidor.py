@@ -4,11 +4,10 @@ import base64
 import requests
 import hashlib
 import hmac
-import gc  # 🚀 NUEVO: Importamos el Recolector de Basura para limpiar la RAM
+import gc  
 from flask import Flask, render_template, request, jsonify, Response
 from PIL import Image
 
-# Sin límites estrictos, pero con precaución
 Image.MAX_IMAGE_PIXELS = None
 
 app = Flask(__name__)
@@ -116,7 +115,6 @@ MODELS = [
 
 MODELS_BY_SLUG = {m["slug"]: m for m in MODELS}
 
-# 🚀 OPTIMIZACIÓN: Cierra las imágenes inmediatamente con "with" para no dejar la RAM ocupada
 def resize_if_needed(file_bytes, slug, original_filename="image.jpg"):
     try:
         max_dim = 1500 if "enhance" in slug else (512 if "pose" in slug else 3000)
@@ -147,7 +145,7 @@ def resize_if_needed(file_bytes, slug, original_filename="image.jpg"):
     except Exception:
         return file_bytes, original_filename, "image/jpeg"
     finally:
-        gc.collect()  # 🚀 Forzamos la limpieza de la memoria RAM
+        gc.collect() 
 
 @app.route("/")
 def index(): return render_template("index.html")
@@ -181,9 +179,6 @@ def proxy_download():
     except Exception as e:
         return str(e), 500
 
-# ========================================================
-# 🚀 RUTA DE VERIFICACIÓN CON TELEGRAM
-# ========================================================
 @app.route("/verify-telegram", methods=["POST"])
 def verify_telegram():
     data = request.json
@@ -271,13 +266,16 @@ def run_model(slug):
                 else:
                     data[key] = value
 
+        # 🚀 REPARACIÓN: Borrado Ultra para que elimine el fondo detrás del texto
         if slug in ["detect-text", "detect-wires"]:
             r1 = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files, timeout=120)
             if r1.status_code == 200:
                 try:
                     d_json = r1.json()
-                    if d_json.get("detected") and d_json.get("mask"):
-                        mask_b64 = d_json["mask"]
+                    data_dict = d_json.get("data", d_json) if isinstance(d_json, dict) else d_json
+                    mask_b64 = data_dict.get("mask") if isinstance(data_dict, dict) else None
+
+                    if mask_b64:
                         if "," in mask_b64:
                             mask_b64 = mask_b64.split(",", 1)[1]
                         mask_b64 = mask_b64.replace('\n', '').replace('\r', '').strip()
@@ -289,9 +287,8 @@ def run_model(slug):
                             "input_mask": ("mask.png", mask_bytes, "image/png")
                         }
                         
-                        ep_remove = "/v1/images/remove-text" if slug == "detect-text" else "/v1/images/remove-wires"
-                        
-                        response = requests.post(BASE + ep_remove, headers=HEADERS, files=f2, data={"erase_mode": "ultra"}, timeout=300)
+                        # Usamos "remove-objects" que sí usa el motor generativo para borrar con fondo
+                        response = requests.post(BASE + "/v1/images/remove-objects", headers=HEADERS, files=f2, data={"erase_mode": "ultra"}, timeout=300)
                     else:
                         return jsonify({"error": True, "message": "No se detectó texto o cables en la imagen."}), 400
                 except Exception as e:
@@ -311,7 +308,7 @@ def run_model(slug):
     except Exception as e: 
         return jsonify({"error": True, "message": str(e)}), 500
     finally:
-        gc.collect()  # 🚀 Limpieza final obligatoria de RAM después de cada petición
+        gc.collect()  
 
 @app.route("/task-status/<slug>/<task_id>")
 def task_status(slug, task_id):
