@@ -117,7 +117,13 @@ MODELS_BY_SLUG = {m["slug"]: m for m in MODELS}
 
 def resize_if_needed(file_bytes, slug, original_filename="image.jpg"):
     try:
-        max_dim = 1500 if "enhance" in slug else (512 if "pose" in slug else 3000)
+        # 🚀 SOLUCIÓN 1: Si es un modelo Gráfico o Pesado, achicamos a 1500px para que SnapEdit no dé "Error de Red"
+        if any(x in slug for x in ["enhance", "graphic", "art", "try-on", "pose", "edit"]):
+            max_dim = 1500
+            if "pose" in slug: max_dim = 512
+        else:
+            max_dim = 2500
+
         with Image.open(io.BytesIO(file_bytes)) as img:
             img_format = (img.format or "JPEG").upper()
             width, height = img.size
@@ -145,7 +151,7 @@ def resize_if_needed(file_bytes, slug, original_filename="image.jpg"):
     except Exception:
         return file_bytes, original_filename, "image/jpeg"
     finally:
-        gc.collect() 
+        gc.collect()  
 
 @app.route("/")
 def index(): return render_template("index.html")
@@ -266,7 +272,7 @@ def run_model(slug):
                 else:
                     data[key] = value
 
-        # 🚀 REPARACIÓN: Borrado Ultra para que elimine el fondo detrás del texto
+        # 🚀 SOLUCIÓN 2: Borrado Ultra para Textos con Fondo
         if slug in ["detect-text", "detect-wires"]:
             r1 = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files, timeout=120)
             if r1.status_code == 200:
@@ -287,7 +293,6 @@ def run_model(slug):
                             "input_mask": ("mask.png", mask_bytes, "image/png")
                         }
                         
-                        # Usamos "remove-objects" que sí usa el motor generativo para borrar con fondo
                         response = requests.post(BASE + "/v1/images/remove-objects", headers=HEADERS, files=f2, data={"erase_mode": "ultra"}, timeout=300)
                     else:
                         return jsonify({"error": True, "message": "No se detectó texto o cables en la imagen."}), 400
@@ -302,7 +307,13 @@ def run_model(slug):
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
         
         content_type = response.headers.get("Content-Type", "")
-        if "application/json" in content_type: return jsonify(response.json()), response.status_code
+        if "application/json" in content_type: 
+            return jsonify(response.json()), response.status_code
+            
+        # 🚀 SOLUCIÓN 3: Evitar el "Error de Red" confuso si la API se satura
+        if response.status_code != 200:
+            return jsonify({"error": True, "message": f"La IA no pudo procesar esta imagen (Error {response.status_code}). Intenta bajarle un poco la resolución."}), 400
+
         return Response(response.content, mimetype=content_type), response.status_code
 
     except Exception as e: 
