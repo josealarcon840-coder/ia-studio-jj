@@ -117,8 +117,8 @@ MODELS_BY_SLUG = {m["slug"]: m for m in MODELS}
 
 def resize_if_needed(file_bytes, slug, original_filename="image.jpg"):
     try:
-        # 🚀 SOLUCIÓN 1: Si es un modelo Gráfico o Pesado, achicamos a 1500px para que SnapEdit no dé "Error de Red"
-        if any(x in slug for x in ["enhance", "graphic", "art", "try-on", "pose", "edit"]):
+        # 🚀 SOLUCIÓN 1: Quitamos "graphic" del límite de 1500px para que conserve el detalle HD y corte perfecto el cojín morado.
+        if any(x in slug for x in ["enhance", "art", "try-on", "pose", "edit"]):
             max_dim = 1500
             if "pose" in slug: max_dim = 512
         else:
@@ -272,7 +272,6 @@ def run_model(slug):
                 else:
                     data[key] = value
 
-        # 🚀 SOLUCIÓN 2: Borrado Ultra para Textos con Fondo
         if slug in ["detect-text", "detect-wires"]:
             r1 = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files, timeout=120)
             if r1.status_code == 200:
@@ -302,7 +301,11 @@ def run_model(slug):
                 response = r1
         else:
             if model.get("needs_image") is False:
-                response = requests.post(BASE + model["endpoint"], headers=HEADERS, data=data, timeout=300)
+                # 🚀 SOLUCIÓN 2: Evitar Error 500 enviando solo los parámetros que la API de texto-a-imagen reconoce (ratio)
+                payload = {"prompt": data.get("prompt")}
+                if "aspect_ratio" in data and data["aspect_ratio"]:
+                    payload["ratio"] = data["aspect_ratio"]
+                response = requests.post(BASE + model["endpoint"], headers=HEADERS, data=payload, timeout=300)
             else:
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
         
@@ -310,7 +313,6 @@ def run_model(slug):
         if "application/json" in content_type: 
             return jsonify(response.json()), response.status_code
             
-        # 🚀 SOLUCIÓN 3: Evitar el "Error de Red" confuso si la API se satura
         if response.status_code != 200:
             return jsonify({"error": True, "message": f"La IA no pudo procesar esta imagen (Error {response.status_code}). Intenta bajarle un poco la resolución."}), 400
 
