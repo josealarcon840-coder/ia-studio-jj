@@ -92,8 +92,8 @@ MODELS = [
     {"slug": "night-flash", "label": L("Flash Nocturno", "Night Flash"), "icon": "fa-moon", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Añade flash realista.", "Adds realistic flash."), "endpoint": "/v1/images/night-flash", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
     # --- Generación ---
-    {"slug": "generate-zimage", "label": L("Crear: Z-Image (Texto)", "Create: Z-Image (Text)"), "icon": "fa-rocket", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Crea imagen rápida.", "Create image fast."), "endpoint": "/v1/images/generates/zimage", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}]},
-    {"slug": "generate-qwen", "label": L("Crear: Qwen (Texto)", "Create: Qwen (Text)"), "icon": "fa-brain", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Motor HD realista.", "HD realistic engine."), "endpoint": "/v1/images/generates/qwen", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}]},
+    {"slug": "generate-zimage", "label": L("Crear: Z-Image (Texto)", "Create: Z-Image (Text)"), "icon": "fa-rocket", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Crea imagen rápida.", "Create image fast."), "endpoint": "/v1/images/generates/zimage", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "select", "label": L("Proporción", "Ratio"), "options": [{"value": "1:1", "label": L("1:1", "1:1")}, {"value": "16:9", "label": L("16:9", "16:9")}, {"value": "9:16", "label": L("9:16", "9:16")}]}]},
+    {"slug": "generate-qwen", "label": L("Crear: Qwen (Texto)", "Create: Qwen (Text)"), "icon": "fa-brain", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Motor HD realista.", "HD realistic engine."), "endpoint": "/v1/images/generates/qwen", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "select", "label": L("Proporción", "Ratio"), "options": [{"value": "1:1", "label": L("1:1", "1:1")}, {"value": "16:9", "label": L("16:9", "16:9")}, {"value": "9:16", "label": L("9:16", "9:16")}]}]},
     {"slug": "fairy-art", "label": L("Retrato a Arte", "Portrait to Art"), "icon": "fa-wand-magic-sparkles", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Convierte fotos a Anime/3D.", "Convert photos to Anime/3D."), "endpoint": "/v1/images/generates/art", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "style", "type": "select", "label": L("Estilo", "Style"), "required": True, "options_url": "https://storage.googleapis.com/assets.snapedit.app/fairyai/anime_styles_6mar25.json"}]},
     {"slug": "generate-background", "label": L("Generar Fondo Nuevo", "Generate Background"), "icon": "fa-image", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Fondo para productos.", "Background for products."), "endpoint": "/v1/images/generates-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Descripción del fondo", "Background prompt"), "required": True}]},
     {"slug": "headshot", "label": L("Foto Perfil Profesional", "Professional Headshot"), "icon": "fa-user-tie", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Viste a la persona con IA.", "Dress the person with AI."), "endpoint": "/v1/images/generates/headshot", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Atuendo/Fondo", "Outfit/Background"), "required": True}]},
@@ -114,6 +114,7 @@ MODELS = [
 
 MODELS_BY_SLUG = {m["slug"]: m for m in MODELS}
 
+# 🚀 IGUAL A TU CÓDIGO ORIGINAL (3000px de límite y nombres originales)
 def resize_if_needed(file_bytes, slug, original_filename="image.jpg"):
     try:
         max_dim = 1500 if "enhance" in slug else (512 if "pose" in slug else 3000)
@@ -244,9 +245,8 @@ def run_model(slug):
                 if key == "input_image" and any(x in model["endpoint"] for x in ["generates-background", "pose-suggest", "outpaint"]):
                     api_key = "image"
                 
-                # 🚀 TRUCO TELEGRAM: Forzamos el nombre del archivo para que SnapEdit no se confunda con artes.
-                ext = "png" if "png" in mime else "jpg"
-                files[api_key] = (f"imagen.{ext}", buf, mime)
+                # 🚀 USAMOS EXACTAMENTE EL COMPORTAMIENTO DE TU CÓDIGO (Sin renombrar forzosamente)
+                files[api_key] = (fname, buf, mime)
 
         for key, value in request.form.items():
             if value:
@@ -260,10 +260,7 @@ def run_model(slug):
                             api_key = key
                             if key == "input_image" and any(x in model["endpoint"] for x in ["generates-background", "pose-suggest", "outpaint"]):
                                 api_key = "image"
-                            
-                            # 🚀 TRUCO TELEGRAM: Forzamos el nombre
-                            ext = "png" if "png" in mime else "jpg"
-                            files[api_key] = (f"imagen_encadenada.{ext}", buf, mime)
+                            files[api_key] = (fname, buf, mime)
                         else:
                             return jsonify({"error": True, "message": "No se pudo conectar a SnapEdit para la foto previa."}), 400
                     except Exception as e:
@@ -276,8 +273,10 @@ def run_model(slug):
             if r1.status_code == 200:
                 try:
                     d_json = r1.json()
-                    if d_json.get("detected") and d_json.get("mask"):
-                        mask_b64 = d_json["mask"]
+                    data_dict = d_json.get("data", d_json) if isinstance(d_json, dict) else d_json
+                    mask_b64 = data_dict.get("mask") if isinstance(data_dict, dict) else None
+
+                    if mask_b64:
                         if "," in mask_b64:
                             mask_b64 = mask_b64.split(",", 1)[1]
                         mask_b64 = mask_b64.replace('\n', '').replace('\r', '').strip()
@@ -289,9 +288,7 @@ def run_model(slug):
                             "input_mask": ("mask.png", mask_bytes, "image/png")
                         }
                         
-                        ep_remove = "/v1/images/remove-text" if slug == "detect-text" else "/v1/images/remove-wires"
-                        
-                        response = requests.post(BASE + ep_remove, headers=HEADERS, files=f2, data={"erase_mode": "ultra"}, timeout=300)
+                        response = requests.post(BASE + "/v1/images/remove-objects", headers=HEADERS, files=f2, data={"erase_mode": "ultra"}, timeout=300)
                     else:
                         return jsonify({"error": True, "message": "No se detectó texto o cables en la imagen."}), 400
                 except Exception as e:
@@ -300,7 +297,7 @@ def run_model(slug):
                 response = r1
         else:
             if model.get("needs_image") is False:
-                # 🚀 SOLUCIÓN ERROR 500: Solo mandamos "prompt" y traducimos aspect_ratio a "ratio"
+                # 🚀 SOLUCIÓN 500 CREAR IMÁGENES: Formato JSON exacto y "ratio"
                 payload = {"prompt": data.get("prompt")}
                 if data.get("aspect_ratio"):
                     payload["ratio"] = data.get("aspect_ratio")
@@ -310,6 +307,10 @@ def run_model(slug):
         
         content_type = response.headers.get("Content-Type", "")
         if "application/json" in content_type: return jsonify(response.json()), response.status_code
+        
+        if response.status_code != 200:
+            return jsonify({"error": True, "message": f"La IA no pudo procesar esta imagen (Error {response.status_code}). Intenta bajarle un poco la resolución."}), 400
+
         return Response(response.content, mimetype=content_type), response.status_code
 
     except Exception as e: 
