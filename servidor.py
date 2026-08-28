@@ -186,20 +186,21 @@ def run_model(slug):
                 files = None
                 data.pop("input_image", None)
 
-            # 🚀 AQUÍ ESTÁ EL DETECTOR: Hacemos la petición a SnapEdit
+            # 🚀 AQUÍ ESTÁ EL DETECTOR Y LA CORRECCIÓN
             if model.get("needs_image") is False:
                 payload = {}
                 if "prompt" in data: payload["prompt"] = data["prompt"]
                 if "aspect_ratio" in data: payload["aspect_ratio"] = data["aspect_ratio"]
-                print(f"👉 Enviando a SnapEdit: {payload}") # Esto se verá en tu terminal negra
+                print(f"👉 Enviando a SnapEdit (Formulario): {payload}") # Terminal
                 
-                response = requests.post(BASE + model["endpoint"], headers=HEADERS, json=payload, timeout=120)
+                # 🚀 SOLUCIÓN: Enviar como Formulario (data=payload) en lugar de JSON
+                response = requests.post(BASE + model["endpoint"], headers=HEADERS, data=payload, timeout=120)
             else:
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
         
         content_type = response.headers.get("Content-Type", "")
         
-        # 🚀 SI SNAPEDIT RESPONDE EN FORMATO TEXTO (JSON)
+        # 🚀 RESPUESTA DE SNAPEDIT
         if "application/json" in content_type: 
             d_json = response.json()
             
@@ -211,18 +212,15 @@ def run_model(slug):
                     if r_img.status_code == 200:
                         return Response(r_img.content, mimetype=r_img.headers.get("Content-Type", "image/png"))
                     else:
-                        # Para que salga el cartel rojo en tu web
                         return jsonify({"error": True, "message": "Fallo al descargar la imagen final."}), 400
                 return jsonify(d_json), 200
             
-            # Si SnapEdit Lanza un Error (Ej: Sin saldo) ⚠️
+            # Si SnapEdit Lanza un Error (Ej: Sin saldo o servidor caído) ⚠️
             else:
                 error_msg = d_json.get("message", str(d_json))
                 print(f"❌ ERROR DE SNAPEDIT: {error_msg}") # Esto se verá en tu terminal negra
-                # Obligamos a la web a mostrar el error exacto de SnapEdit
                 return jsonify({"error": True, "message": f"Mensaje de la API: {error_msg}"}), 400
             
-        # Si por algún motivo no es JSON ni es 200
         if response.status_code != 200:
             return jsonify({"error": True, "message": f"Error desconocido ({response.status_code})."}), 400
 
@@ -236,4 +234,4 @@ def run_model(slug):
         gc.collect()
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(debug=True, host="0.0.0.0", port=10000)
