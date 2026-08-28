@@ -15,7 +15,8 @@ app = Flask(__name__)
 # ========================================================
 # 🚀 CONFIGURACIÓN DE TELEGRAM Y SNAPEDIT
 # ========================================================
-API_KEY = os.environ.get("SNAPEDIT_API_KEY", "sk-snap-uuh6Z0veQTW7z3DSQ7TUr5yuyaC7HIHAoUchqM_KrfI")
+# 👇 AQUÍ ESTÁ TU NUEVA API KEY
+API_KEY = os.environ.get("SNAPEDIT_API_KEY", "sk-snap-Y7Fy-NIUgFKKOoXVxNN7h_XTHgBJdAdeBMZxOArakB8")
 BASE = "https://api.snapedit.app"
 HEADERS = {"api-key": API_KEY}
 ALLOWED_STYLE_DOMAINS = ("storage.googleapis.com",)
@@ -186,14 +187,12 @@ def run_model(slug):
                 files = None
                 data.pop("input_image", None)
 
-            # 🚀 AQUÍ ESTÁ EL DETECTOR Y LA CORRECCIÓN
             if model.get("needs_image") is False:
                 payload = {}
                 if "prompt" in data: payload["prompt"] = data["prompt"]
                 if "aspect_ratio" in data: payload["aspect_ratio"] = data["aspect_ratio"]
                 print(f"👉 Enviando a SnapEdit (Formulario): {payload}") # Terminal
                 
-                # 🚀 SOLUCIÓN: Enviar como Formulario (data=payload) en lugar de JSON
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, data=payload, timeout=120)
             else:
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
@@ -215,10 +214,10 @@ def run_model(slug):
                         return jsonify({"error": True, "message": "Fallo al descargar la imagen final."}), 400
                 return jsonify(d_json), 200
             
-            # Si SnapEdit Lanza un Error (Ej: Sin saldo o servidor caído) ⚠️
+            # Si SnapEdit Lanza un Error
             else:
                 error_msg = d_json.get("message", str(d_json))
-                print(f"❌ ERROR DE SNAPEDIT: {error_msg}") # Esto se verá en tu terminal negra
+                print(f"❌ ERROR DE SNAPEDIT: {error_msg}")
                 return jsonify({"error": True, "message": f"Mensaje de la API: {error_msg}"}), 400
             
         if response.status_code != 200:
@@ -228,7 +227,7 @@ def run_model(slug):
         return Response(response.content, mimetype=content_type), response.status_code
 
     except Exception as e: 
-        print(f"❌ ERROR DEL SERVIDOR: {str(e)}") # Esto se verá en tu terminal negra
+        print(f"❌ ERROR DEL SERVIDOR: {str(e)}")
         return jsonify({"error": True, "message": f"Error interno: {str(e)}"}), 400
     finally:
         gc.collect()
