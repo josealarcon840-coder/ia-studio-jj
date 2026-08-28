@@ -15,8 +15,8 @@ app = Flask(__name__)
 # ========================================================
 # 🚀 CONFIGURACIÓN DE TELEGRAM Y SNAPEDIT
 # ========================================================
-# 👇 AQUÍ ESTÁ TU NUEVA API KEY
-API_KEY = os.environ.get("SNAPEDIT_API_KEY", "sk-snap-Y7Fy-NIUgFKKOoXVxNN7h_XTHgBJdAdeBMZxOArakB8")
+# 👇 AQUÍ ESTÁ TU API KEY ORIGINAL DE VUELTA
+API_KEY = os.environ.get("SNAPEDIT_API_KEY", "sk-snap-uuh6Z0veQTW7z3DSQ7TUr5yuyaC7HIHAoUchqM_KrfI")
 BASE = "https://api.snapedit.app"
 HEADERS = {"api-key": API_KEY}
 ALLOWED_STYLE_DOMAINS = ("storage.googleapis.com",)
