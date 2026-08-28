@@ -20,7 +20,6 @@ BASE = "https://api.snapedit.app"
 HEADERS = {"api-key": API_KEY}
 ALLOWED_STYLE_DOMAINS = ("storage.googleapis.com",)
 
-# DATOS DE TU BOT Y TU GRUPO DE TELEGRAM
 TELEGRAM_BOT_TOKEN = "8066431561:AAE4iCEkjw4ynw5VQC4OVsC0liH_lDv9mcY" 
 TELEGRAM_CHAT_ID = "-1002330690954"
 
@@ -51,7 +50,7 @@ MODELS = [
     {"slug": "colorize-pro", "label": L("Colorear B/N (Pro)", "Colorize B/W (Pro)"), "icon": "fa-paint-roller", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Colorización avanzada.", "Advanced colorization."), "endpoint": "/v1/images/colorize/pro", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "light-restore", "label": L("Corregir Iluminación", "Fix Lighting"), "icon": "fa-sun", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Arregla fotos oscuras.", "Fixes dark photos."), "endpoint": "/v1/images/light-restore", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    # --- Generación (SOLUCIONADO: aspect_ratio + needs_image) ---
+    # --- Generación ---
     {"slug": "generate-zimage", "label": L("Crear: Z-Image (Texto)", "Create: Z-Image (Text)"), "icon": "fa-rocket", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Crea imagen rápida.", "Create image fast."), "endpoint": "/v1/images/generates/zimage", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "select", "label": L("Proporción", "Ratio"), "options": [{"value": "1:1", "label": L("1:1", "1:1")}, {"value": "16:9", "label": L("16:9", "16:9")}, {"value": "9:16", "label": L("9:16", "9:16")}]}]},
     {"slug": "generate-qwen", "label": L("Crear: Qwen (Texto)", "Create: Qwen (Text)"), "icon": "fa-brain", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Motor HD realista.", "HD realistic engine."), "endpoint": "/v1/images/generates/qwen", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "select", "label": L("Proporción", "Ratio"), "options": [{"value": "1:1", "label": L("1:1", "1:1")}, {"value": "16:9", "label": L("16:9", "16:9")}, {"value": "9:16", "label": L("9:16", "9:16")}]}]},
     
@@ -112,17 +111,6 @@ def style_list():
     if not url or not any(url.startswith(f"https://{d}") for d in ALLOWED_STYLE_DOMAINS): return jsonify({"error": True}), 400
     try: return jsonify(requests.get(url, timeout=15).json())
     except: return jsonify({"error": True}), 500
-
-@app.route("/download")
-def proxy_download():
-    image_url = request.args.get("url")
-    if not image_url: return "URL no proporcionada", 400
-    try:
-        r = requests.get(image_url, stream=True, timeout=30)
-        if r.status_code == 200:
-            return Response(r.content, mimetype=r.headers.get("content-type", "image/png"), headers={"Content-Disposition": "attachment; filename=JJ_Studio_IA.png"})
-        return "No se pudo descargar la imagen", 400
-    except Exception as e: return str(e), 500
 
 @app.route("/verify-telegram", methods=["POST"])
 def verify_telegram():
@@ -198,35 +186,52 @@ def run_model(slug):
                 files = None
                 data.pop("input_image", None)
 
+            # 🚀 AQUÍ ESTÁ EL DETECTOR: Hacemos la petición a SnapEdit
             if model.get("needs_image") is False:
-                # 🚀 SOLUCIÓN APLICADA: Enviamos como JSON (estándar de la API Z-Image)
-                response = requests.post(BASE + model["endpoint"], headers=HEADERS, json=data, timeout=300)
+                payload = {}
+                if "prompt" in data: payload["prompt"] = data["prompt"]
+                if "aspect_ratio" in data: payload["aspect_ratio"] = data["aspect_ratio"]
+                print(f"👉 Enviando a SnapEdit: {payload}") # Esto se verá en tu terminal negra
+                
+                response = requests.post(BASE + model["endpoint"], headers=HEADERS, json=payload, timeout=120)
             else:
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
         
         content_type = response.headers.get("Content-Type", "")
         
-        # 🚀 SOLUCIÓN APLICADA: Si devuelve un JSON, extraemos la URL de la imagen y la descargamos
+        # 🚀 SI SNAPEDIT RESPONDE EN FORMATO TEXTO (JSON)
         if "application/json" in content_type: 
+            d_json = response.json()
+            
+            # Si dice OK (200)
             if response.status_code == 200:
-                d_json = response.json()
                 if "data" in d_json and isinstance(d_json["data"], list) and len(d_json["data"]) > 0 and "url" in d_json["data"][0]:
                     img_url = d_json["data"][0]["url"]
                     r_img = requests.get(img_url, timeout=60)
                     if r_img.status_code == 200:
                         return Response(r_img.content, mimetype=r_img.headers.get("Content-Type", "image/png"))
                     else:
-                        return jsonify({"error": True, "message": "Fallo al descargar la imagen final."}), 500
+                        # Para que salga el cartel rojo en tu web
+                        return jsonify({"error": True, "message": "Fallo al descargar la imagen final."}), 400
+                return jsonify(d_json), 200
             
-            return jsonify(response.json()), response.status_code
+            # Si SnapEdit Lanza un Error (Ej: Sin saldo) ⚠️
+            else:
+                error_msg = d_json.get("message", str(d_json))
+                print(f"❌ ERROR DE SNAPEDIT: {error_msg}") # Esto se verá en tu terminal negra
+                # Obligamos a la web a mostrar el error exacto de SnapEdit
+                return jsonify({"error": True, "message": f"Mensaje de la API: {error_msg}"}), 400
             
+        # Si por algún motivo no es JSON ni es 200
         if response.status_code != 200:
-            return jsonify({"error": True, "message": f"Error {response.status_code}."}), 400
+            return jsonify({"error": True, "message": f"Error desconocido ({response.status_code})."}), 400
 
+        # Respuesta normal (imagen)
         return Response(response.content, mimetype=content_type), response.status_code
 
     except Exception as e: 
-        return jsonify({"error": True, "message": str(e)}), 500
+        print(f"❌ ERROR DEL SERVIDOR: {str(e)}") # Esto se verá en tu terminal negra
+        return jsonify({"error": True, "message": f"Error interno: {str(e)}"}), 400
     finally:
         gc.collect()
 
