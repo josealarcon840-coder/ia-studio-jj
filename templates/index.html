@@ -116,6 +116,8 @@
   .viewer-container { width: 100%; min-height: 450px; height: 100%; border-radius: 16px; border: 1px solid #333; overflow: hidden; position: relative; background: #080808; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); cursor: grab; }
   .viewer-container:active { cursor: grabbing; }
   #viewerWrapper { transform-origin: center center; transition: transform 0.1s ease-out; position: relative; display: inline-block;}
+  
+  /* 💥 ESTA LÍNEA EVITA QUE EL NAVEGADOR BLOQUEE LA VISTA PREVIA */
   #mainResultImg { display: block; max-width: 90vw; max-height: 70vh; object-fit: contain; border-radius: 8px;}
   
   /* Botones sobre el visor */
@@ -260,7 +262,7 @@
 
               <div id="viewerWrapper">
                   <div id="imgContainer" style="position:relative; display:inline-block; line-height:0;">
-                      <img id="mainResultImg" src="" alt="Resultado">
+                      <img id="mainResultImg" src="" alt="Resultado" referrerpolicy="no-referrer">
                       <div id="boxesContainer" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
                   </div>
               </div>
@@ -412,13 +414,25 @@ function renderForm(model) {
   model.fields.forEach(field => {
     const wrap = document.createElement("div"); wrap.className = "field";
     
-    // 🚀 NUEVA LÓGICA DE CENTÍMETROS AUTOMÁTICOS
-    if (field.type === "cm_ratio_auto") {
+    // 🚀 LÓGICA DE CENTÍMETROS CON MENÚ VISIBLE Y SINCRONIZACIÓN PERFECTA
+    if (field.type === "cm_ratio") {
         const labelMain = document.createElement("label"); 
-        labelMain.innerHTML = "Medidas en Centímetros <span class='req'>*</span>";
+        labelMain.innerHTML = "Medidas y Proporción <span class='req'>*</span>";
         wrap.appendChild(labelMain);
 
-        // Cajitas de Ancho y Alto en CM (y ratio oculto)
+        // Menú Deslizable Restaurado
+        const selectRatio = document.createElement("select");
+        selectRatio.id = "field_" + field.name;
+        selectRatio.name = field.name;
+        selectRatio.style.marginBottom = "15px";
+        const ratios = ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"];
+        ratios.forEach(r => { 
+            const opt = document.createElement("option"); opt.value = r; opt.textContent = `Proporción ${r}`; 
+            selectRatio.appendChild(opt); 
+        });
+        wrap.appendChild(selectRatio);
+
+        // Cajitas de Medidas (CM)
         const row = document.createElement("div"); row.style = "display: flex; gap: 10px;";
         
         const colW = document.createElement("div"); colW.style.flex = "1";
@@ -434,38 +448,29 @@ function renderForm(model) {
         row.appendChild(colW); row.appendChild(colH);
         wrap.appendChild(row);
 
-        // Secreto para enviar el aspect_ratio a la API
-        const selectRatio = document.createElement("input");
-        selectRatio.type = "hidden";
-        selectRatio.id = "field_" + field.name;
-        selectRatio.name = field.name;
-        selectRatio.value = "1:1";
-        wrap.appendChild(selectRatio);
-
         const info = document.createElement("p");
-        info.style = "font-size: 0.75rem; color: var(--text-dim); margin-top: 8px;";
-        info.innerHTML = "💡 Puedes cambiar un valor; calcularemos la proporción más cercana para la IA.";
+        info.style = "font-size: 0.75rem; color: var(--ok); margin-top: 8px; font-weight: bold;";
+        info.innerHTML = "<i class='fa-solid fa-print'></i> Imagen optimizada para impresión (300 DPI)";
         wrap.appendChild(info);
 
+        // Lógica de cálculo (Si cambia el ratio o el ancho, el alto se adapta)
         const syncSize = (source) => {
-            let w = parseFloat(inpW.value); let h = parseFloat(inpH.value);
-            if(w > 0 && h > 0) {
-                let ratio = w / h;
-                if(source === 'W') inpH.value = w; // Por defecto cuadrado hasta que IA asuma
-                else inpW.value = h;
-                
-                // Mapeamos a los permitidos por SnapEdit
-                let closest = "1:1";
-                let minDiff = Math.abs(ratio - 1);
-                const ratiosDict = {"1:1":1, "16:9":16/9, "9:16":9/16, "4:3":4/3, "3:4":3/4, "3:2":3/2, "2:3":2/3};
-                for(let k in ratiosDict) {
-                    let diff = Math.abs(ratio - ratiosDict[k]);
-                    if(diff < minDiff) { minDiff = diff; closest = k; }
-                }
-                selectRatio.value = closest;
+            let parts = selectRatio.value.split(':');
+            let ratio = parseFloat(parts[0]) / parseFloat(parts[1]);
+            if(source === 'W') {
+                let w = parseFloat(inpW.value);
+                if(w > 0) inpH.value = (w / ratio).toFixed(2);
+            } else if (source === 'H') {
+                let h = parseFloat(inpH.value);
+                if(h > 0) inpW.value = (h * ratio).toFixed(2);
+            } else if (source === 'R') {
+                // Al cambiar proporción, mantenemos el Ancho y ajustamos el Alto
+                let w = parseFloat(inpW.value);
+                if(w > 0) inpH.value = (w / ratio).toFixed(2);
             }
         };
 
+        selectRatio.addEventListener("change", () => syncSize('R'));
         inpW.addEventListener("input", () => syncSize('W'));
         inpH.addEventListener("input", () => syncSize('H'));
         
@@ -626,8 +631,6 @@ form.addEventListener("submit", async (e) => {
         processFinalUrl(URL.createObjectURL(blob));
     } else {
         const data = await res.json();
-        
-        // 🚀 Lógica idéntica al Bot de Telegram (Verifica "success": True)
         if (data.success && data.url) {
             processFinalUrl(data.url);
         } else if (data.error) {
@@ -701,17 +704,22 @@ async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
     }
 }
 
+// 💥 SOLUCIÓN A LA VISTA PREVIA INVISIBLE
 function processFinalUrl(url) {
-    urlResultMemoria = url; mainResultImg.src = url;
-    statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
+    let displayUrl = url;
     
-    // 💥 DESCARGA EN PNG OPTIMIZADO (Ruta de Python Inyecta DPI)
-    if(url.startsWith("blob:")) {
-        btnDownloadResult.href = url;
-    } else {
-        btnDownloadResult.href = "/download?url=" + encodeURIComponent(url);
+    // Si la URL viene directo de SnapEdit, la forzamos a pasar por nuestro Proxy de Python (Download)
+    // Esto evade el bloqueo del navegador y de paso inyecta los 300 DPI
+    if(url.startsWith("http")) {
+        displayUrl = "/download?url=" + encodeURIComponent(url);
     }
     
+    urlResultMemoria = displayUrl; 
+    mainResultImg.src = displayUrl; // Ahora sí se mostrará en pantalla
+    
+    statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
+    
+    btnDownloadResult.href = displayUrl;
     btnDownloadResult.setAttribute("download", "JJ_Studio_IA_300DPI.png");
     btnDownloadResult.style.display = "block";
     btnDownloadResult.onclick = null;
