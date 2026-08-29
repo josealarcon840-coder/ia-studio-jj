@@ -282,10 +282,10 @@
 <script>
 const UI = {
   es: {
-    gate_sub: "Inicia sesión con Telegram para verificar tu acceso.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Ingresar", gate_error: "No tienes acceso. ¡Asegúrate de estar en el grupo VIP!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "¿Cerrar sesión?", home_title: "Panel Premium", home_sub: "Selecciona una herramienta para comenzar.", back: "Volver", run_btn: "Procesar con IA", restart_btn: "Reiniciar Todo", processing: "La IA está procesando...", processing_task: "Tarea asíncrona, espere...", processing_pct: (p) => `Trabajando... (${p}%)`, done: "¡Completado exitosamente!", error_prefix: "Error: ", generic_error: "Fallo de conexión.", task_failed: "La tarea ha fallado.", conn_error: "Error de red: ", conn_error_task: "Error al consultar la tarea.", dropzone_text: "Haz clic o arrastra una imagen", loading_options: "Descargando de internet...", select_placeholder: "Selecciona...", load_error: "Error de red", magic_tags_title: "✨ Toca las etiquetas para borrar:", magic_btn_apply: "Borrar Seleccionados", download_btn: "⬇️ Descargar Diseño"
+    gate_sub: "Inicia sesión con Telegram para verificar tu acceso.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Ingresar", gate_error: "No tienes acceso. ¡Asegúrate de estar en el grupo VIP!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "¿Cerrar sesión?", home_title: "Panel Premium", home_sub: "Selecciona una herramienta para comenzar.", back: "Volver", run_btn: "Procesar con IA", restart_btn: "Reiniciar Todo", processing: "La IA está procesando...", processing_task: "Tarea asíncrona, espere...", processing_pct: (p) => `Trabajando... (${p}%)`, done: "¡Completado exitosamente!", error_prefix: "Error: ", generic_error: "Fallo de conexión.", task_failed: "La tarea ha fallado.", conn_error: "Error de red: ", conn_error_task: "Error al consultar la tarea.", dropzone_text: "Haz clic o arrastra una imagen", loading_options: "Descargando de internet...", select_placeholder: "Selecciona...", load_error: "Error de red", magic_tags_title: "✨ Toca las etiquetas para borrar:", magic_btn_apply: "Borrar Seleccionados", download_btn: "⬇️ Descargar Diseño (300 DPI)"
   },
   en: {
-    gate_sub: "Login with Telegram to verify access.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Login", gate_error: "Access denied. Make sure you are in the VIP group!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "Log out?", home_title: "Premium Dashboard", home_sub: "Select a tool to begin.", back: "Back", run_btn: "Run AI", restart_btn: "Reset All", processing: "AI is processing...", processing_task: "Async task, wait...", processing_pct: (p) => `Working... (${p}%)`, done: "Successfully completed!", error_prefix: "Error: ", generic_error: "Connection failed.", task_failed: "Task failed.", conn_error: "Network error: ", conn_error_task: "Error checking task.", dropzone_text: "Click or drag an image here", loading_options: "Downloading from cloud...", select_placeholder: "Select...", load_error: "Network error", magic_tags_title: "✨ Tap tags to erase:", magic_btn_apply: "Erase Selected", download_btn: "⬇️ Download Design"
+    gate_sub: "Login with Telegram to verify access.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Login", gate_error: "Access denied. Make sure you are in the VIP group!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "Log out?", home_title: "Premium Dashboard", home_sub: "Select a tool to begin.", back: "Back", run_btn: "Run AI", restart_btn: "Reset All", processing: "AI is processing...", processing_task: "Async task, wait...", processing_pct: (p) => `Working... (${p}%)`, done: "Successfully completed!", error_prefix: "Error: ", generic_error: "Connection failed.", task_failed: "Task failed.", conn_error: "Network error: ", conn_error_task: "Error checking task.", dropzone_text: "Click or drag an image here", loading_options: "Downloading from cloud...", select_placeholder: "Select...", load_error: "Network error", magic_tags_title: "✨ Tap tags to erase:", magic_btn_apply: "Erase Selected", download_btn: "⬇️ Download Design (300 DPI)"
   }
 };
 
@@ -412,25 +412,12 @@ function renderForm(model) {
   model.fields.forEach(field => {
     const wrap = document.createElement("div"); wrap.className = "field";
     
-    // 🚀 LÓGICA DE CENTÍMETROS AUTOMÁTICOS
-    if (field.type === "cm_ratio") {
+    // 🚀 LÓGICA DE CENTÍMETROS LIBRES: Ancho y Alto independientes.
+    if (field.type === "cm_ratio_auto") {
         const labelMain = document.createElement("label"); 
-        labelMain.innerHTML = "Medidas y Proporción <span class='req'>*</span>";
+        labelMain.innerHTML = "Medidas en Centímetros <span class='req'>*</span>";
         wrap.appendChild(labelMain);
 
-        // Selector visual de Proporción (Desplegable 1:1, etc)
-        const selectRatio = document.createElement("select");
-        selectRatio.id = "field_" + field.name;
-        selectRatio.name = field.name;
-        selectRatio.style.marginBottom = "15px";
-        const ratios = ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"];
-        ratios.forEach(r => { 
-            const opt = document.createElement("option"); opt.value = r; opt.textContent = `Proporción ${r}`; 
-            selectRatio.appendChild(opt); 
-        });
-        wrap.appendChild(selectRatio);
-
-        // Cajitas de Medidas (CM)
         const row = document.createElement("div"); row.style = "display: flex; gap: 10px;";
         
         const colW = document.createElement("div"); colW.style.flex = "1";
@@ -446,24 +433,36 @@ function renderForm(model) {
         row.appendChild(colW); row.appendChild(colH);
         wrap.appendChild(row);
 
-        const syncSize = (source) => {
-            let parts = selectRatio.value.split(':');
-            let ratio = parseFloat(parts[0]) / parseFloat(parts[1]);
-            if(source === 'W') {
-                let w = parseFloat(inpW.value);
-                if(w > 0) inpH.value = (w / ratio).toFixed(2);
-            } else if (source === 'H') {
-                let h = parseFloat(inpH.value);
-                if(h > 0) inpW.value = (h * ratio).toFixed(2);
-            } else if (source === 'R') {
-                let w = parseFloat(inpW.value);
-                if(w > 0) inpH.value = (w / ratio).toFixed(2);
+        // Input oculto para que SnapEdit reciba la proporción
+        const selectRatio = document.createElement("input");
+        selectRatio.type = "hidden";
+        selectRatio.id = "field_" + field.name;
+        selectRatio.name = field.name;
+        selectRatio.value = "1:1";
+        wrap.appendChild(selectRatio);
+
+        const info = document.createElement("p");
+        info.style = "font-size: 0.75rem; color: var(--ok); margin-top: 8px;";
+        info.innerHTML = "💡 Escribe cualquier medida. La IA calculará la mejor proporción (1:1, 16:9, etc.) para que se vea perfecta.";
+        wrap.appendChild(info);
+
+        const syncSize = () => {
+            let w = parseFloat(inpW.value); let h = parseFloat(inpH.value);
+            if(w > 0 && h > 0) {
+                let ratio = w / h;
+                let closest = "1:1";
+                let minDiff = Math.abs(ratio - 1);
+                const ratiosDict = {"1:1":1, "16:9":16/9, "9:16":9/16, "4:3":4/3, "3:4":3/4, "3:2":3/2, "2:3":2/3};
+                for(let k in ratiosDict) {
+                    let diff = Math.abs(ratio - ratiosDict[k]);
+                    if(diff < minDiff) { minDiff = diff; closest = k; }
+                }
+                selectRatio.value = closest;
             }
         };
 
-        selectRatio.addEventListener("change", () => syncSize('R'));
-        inpW.addEventListener("input", () => syncSize('W'));
-        inpH.addEventListener("input", () => syncSize('H'));
+        inpW.addEventListener("input", syncSize);
+        inpH.addEventListener("input", syncSize);
         
         form.appendChild(wrap);
         return;
@@ -549,12 +548,9 @@ function renderQuickActions(slug) {
     };
 
     let keys = [];
-    
     let is8x = false;
     const zoomEl = document.getElementById("field_zoom_factor");
-    if (zoomEl && zoomEl.value === "8") {
-        is8x = true;
-    }
+    if (zoomEl && zoomEl.value === "8") { is8x = true; }
 
     if (slug.includes("enhance")) {
         if (slug === "enhance-art" && !is8x) {
@@ -567,20 +563,12 @@ function renderQuickActions(slug) {
         }
     } else {
         qaTitle.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Sugerencias de la IA`;
-
-        if (slug.includes("restore") || slug === "light-restore" || slug === "night-flash" || slug === "backlit-fix") {
-            keys = ["colorize", "upscale-faces", "magic-eraser", "light"];
-        } else if (slug.includes("colorize")) {
-            keys = ["restore", "upscale-faces", "magic-eraser"];
-        } else if (slug.includes("remove-background")) {
-            keys = ["upscale-8x", "gen-bg", "magic-eraser"];
-        } else if (slug.includes("generate") || slug.includes("fairy") || slug.includes("sticker")) {
-            keys = ["upscale-8x", "remove-bg", "extract-logo"];
-        } else if (slug === "detect-objects" || slug === "remove-objects" || slug === "erase-text" || slug === "erase-wires") {
-            keys = ["upscale-8x", "remove-bg", "light"];
-        } else {
-            keys = ["upscale-8x", "remove-bg", "magic-eraser"];
-        }
+        if (slug.includes("restore") || slug === "light-restore" || slug === "night-flash" || slug === "backlit-fix") { keys = ["colorize", "upscale-faces", "magic-eraser", "light"]; } 
+        else if (slug.includes("colorize")) { keys = ["restore", "upscale-faces", "magic-eraser"]; } 
+        else if (slug.includes("remove-background")) { keys = ["upscale-8x", "gen-bg", "magic-eraser"]; } 
+        else if (slug.includes("generate") || slug.includes("fairy") || slug.includes("sticker")) { keys = ["upscale-8x", "remove-bg", "extract-logo"]; } 
+        else if (slug === "detect-objects" || slug === "remove-objects" || slug === "erase-text" || slug === "erase-wires") { keys = ["upscale-8x", "remove-bg", "light"]; } 
+        else { keys = ["upscale-8x", "remove-bg", "magic-eraser"]; }
     }
 
     keys.forEach(k => {
@@ -617,20 +605,30 @@ form.addEventListener("submit", async (e) => {
     const res = await fetch(`/run/${model.slug}`, { method: "POST", body: formData });
     mainResultImg.classList.remove("opacity-50", "blur-sm");
     
+    // 💥 AQUÍ OCURRE LA MAGIA. Si el servidor mandó la imagen binaria directa:
     if (!res.headers.get("content-type").includes("application/json")) {
         const blob = await res.blob(); 
         processFinalUrl(URL.createObjectURL(blob));
     } else {
         const data = await res.json();
-        if (data.success && data.url) {
-            processFinalUrl(data.url);
-        } else if (data.error) {
+        if (data.error) {
             statusLine.className = "status-line show error"; statusText.textContent = t("error_prefix") + (data.message || data.detalle || t("generic_error"));
+        } else if (model.slug === "detect-objects" && data.detected_objects) {
+            statusLine.classList.remove("show"); aiSessionId = data.session_id; aiObjects = data.detected_objects; aiSelected.clear();
+            magicTagsPanel.style.display = "block"; tagsContainer.innerHTML = ""; boxesContainer.innerHTML = ""; btnExecuteErase.style.display = "none";
+            const natW = mainResultImg.naturalWidth; const natH = mainResultImg.naturalHeight;
+            aiObjects.forEach((obj, i) => {
+                const tag = document.createElement("span"); tag.className = "ai-tag"; tag.textContent = obj.object_description; tag.onclick = () => toggleAiObject(i, tag); tagsContainer.appendChild(tag);
+                if(obj.box && natW) {
+                    const [xmin, ymin, xmax, ymax] = obj.box; const box = document.createElement('div'); box.id = `box_ai_${i}`; box.className = "ai-box";
+                    box.style.left = `${(xmin / natW) * 100}%`; box.style.top = `${(ymin / natH) * 100}%`; box.style.width = `${((xmax - xmin) / natW) * 100}%`; box.style.height = `${((ymax - ymin) / natH) * 100}%`; boxesContainer.appendChild(box);
+                }
+            });
+            tray.style.display = "block"; renderQuickActions(currentSlug); quickActionsBar.style.display = "block";
+            document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block';
         } else {
             statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
-            jsonViewer.value = JSON.stringify(data, null, 2);
-            jsonViewer.style.display = "block";
-            document.getElementById('imgContainer').style.display = 'none';
+            jsonViewer.value = JSON.stringify(data, null, 2); jsonViewer.style.display = "block"; document.getElementById('imgContainer').style.display = 'none';
         }
     }
   } catch (err) {
@@ -695,23 +693,13 @@ async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
     }
 }
 
-// 💥 AQUÍ ESTÁ EL PUENTE QUE GARANTIZA LA VISTA PREVIA Y LA DESCARGA PERFECTA
+// 💥 AQUÍ SE RECIBE EL ARCHIVO SANO DESDE PYTHON
 function processFinalUrl(url) {
-    let displayUrl = url;
-    let downloadUrl = url;
-    
-    // Si viene de SnapEdit, la pasamos por nuestro servidor de Python
-    if(url.startsWith("http")) {
-        displayUrl = "/proxy-image?url=" + encodeURIComponent(url);
-        downloadUrl = "/proxy-image?url=" + encodeURIComponent(url) + "&dl=1";
-    }
-    
-    urlResultMemoria = displayUrl; 
-    mainResultImg.src = displayUrl; // Bypassa la seguridad y muestra la imagen
-    
+    urlResultMemoria = url; mainResultImg.src = url;
     statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
     
-    btnDownloadResult.href = downloadUrl; // Forzamos la descarga del archivo sano
+    btnDownloadResult.href = url;
+    btnDownloadResult.setAttribute("download", "JJ_Studio_Diseño.png");
     btnDownloadResult.style.display = "block";
     btnDownloadResult.onclick = null;
     
