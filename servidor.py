@@ -50,9 +50,9 @@ MODELS = [
     {"slug": "colorize-pro", "label": L("Colorear B/N (Pro)", "Colorize B/W (Pro)"), "icon": "fa-paint-roller", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Colorización avanzada.", "Advanced colorization."), "endpoint": "/v1/images/colorize/pro", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "light-restore", "label": L("Corregir Iluminación", "Fix Lighting"), "icon": "fa-sun", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Arregla fotos oscuras.", "Fixes dark photos."), "endpoint": "/v1/images/light-restore", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    # --- Generación (Con Menú de Proporción y CM) ---
-    {"slug": "generate-zimage", "label": L("Crear: Z-Image (Texto)", "Create: Z-Image (Text)"), "icon": "fa-rocket", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Crea imagen rápida.", "Create image fast."), "endpoint": "/v1/images/generates/zimage", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "cm_ratio", "label": L("Proporción y Medidas", "Size & Ratio")}]},
-    {"slug": "generate-qwen", "label": L("Crear: Qwen (Texto)", "Create: Qwen (Text)"), "icon": "fa-brain", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Motor HD realista.", "HD realistic engine."), "endpoint": "/v1/images/generates/qwen", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "cm_ratio", "label": L("Proporción y Medidas", "Size & Ratio")}]},
+    # --- Generación (Cajas CM libres sin desplegable) ---
+    {"slug": "generate-zimage", "label": L("Crear: Z-Image (Texto)", "Create: Z-Image (Text)"), "icon": "fa-rocket", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Crea imagen rápida.", "Create image fast."), "endpoint": "/v1/images/generates/zimage", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "cm_ratio_auto", "label": L("Medidas (Ancho y Alto cm)", "Size (cm)")}]},
+    {"slug": "generate-qwen", "label": L("Crear: Qwen (Texto)", "Create: Qwen (Text)"), "icon": "fa-brain", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Motor HD realista.", "HD realistic engine."), "endpoint": "/v1/images/generates/qwen", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "cm_ratio_auto", "label": L("Medidas (Ancho y Alto cm)", "Size (cm)")}]},
     
     {"slug": "fairy-art", "label": L("Retrato a Arte", "Portrait to Art"), "icon": "fa-wand-magic-sparkles", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Convierte fotos a Anime/3D.", "Convert photos to Anime/3D."), "endpoint": "/v1/images/generates/art", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "style", "type": "select", "label": L("Estilo", "Style"), "required": True, "options_url": "https://storage.googleapis.com/assets.snapedit.app/fairyai/anime_styles_6mar25.json"}]},
     {"slug": "generate-background", "label": L("Generar Fondo Nuevo", "Generate Background"), "icon": "fa-image", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Fondo para productos.", "Background for products."), "endpoint": "/v1/images/generates-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Descripción del fondo", "Background prompt"), "required": True}]},
@@ -111,28 +111,6 @@ def style_list():
     if not url or not any(url.startswith(f"https://{d}") for d in ALLOWED_STYLE_DOMAINS): return jsonify({"error": True}), 400
     try: return jsonify(requests.get(url, timeout=15).json())
     except: return jsonify({"error": True}), 500
-
-# 💥 NUEVO PUENTE TRANSPARENTE DE DESCARGA Y VISTA PREVIA (Evita archivos corruptos)
-@app.route("/proxy-image")
-def proxy_image():
-    url = request.args.get("url")
-    dl = request.args.get("dl", "0")
-    if not url: return "No URL", 400
-    try:
-        # Descargamos la imagen original de SnapEdit
-        r = requests.get(url, timeout=60)
-        if r.status_code != 200:
-            return "Error CDN SnapEdit", 400
-            
-        headers = {}
-        if dl == "1":
-            # Le decimos al navegador que lo guarde en el PC
-            headers["Content-Disposition"] = "attachment; filename=JJ_Studio_Diseño.png"
-            
-        # Entregamos la imagen INTACTA, cero manipulación de píxeles
-        return Response(r.content, mimetype=r.headers.get("Content-Type", "image/png"), headers=headers)
-    except Exception as e:
-        return str(e), 500
 
 @app.route("/verify-telegram", methods=["POST"])
 def verify_telegram():
@@ -213,32 +191,56 @@ def run_model(slug):
                 if "prompt" in data: payload["prompt"] = data["prompt"]
                 if "aspect_ratio" in data: payload["aspect_ratio"] = data["aspect_ratio"]
                 
-                # 🚀 Enviar parámetros Z-Image / Qwen como JSON nativo
+                # 🚀 Enviar JSON puro a Z-Image
                 headers_gen = {"api-key": API_KEY, "Content-Type": "application/json"}
                 response = requests.post(BASE + model["endpoint"], headers=headers_gen, json=payload, timeout=120)
             else:
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
         
-        content_type = response.headers.get("Content-Type", "")
-        
-        # Respuestas de la IA
-        if "application/json" in content_type:
-            datos = response.json()
-            if response.status_code == 200:
-                # Buscamos la URL generada en el JSON
+        # 💥 SOLUCIÓN DEFINITIVA: Python descarga la imagen y le inyecta 300 DPI de forma segura
+        if response.status_code == 200:
+            if "application/json" in response.headers.get("Content-Type", ""):
+                datos = response.json()
+                # Extraemos la URL generada
+                url_img = None
                 if "data" in datos and isinstance(datos["data"], list) and len(datos["data"]) > 0 and "url" in datos["data"][0]:
-                    return jsonify({"success": True, "url": datos["data"][0]["url"]}), 200
+                    url_img = datos["data"][0]["url"]
                 elif "data" in datos and isinstance(datos["data"], dict) and "url" in datos["data"]:
-                    return jsonify({"success": True, "url": datos["data"]["url"]}), 200
+                    url_img = datos["data"]["url"]
                 elif "url" in datos:
-                    return jsonify({"success": True, "url": datos["url"]}), 200
+                    url_img = datos["url"]
+
+                if url_img:
+                    # Python descarga el archivo (Como en Telegram)
+                    try:
+                        r_img = requests.get(url_img, timeout=60)
+                        if r_img.status_code == 200:
+                            try:
+                                # Inyectamos 300 DPI
+                                img_obj = Image.open(io.BytesIO(r_img.content))
+                                buf = io.BytesIO()
+                                img_obj.save(buf, format="PNG", dpi=(300, 300))
+                                return Response(buf.getvalue(), mimetype="image/png")
+                            except:
+                                # Si falla el DPI, devolvemos la original intacta
+                                return Response(r_img.content, mimetype="image/png")
+                        else:
+                            return jsonify({"error": True, "message": "Fallo al descargar la imagen."}), 400
+                    except Exception as e:
+                        return jsonify({"error": True, "message": str(e)}), 400
                 else:
                     return jsonify(datos), 200
             else:
-                return jsonify({"error": True, "message": datos.get("message", str(datos))}), 400
+                # Si la API respondió en binario directo
+                try:
+                    img_obj = Image.open(io.BytesIO(response.content))
+                    buf = io.BytesIO()
+                    img_obj.save(buf, format="PNG", dpi=(300, 300))
+                    return Response(buf.getvalue(), mimetype="image/png")
+                except:
+                    return Response(response.content, mimetype=response.headers.get("Content-Type", "image/png"))
         else:
-            # Respuesta Binaria (Bypass limpio sin corromper la imagen)
-            return Response(response.content, mimetype=content_type), response.status_code
+            return jsonify({"error": True, "message": f"Error SnapEdit: {response.text}"}), 400
 
     except Exception as e: 
         print(f"❌ ERROR: {str(e)}")
