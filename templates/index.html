@@ -129,7 +129,7 @@
   .ai-box { position: absolute; border: 2px solid transparent; border-radius: 6px; pointer-events: none; transition: 0.2s; }
   .ai-box.selected { border-color: var(--red-bright); background: rgba(255,45,58,0.2); box-shadow: 0 0 15px rgba(255,45,58,0.6); }
 
-  /* 🚀 BOTONES ASEGURADOS (MANTIENEN SUS COLORES ORIGINALES) */
+  /* BOTONES */
   .btn-primary { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--red-bright), var(--red-dim)); color: #fff; border: none; border-radius: 8px; font-weight: 900; font-size: 0.9rem; text-transform: uppercase; cursor: pointer; transition: 0.2s ease; box-shadow: 0 5px 15px rgba(255,45,58,0.3); margin-top: 15px;}
   .btn-primary:hover:not(:disabled) { transform: scale(1.02); filter: brightness(1.15); }
   .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -282,10 +282,10 @@
 <script>
 const UI = {
   es: {
-    gate_sub: "Inicia sesión con Telegram para verificar tu acceso.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Ingresar", gate_error: "No tienes acceso. ¡Asegúrate de estar en el grupo VIP!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "¿Cerrar sesión?", home_title: "Panel Premium", home_sub: "Selecciona una herramienta para comenzar.", back: "Volver", run_btn: "Procesar con IA", restart_btn: "Reiniciar Todo", processing: "La IA está procesando...", processing_task: "Tarea asíncrona, espere...", processing_pct: (p) => `Trabajando... (${p}%)`, done: "¡Completado exitosamente!", error_prefix: "Error: ", generic_error: "Fallo de conexión.", task_failed: "La tarea ha fallado.", conn_error: "Error de red: ", conn_error_task: "Error al consultar la tarea.", dropzone_text: "Haz clic o arrastra una imagen", loading_options: "Descargando de internet...", select_placeholder: "Selecciona...", load_error: "Error de red", magic_tags_title: "✨ Toca las etiquetas para borrar:", magic_btn_apply: "Borrar Seleccionados", download_btn: "Descargar Imagen"
+    gate_sub: "Inicia sesión con Telegram para verificar tu acceso.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Ingresar", gate_error: "No tienes acceso. ¡Asegúrate de estar en el grupo VIP!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "¿Cerrar sesión?", home_title: "Panel Premium", home_sub: "Selecciona una herramienta para comenzar.", back: "Volver", run_btn: "Procesar con IA", restart_btn: "Reiniciar Todo", processing: "La IA está procesando...", processing_task: "Tarea asíncrona, espere...", processing_pct: (p) => `Trabajando... (${p}%)`, done: "¡Completado exitosamente!", error_prefix: "Error: ", generic_error: "Fallo de conexión.", task_failed: "La tarea ha fallado.", conn_error: "Error de red: ", conn_error_task: "Error al consultar la tarea.", dropzone_text: "Haz clic o arrastra una imagen", loading_options: "Descargando de internet...", select_placeholder: "Selecciona...", load_error: "Error de red", magic_tags_title: "✨ Toca las etiquetas para borrar:", magic_btn_apply: "Borrar Seleccionados", download_btn: "Descargar Alta Calidad"
   },
   en: {
-    gate_sub: "Login with Telegram to verify access.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Login", gate_error: "Access denied. Make sure you are in the VIP group!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "Log out?", home_title: "Premium Dashboard", home_sub: "Select a tool to begin.", back: "Back", run_btn: "Run AI", restart_btn: "Reset All", processing: "AI is processing...", processing_task: "Async task, wait...", processing_pct: (p) => `Working... (${p}%)`, done: "Successfully completed!", error_prefix: "Error: ", generic_error: "Connection failed.", task_failed: "Task failed.", conn_error: "Network error: ", conn_error_task: "Error checking task.", dropzone_text: "Click or drag an image here", loading_options: "Downloading from cloud...", select_placeholder: "Select...", load_error: "Network error", magic_tags_title: "✨ Tap tags to erase:", magic_btn_apply: "Erase Selected", download_btn: "Download Image"
+    gate_sub: "Login with Telegram to verify access.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Login", gate_error: "Access denied. Make sure you are in the VIP group!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "Log out?", home_title: "Premium Dashboard", home_sub: "Select a tool to begin.", back: "Back", run_btn: "Run AI", restart_btn: "Reset All", processing: "AI is processing...", processing_task: "Async task, wait...", processing_pct: (p) => `Working... (${p}%)`, done: "Successfully completed!", error_prefix: "Error: ", generic_error: "Connection failed.", task_failed: "Task failed.", conn_error: "Network error: ", conn_error_task: "Error checking task.", dropzone_text: "Click or drag an image here", loading_options: "Downloading from cloud...", select_placeholder: "Select...", load_error: "Network error", magic_tags_title: "✨ Tap tags to erase:", magic_btn_apply: "Erase Selected", download_btn: "Download High Quality"
   }
 };
 
@@ -412,64 +412,60 @@ function renderForm(model) {
   model.fields.forEach(field => {
     const wrap = document.createElement("div"); wrap.className = "field";
     
-    // 🚀 LÓGICA MÁGICA: Selector de Centímetros Automático para Generación
+    // 🚀 NUEVA LÓGICA DE CENTÍMETROS AUTOMÁTICOS
     if (field.type === "cm_ratio") {
         const labelMain = document.createElement("label"); 
-        labelMain.textContent = tl(field.label).split('|')[0].trim();
+        labelMain.innerHTML = "Medidas y Proporción <span class='req'>*</span>";
         wrap.appendChild(labelMain);
 
-        const row = document.createElement("div"); 
-        row.style = "display: flex; gap: 15px; margin-bottom: 5px;";
+        // Selector visual de Proporción
+        const selectRatio = document.createElement("select");
+        selectRatio.id = "field_" + field.name;
+        selectRatio.name = field.name;
+        selectRatio.style.marginBottom = "10px";
+        const ratios = ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"];
+        ratios.forEach(r => { 
+            const opt = document.createElement("option"); opt.value = r; opt.textContent = `Proporción ${r}`; 
+            selectRatio.appendChild(opt); 
+        });
+        wrap.appendChild(selectRatio);
+
+        // Cajitas de Ancho y Alto en CM
+        const row = document.createElement("div"); row.style = "display: flex; gap: 10px;";
         
         const colW = document.createElement("div"); colW.style.flex = "1";
-        const inpW = document.createElement("input"); inpW.type = "number"; inpW.placeholder = "Ancho (cm)"; inpW.id = "cm_width"; inpW.required = true;
-        colW.appendChild(inpW);
+        const labelW = document.createElement("label"); labelW.textContent = "Ancho (cm)"; labelW.style.fontSize="0.75rem"; labelW.style.color="#aaa"; labelW.style.textTransform="none";
+        const inpW = document.createElement("input"); inpW.type = "number"; inpW.value = "20"; inpW.step = "0.01";
+        colW.appendChild(labelW); colW.appendChild(inpW);
         
         const colH = document.createElement("div"); colH.style.flex = "1";
-        const inpH = document.createElement("input"); inpH.type = "number"; inpH.placeholder = "Alto (cm)"; inpH.id = "cm_height"; inpH.required = true;
-        colH.appendChild(inpH);
+        const labelH = document.createElement("label"); labelH.textContent = "Alto (cm)"; labelH.style.fontSize="0.75rem"; labelH.style.color="#aaa"; labelH.style.textTransform="none";
+        const inpH = document.createElement("input"); inpH.type = "number"; inpH.value = "20"; inpH.step = "0.01";
+        colH.appendChild(labelH); colH.appendChild(inpH);
         
         row.appendChild(colW); row.appendChild(colH);
         wrap.appendChild(row);
 
-        const selectApi = document.createElement("select");
-        selectApi.id = "field_" + field.name;
-        selectApi.name = field.name;
-        selectApi.style.display = "none";
-        
-        const validRatios = field.options ? field.options.map(o => o.value) : ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"];
-        validRatios.forEach(r => { const opt = document.createElement("option"); opt.value = r; selectApi.appendChild(opt); });
-        selectApi.value = "1:1";
-        wrap.appendChild(selectApi);
+        const info = document.createElement("p");
+        info.style = "font-size: 0.75rem; color: var(--ok); margin-top: 8px; font-weight: bold;";
+        info.innerHTML = "<i class='fa-solid fa-print'></i> Imagen optimizada para impresión (300 DPI)";
+        wrap.appendChild(info);
 
-        const displayRatio = document.createElement("div");
-        displayRatio.style = "font-size: 0.85rem; color: var(--text-dim); margin-top: 5px;";
-        displayRatio.innerHTML = "La IA ajustará la proporción a: <b id='ratio_badge' style='color:var(--ok);'>1:1</b>";
-        wrap.appendChild(displayRatio);
-
-        const calcRatio = () => {
-            let w = parseFloat(inpW.value); let h = parseFloat(inpH.value);
-            if(w > 0 && h > 0) {
-                let ratio = w / h;
-                let closest = "1:1";
-                let minDiff = Math.abs(ratio - 1);
-                
-                const ratiosDict = {};
-                validRatios.forEach(r => {
-                   let parts = r.split(':');
-                   if(parts.length===2) ratiosDict[r] = parseInt(parts[0]) / parseInt(parts[1]);
-                });
-                
-                for(let k in ratiosDict) {
-                    let diff = Math.abs(ratio - ratiosDict[k]);
-                    if(diff < minDiff) { minDiff = diff; closest = k; }
-                }
-                selectApi.value = closest;
-                document.getElementById('ratio_badge').innerText = closest;
+        const syncSize = (source) => {
+            let parts = selectRatio.value.split(':');
+            let ratio = parseFloat(parts[0]) / parseFloat(parts[1]);
+            if(source === 'W') {
+                let w = parseFloat(inpW.value);
+                if(w > 0) inpH.value = (w / ratio).toFixed(2);
+            } else {
+                let h = parseFloat(inpH.value);
+                if(h > 0) inpW.value = (h * ratio).toFixed(2);
             }
         };
-        inpW.addEventListener("input", calcRatio);
-        inpH.addEventListener("input", calcRatio);
+
+        selectRatio.addEventListener("change", () => syncSize('W'));
+        inpW.addEventListener("input", () => syncSize('W'));
+        inpH.addEventListener("input", () => syncSize('H'));
         
         form.appendChild(wrap);
         return;
@@ -622,61 +618,21 @@ form.addEventListener("submit", async (e) => {
   try {
     const res = await fetch(`/run/${model.slug}`, { method: "POST", body: formData });
     mainResultImg.classList.remove("opacity-50", "blur-sm");
-    const contentType = res.headers.get("content-type");
     
-    if (contentType && contentType.includes("application/json")) {
-        const data = await res.json();
-        if (!res.ok || data.error) {
-            statusLine.className = "status-line show error"; statusText.textContent = t("error_prefix") + (data.message || data.detalle || t("generic_error"));
-        } 
-        else if (model.slug === "detect-objects" && data.detected_objects) {
-            statusLine.classList.remove("show"); aiSessionId = data.session_id; aiObjects = data.detected_objects; aiSelected.clear();
-            magicTagsPanel.style.display = "block"; tagsContainer.innerHTML = ""; boxesContainer.innerHTML = ""; btnExecuteErase.style.display = "none";
-            const natW = mainResultImg.naturalWidth; const natH = mainResultImg.naturalHeight;
-            aiObjects.forEach((obj, i) => {
-                const tag = document.createElement("span"); tag.className = "ai-tag"; tag.textContent = obj.object_description; tag.onclick = () => toggleAiObject(i, tag); tagsContainer.appendChild(tag);
-                if(obj.box && natW) {
-                    const [xmin, ymin, xmax, ymax] = obj.box; const box = document.createElement('div'); box.id = `box_ai_${i}`; box.className = "ai-box";
-                    box.style.left = `${(xmin / natW) * 100}%`; box.style.top = `${(ymin / natH) * 100}%`; box.style.width = `${((xmax - xmin) / natW) * 100}%`; box.style.height = `${((ymax - ymin) / natH) * 100}%`; boxesContainer.appendChild(box);
-                }
-            });
-            tray.style.display = "block"; 
-            renderQuickActions(currentSlug);
-            quickActionsBar.style.display = "block";
-            document.getElementById('imgContainer').style.display = 'inline-block';
-            document.getElementById('btnCentrar').style.display = 'block';
-            document.getElementById('btnZoomLabel').style.display = 'block';
-        }
-        else if (model.response_type === "task") { statusText.textContent = t("processing_task"); pollTask(model.slug, data.task_id); } 
-        // 🚀 CATCH DE RESPALDO (Por si el servidor de SnapEdit envía JSON en lugar de la imagen)
-        else if (data.data || data.url || data.image_url) {
-            let urlF = data.url || data.image_url;
-            if (!urlF && data.data) {
-                if (Array.isArray(data.data) && data.data.length > 0) urlF = data.data[0].url;
-                else if (data.data.url) urlF = data.data.url;
-            }
-            if(urlF) processFinalUrl(urlF);
-            else { 
-                statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
-                tray.style.display = "block";
-                document.getElementById('imgContainer').style.display = 'none';
-                document.getElementById('btnCentrar').style.display = 'none';
-                document.getElementById('btnZoomLabel').style.display = 'none';
-                jsonViewer.value = JSON.stringify(data.data || data, null, 2);
-                jsonViewer.style.display = "block";
-            }
-        } else {
-            statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
-            tray.style.display = "block";
-            document.getElementById('imgContainer').style.display = 'none';
-            document.getElementById('btnCentrar').style.display = 'none';
-            document.getElementById('btnZoomLabel').style.display = 'none';
-            jsonViewer.value = JSON.stringify(data, null, 2);
-            jsonViewer.style.display = "block";
-        }
-    } else {
+    // Si la respuesta es de imagen directa (binario), la procesamos
+    if (!res.headers.get("content-type").includes("application/json")) {
         const blob = await res.blob(); 
         processFinalUrl(URL.createObjectURL(blob));
+    } else {
+        const data = await res.json();
+        if (data.error) {
+            statusLine.className = "status-line show error"; statusText.textContent = t("error_prefix") + (data.message || data.detalle || t("generic_error"));
+        } else {
+            statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
+            jsonViewer.value = JSON.stringify(data, null, 2);
+            jsonViewer.style.display = "block";
+            document.getElementById('imgContainer').style.display = 'none';
+        }
     }
   } catch (err) {
     statusLine.className = "status-line show error"; statusText.textContent = t("conn_error") + err.message; mainResultImg.classList.remove("opacity-50", "blur-sm");
@@ -727,37 +683,13 @@ async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
         const res = await fetch(`/run/${targetSlug}`, { method: "POST", body: formData });
         mainResultImg.classList.remove("opacity-50", "blur-sm");
         
-        const contentType = res.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-            const data = await res.json();
-            if(data.error) throw new Error(data.message);
-            
-            if (targetSlug === "detect-objects" && data.detected_objects) {
-                currentSlug = "detect-objects";
-                statusLine.classList.remove("show"); aiSessionId = data.session_id; aiObjects = data.detected_objects; aiSelected.clear();
-                magicTagsPanel.style.display = "block"; tagsContainer.innerHTML = ""; boxesContainer.innerHTML = ""; btnExecuteErase.style.display = "none";
-                const natW = mainResultImg.naturalWidth; const natH = mainResultImg.naturalHeight;
-                aiObjects.forEach((obj, i) => {
-                    const tag = document.createElement("span"); tag.className = "ai-tag"; tag.textContent = obj.object_description; tag.onclick = () => toggleAiObject(i, tag); tagsContainer.appendChild(tag);
-                    if(obj.box && natW) {
-                        const [xmin, ymin, xmax, ymax] = obj.box; const box = document.createElement('div'); box.id = `box_ai_${i}`; box.className = "ai-box";
-                        box.style.left = `${(xmin / natW) * 100}%`; box.style.top = `${(ymin / natH) * 100}%`; box.style.width = `${((xmax - xmin) / natW) * 100}%`; box.style.height = `${((ymax - ymin) / natH) * 100}%`; boxesContainer.appendChild(box);
-                    }
-                });
-                renderQuickActions("detect-objects");
-                quickActionsBar.style.display = "block";
-            } else if(data.data || data.url || data.image_url) {
-                let urlF = data.url || data.image_url;
-                if (!urlF && data.data) {
-                    if (Array.isArray(data.data) && data.data.length > 0) urlF = data.data[0].url;
-                    else if (data.data.url) urlF = data.data.url;
-                }
-                if(urlF) { currentSlug = targetSlug; processFinalUrl(urlF); }
-            }
-        } else {
+        if (!res.headers.get("content-type").includes("application/json")) {
             currentSlug = targetSlug;
             const blobFinal = await res.blob(); 
             processFinalUrl(URL.createObjectURL(blobFinal));
+        } else {
+            const data = await res.json();
+            if(data.error) throw new Error(data.message);
         }
     } catch(err) {
         alert("Atención: La imagen generada puede ser demasiado grande para esta herramienta."); mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block";
@@ -768,9 +700,14 @@ function processFinalUrl(url) {
     urlResultMemoria = url; mainResultImg.src = url;
     statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
     
-    const proxyUrl = "/download?url=" + encodeURIComponent(url);
-    btnDownloadResult.href = proxyUrl;
-    btnDownloadResult.setAttribute("download", "JJ_Studio_IA_" + Date.now() + ".png");
+    // 💥 Enlazamos el botón de descarga correctamente
+    if(url.startsWith("blob:")) {
+        btnDownloadResult.href = url;
+    } else {
+        btnDownloadResult.href = "/download?url=" + encodeURIComponent(url);
+    }
+    
+    btnDownloadResult.setAttribute("download", "JJ_Studio_IA_300DPI.png");
     btnDownloadResult.style.display = "block";
     btnDownloadResult.onclick = null;
     
@@ -831,31 +768,17 @@ btnExecuteErase.addEventListener("click", async () => {
     try {
         const res = await fetch(`/run/execute-magic-erase`, { method: "POST", body: formData });
         mainResultImg.classList.remove("opacity-50", "blur-sm");
-        if(res.headers.get("content-type").includes("application/json")){
+        
+        if (!res.headers.get("content-type").includes("application/json")) {
+            const blob = await res.blob(); processFinalUrl(URL.createObjectURL(blob));
+        } else {
             const json = await res.json();
             if(json.error) throw new Error(json.message || json.detalle || "Parámetros incorrectos");
-            let urlF = json.data && Array.isArray(json.data) ? json.data[0].url : (json.data && json.data.url ? json.data.url : json.url);
-            if(urlF) processFinalUrl(urlF);
-        } else {
-            const blob = await res.blob(); processFinalUrl(URL.createObjectURL(blob));
         }
         magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = "";
     } catch(err) { alert("Error al borrar: " + err.message); mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block"; } 
     finally { btnExecuteErase.disabled = false; btnExecuteErase.innerHTML = `<i class="fa-solid fa-eraser mr-2"></i> ` + t("magic_btn_apply"); }
 });
-
-function pollTask(slug, taskId) {
-  const interval = setInterval(async () => {
-    try {
-      const res = await fetch(`/task-status/${slug}/${taskId}`); const data = await res.json();
-      if (data.status === "COMPLETED") {
-        clearInterval(interval); processFinalUrl(data.download_url);
-      } else if (data.status === "FAILED" || data.error) {
-        clearInterval(interval); statusLine.className = "status-line show error"; statusText.textContent = t("error_prefix") + (data.error_msg || data.message || t("task_failed"));
-      } else { statusText.textContent = t("processing_pct", data.progress || 0); }
-    } catch (err) { clearInterval(interval); statusLine.className = "status-line show error"; statusText.textContent = t("conn_error_task"); }
-  }, 2500);
-}
 
 document.querySelectorAll(".lang-switch button").forEach(btn => { btn.classList.toggle("active", btn.dataset.lang === currentLang); });
 applyStaticText(); checkSession();
