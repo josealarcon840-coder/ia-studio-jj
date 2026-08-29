@@ -50,9 +50,9 @@ MODELS = [
     {"slug": "colorize-pro", "label": L("Colorear B/N (Pro)", "Colorize B/W (Pro)"), "icon": "fa-paint-roller", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Colorización avanzada.", "Advanced colorization."), "endpoint": "/v1/images/colorize/pro", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "light-restore", "label": L("Corregir Iluminación", "Fix Lighting"), "icon": "fa-sun", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Arregla fotos oscuras.", "Fixes dark photos."), "endpoint": "/v1/images/light-restore", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    # --- Generación (Con Selector CM Inteligente) ---
-    {"slug": "generate-zimage", "label": L("Crear: Z-Image (Texto)", "Create: Z-Image (Text)"), "icon": "fa-rocket", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Crea imagen rápida.", "Create image fast."), "endpoint": "/v1/images/generates/zimage", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "cm_ratio", "label": L("Medidas (Ancho y Alto cm)", "Size (cm)"), "options": [{"value": "1:1"}, {"value": "16:9"}, {"value": "9:16"}, {"value": "4:3"}, {"value": "3:4"}, {"value": "3:2"}, {"value": "2:3"}]}]},
-    {"slug": "generate-qwen", "label": L("Crear: Qwen (Texto)", "Create: Qwen (Text)"), "icon": "fa-brain", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Motor HD realista.", "HD realistic engine."), "endpoint": "/v1/images/generates/qwen", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "cm_ratio", "label": L("Medidas (Ancho y Alto cm)", "Size (cm)"), "options": [{"value": "1:1"}, {"value": "16:9"}, {"value": "9:16"}, {"value": "4:3"}, {"value": "3:4"}, {"value": "3:2"}, {"value": "2:3"}]}]},
+    # --- Generación (Con Calculadora CM) ---
+    {"slug": "generate-zimage", "label": L("Crear: Z-Image (Texto)", "Create: Z-Image (Text)"), "icon": "fa-rocket", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Crea imagen rápida.", "Create image fast."), "endpoint": "/v1/images/generates/zimage", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "cm_ratio", "label": L("Proporción y Medidas", "Size & Ratio"), "options": [{"value": "1:1"}, {"value": "16:9"}, {"value": "9:16"}, {"value": "4:3"}, {"value": "3:4"}, {"value": "3:2"}, {"value": "2:3"}]}]},
+    {"slug": "generate-qwen", "label": L("Crear: Qwen (Texto)", "Create: Qwen (Text)"), "icon": "fa-brain", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Motor HD realista.", "HD realistic engine."), "endpoint": "/v1/images/generates/qwen", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "cm_ratio", "label": L("Proporción y Medidas", "Size & Ratio"), "options": [{"value": "1:1"}, {"value": "16:9"}, {"value": "9:16"}, {"value": "4:3"}, {"value": "3:4"}, {"value": "3:2"}, {"value": "2:3"}]}]},
     
     {"slug": "fairy-art", "label": L("Retrato a Arte", "Portrait to Art"), "icon": "fa-wand-magic-sparkles", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Convierte fotos a Anime/3D.", "Convert photos to Anime/3D."), "endpoint": "/v1/images/generates/art", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "style", "type": "select", "label": L("Estilo", "Style"), "required": True, "options_url": "https://storage.googleapis.com/assets.snapedit.app/fairyai/anime_styles_6mar25.json"}]},
     {"slug": "generate-background", "label": L("Generar Fondo Nuevo", "Generate Background"), "icon": "fa-image", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Fondo para productos.", "Background for products."), "endpoint": "/v1/images/generates-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Descripción del fondo", "Background prompt"), "required": True}]},
@@ -64,6 +64,20 @@ MODELS = [
 ]
 
 MODELS_BY_SLUG = {m["slug"]: m for m in MODELS}
+
+# 🚀 CAZADOR RECURSIVO DE URLs
+def find_image_url(obj):
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            if k in ["url", "image_url", "download_url", "file_url", "out_url", "result"] and isinstance(v, str) and v.startswith("http"):
+                return v
+            res = find_image_url(v)
+            if res: return res
+    elif isinstance(obj, list):
+        for item in obj:
+            res = find_image_url(item)
+            if res: return res
+    return None
 
 def resize_if_needed(file_bytes, slug, original_filename="image.jpg"):
     try:
@@ -111,6 +125,20 @@ def style_list():
     if not url or not any(url.startswith(f"https://{d}") for d in ALLOWED_STYLE_DOMAINS): return jsonify({"error": True}), 400
     try: return jsonify(requests.get(url, timeout=15).json())
     except: return jsonify({"error": True}), 500
+
+@app.route("/download")
+def download_image():
+    # Ruta especial para descargar imágenes de URL externa forzando 300 DPI
+    url = request.args.get("url")
+    if not url: return "No URL", 400
+    try:
+        r = requests.get(url, timeout=60)
+        img = Image.open(io.BytesIO(r.content))
+        buf = io.BytesIO()
+        img.save(buf, format="PNG", dpi=(300, 300))
+        return Response(buf.getvalue(), mimetype="image/png", headers={"Content-Disposition": "attachment; filename=JJ_Studio_300DPI.png"})
+    except Exception as e:
+        return str(e), 500
 
 @app.route("/verify-telegram", methods=["POST"])
 def verify_telegram():
@@ -190,56 +218,55 @@ def run_model(slug):
                 payload = {}
                 if "prompt" in data: payload["prompt"] = data["prompt"]
                 if "aspect_ratio" in data: payload["aspect_ratio"] = data["aspect_ratio"]
-                print(f"👉 Enviando a SnapEdit (Formulario): {payload}") # Terminal
-                
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, data=payload, timeout=120)
             else:
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
         
         content_type = response.headers.get("Content-Type", "")
         
-        # 🚀 RESPUESTA DE SNAPEDIT (MEJORADO PARA ATRAPAR LA IMAGEN SIEMPRE)
+        # 🚀 RESPUESTA JSON DE SNAPEDIT (Cazador de URLs activado)
         if "application/json" in content_type: 
             d_json = response.json()
             
             if response.status_code == 200:
-                img_url = None
-                
-                # Cazador de URL inteligente
-                if "data" in d_json:
-                    if isinstance(d_json["data"], list) and len(d_json["data"]) > 0 and "url" in d_json["data"][0]:
-                        img_url = d_json["data"][0]["url"]
-                    elif isinstance(d_json["data"], dict) and "url" in d_json["data"]:
-                        img_url = d_json["data"]["url"]
-                elif "url" in d_json:
-                    img_url = d_json["url"]
-                elif "image_url" in d_json:
-                    img_url = d_json["image_url"]
+                # 1. Buscamos cualquier URL válida dentro del JSON
+                img_url = find_image_url(d_json)
 
-                # Si logramos atrapar el URL de la imagen, la descargamos directo
                 if img_url:
                     r_img = requests.get(img_url, timeout=60)
                     if r_img.status_code == 200:
-                        return Response(r_img.content, mimetype=r_img.headers.get("Content-Type", "image/png"))
+                        # 💥 MAGIA 300 DPI: Convertimos a calidad de impresión
+                        try:
+                            img_obj = Image.open(io.BytesIO(r_img.content))
+                            buf = io.BytesIO()
+                            img_obj.save(buf, format="PNG", dpi=(300, 300))
+                            return Response(buf.getvalue(), mimetype="image/png")
+                        except:
+                            return Response(r_img.content, mimetype="image/png")
                     else:
-                        return jsonify({"error": True, "message": "Fallo al descargar la imagen generada."}), 400
-                        
+                        return jsonify({"error": True, "message": "Fallo al descargar la imagen final."}), 400
+                
+                # Si es el borrador mágico o algo sin URL directa
                 return jsonify(d_json), 200
             
-            # Si SnapEdit Lanza un Error
             else:
                 error_msg = d_json.get("message", str(d_json))
-                print(f"❌ ERROR DE SNAPEDIT: {error_msg}")
                 return jsonify({"error": True, "message": f"Mensaje de la API: {error_msg}"}), 400
             
         if response.status_code != 200:
             return jsonify({"error": True, "message": f"Error desconocido ({response.status_code})."}), 400
 
-        # Respuesta normal (imagen directa en binario)
-        return Response(response.content, mimetype=content_type), response.status_code
+        # Respuesta binaria directa (Inyectamos 300 DPI aquí también)
+        try:
+            img_obj = Image.open(io.BytesIO(response.content))
+            buf = io.BytesIO()
+            img_obj.save(buf, format="PNG", dpi=(300, 300))
+            return Response(buf.getvalue(), mimetype="image/png")
+        except:
+            return Response(response.content, mimetype=content_type), response.status_code
 
     except Exception as e: 
-        print(f"❌ ERROR DEL SERVIDOR: {str(e)}")
+        print(f"❌ ERROR: {str(e)}")
         return jsonify({"error": True, "message": f"Error interno: {str(e)}"}), 400
     finally:
         gc.collect()
