@@ -116,8 +116,6 @@
   .viewer-container { width: 100%; min-height: 450px; height: 100%; border-radius: 16px; border: 1px solid #333; overflow: hidden; position: relative; background: #080808; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); cursor: grab; }
   .viewer-container:active { cursor: grabbing; }
   #viewerWrapper { transform-origin: center center; transition: transform 0.1s ease-out; position: relative; display: inline-block;}
-  
-  /* 💥 ESTA LÍNEA EVITA QUE EL NAVEGADOR BLOQUEE LA VISTA PREVIA */
   #mainResultImg { display: block; max-width: 90vw; max-height: 70vh; object-fit: contain; border-radius: 8px;}
   
   /* Botones sobre el visor */
@@ -262,7 +260,7 @@
 
               <div id="viewerWrapper">
                   <div id="imgContainer" style="position:relative; display:inline-block; line-height:0;">
-                      <img id="mainResultImg" src="" alt="Resultado" referrerpolicy="no-referrer">
+                      <img id="mainResultImg" src="" alt="Resultado">
                       <div id="boxesContainer" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
                   </div>
               </div>
@@ -284,10 +282,10 @@
 <script>
 const UI = {
   es: {
-    gate_sub: "Inicia sesión con Telegram para verificar tu acceso.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Ingresar", gate_error: "No tienes acceso. ¡Asegúrate de estar en el grupo VIP!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "¿Cerrar sesión?", home_title: "Panel Premium", home_sub: "Selecciona una herramienta para comenzar.", back: "Volver", run_btn: "Procesar con IA", restart_btn: "Reiniciar Todo", processing: "La IA está procesando...", processing_task: "Tarea asíncrona, espere...", processing_pct: (p) => `Trabajando... (${p}%)`, done: "¡Completado exitosamente!", error_prefix: "Error: ", generic_error: "Fallo de conexión.", task_failed: "La tarea ha fallado.", conn_error: "Error de red: ", conn_error_task: "Error al consultar la tarea.", dropzone_text: "Haz clic o arrastra una imagen", loading_options: "Descargando de internet...", select_placeholder: "Selecciona...", load_error: "Error de red", magic_tags_title: "✨ Toca las etiquetas para borrar:", magic_btn_apply: "Borrar Seleccionados", download_btn: "⬇️ Descargar PNG (Alta Calidad 300 DPI)"
+    gate_sub: "Inicia sesión con Telegram para verificar tu acceso.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Ingresar", gate_error: "No tienes acceso. ¡Asegúrate de estar en el grupo VIP!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "¿Cerrar sesión?", home_title: "Panel Premium", home_sub: "Selecciona una herramienta para comenzar.", back: "Volver", run_btn: "Procesar con IA", restart_btn: "Reiniciar Todo", processing: "La IA está procesando...", processing_task: "Tarea asíncrona, espere...", processing_pct: (p) => `Trabajando... (${p}%)`, done: "¡Completado exitosamente!", error_prefix: "Error: ", generic_error: "Fallo de conexión.", task_failed: "La tarea ha fallado.", conn_error: "Error de red: ", conn_error_task: "Error al consultar la tarea.", dropzone_text: "Haz clic o arrastra una imagen", loading_options: "Descargando de internet...", select_placeholder: "Selecciona...", load_error: "Error de red", magic_tags_title: "✨ Toca las etiquetas para borrar:", magic_btn_apply: "Borrar Seleccionados", download_btn: "⬇️ Descargar Diseño"
   },
   en: {
-    gate_sub: "Login with Telegram to verify access.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Login", gate_error: "Access denied. Make sure you are in the VIP group!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "Log out?", home_title: "Premium Dashboard", home_sub: "Select a tool to begin.", back: "Back", run_btn: "Run AI", restart_btn: "Reset All", processing: "AI is processing...", processing_task: "Async task, wait...", processing_pct: (p) => `Working... (${p}%)`, done: "Successfully completed!", error_prefix: "Error: ", generic_error: "Connection failed.", task_failed: "Task failed.", conn_error: "Network error: ", conn_error_task: "Error checking task.", dropzone_text: "Click or drag an image here", loading_options: "Downloading from cloud...", select_placeholder: "Select...", load_error: "Network error", magic_tags_title: "✨ Tap tags to erase:", magic_btn_apply: "Erase Selected", download_btn: "⬇️ Download HQ (300 DPI)"
+    gate_sub: "Login with Telegram to verify access.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Login", gate_error: "Access denied. Make sure you are in the VIP group!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "Log out?", home_title: "Premium Dashboard", home_sub: "Select a tool to begin.", back: "Back", run_btn: "Run AI", restart_btn: "Reset All", processing: "AI is processing...", processing_task: "Async task, wait...", processing_pct: (p) => `Working... (${p}%)`, done: "Successfully completed!", error_prefix: "Error: ", generic_error: "Connection failed.", task_failed: "Task failed.", conn_error: "Network error: ", conn_error_task: "Error checking task.", dropzone_text: "Click or drag an image here", loading_options: "Downloading from cloud...", select_placeholder: "Select...", load_error: "Network error", magic_tags_title: "✨ Tap tags to erase:", magic_btn_apply: "Erase Selected", download_btn: "⬇️ Download Design"
   }
 };
 
@@ -414,13 +412,13 @@ function renderForm(model) {
   model.fields.forEach(field => {
     const wrap = document.createElement("div"); wrap.className = "field";
     
-    // 🚀 LÓGICA DE CENTÍMETROS CON MENÚ VISIBLE Y SINCRONIZACIÓN PERFECTA
+    // 🚀 LÓGICA DE CENTÍMETROS AUTOMÁTICOS
     if (field.type === "cm_ratio") {
         const labelMain = document.createElement("label"); 
         labelMain.innerHTML = "Medidas y Proporción <span class='req'>*</span>";
         wrap.appendChild(labelMain);
 
-        // Menú Deslizable Restaurado
+        // Selector visual de Proporción (Desplegable 1:1, etc)
         const selectRatio = document.createElement("select");
         selectRatio.id = "field_" + field.name;
         selectRatio.name = field.name;
@@ -448,12 +446,6 @@ function renderForm(model) {
         row.appendChild(colW); row.appendChild(colH);
         wrap.appendChild(row);
 
-        const info = document.createElement("p");
-        info.style = "font-size: 0.75rem; color: var(--ok); margin-top: 8px; font-weight: bold;";
-        info.innerHTML = "<i class='fa-solid fa-print'></i> Imagen optimizada para impresión (300 DPI)";
-        wrap.appendChild(info);
-
-        // Lógica de cálculo (Si cambia el ratio o el ancho, el alto se adapta)
         const syncSize = (source) => {
             let parts = selectRatio.value.split(':');
             let ratio = parseFloat(parts[0]) / parseFloat(parts[1]);
@@ -464,7 +456,6 @@ function renderForm(model) {
                 let h = parseFloat(inpH.value);
                 if(h > 0) inpW.value = (h * ratio).toFixed(2);
             } else if (source === 'R') {
-                // Al cambiar proporción, mantenemos el Ancho y ajustamos el Alto
                 let w = parseFloat(inpW.value);
                 if(w > 0) inpH.value = (w / ratio).toFixed(2);
             }
@@ -704,23 +695,23 @@ async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
     }
 }
 
-// 💥 SOLUCIÓN A LA VISTA PREVIA INVISIBLE
+// 💥 AQUÍ ESTÁ EL PUENTE QUE GARANTIZA LA VISTA PREVIA Y LA DESCARGA PERFECTA
 function processFinalUrl(url) {
     let displayUrl = url;
+    let downloadUrl = url;
     
-    // Si la URL viene directo de SnapEdit, la forzamos a pasar por nuestro Proxy de Python (Download)
-    // Esto evade el bloqueo del navegador y de paso inyecta los 300 DPI
+    // Si viene de SnapEdit, la pasamos por nuestro servidor de Python
     if(url.startsWith("http")) {
-        displayUrl = "/download?url=" + encodeURIComponent(url);
+        displayUrl = "/proxy-image?url=" + encodeURIComponent(url);
+        downloadUrl = "/proxy-image?url=" + encodeURIComponent(url) + "&dl=1";
     }
     
     urlResultMemoria = displayUrl; 
-    mainResultImg.src = displayUrl; // Ahora sí se mostrará en pantalla
+    mainResultImg.src = displayUrl; // Bypassa la seguridad y muestra la imagen
     
     statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
     
-    btnDownloadResult.href = displayUrl;
-    btnDownloadResult.setAttribute("download", "JJ_Studio_IA_300DPI.png");
+    btnDownloadResult.href = downloadUrl; // Forzamos la descarga del archivo sano
     btnDownloadResult.style.display = "block";
     btnDownloadResult.onclick = null;
     
