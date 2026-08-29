@@ -15,7 +15,6 @@ app = Flask(__name__)
 # ========================================================
 # 🚀 CONFIGURACIÓN DE TELEGRAM Y SNAPEDIT
 # ========================================================
-# 👇 AQUÍ ESTÁ TU API KEY ORIGINAL DE VUELTA
 API_KEY = os.environ.get("SNAPEDIT_API_KEY", "sk-snap-uuh6Z0veQTW7z3DSQ7TUr5yuyaC7HIHAoUchqM_KrfI")
 BASE = "https://api.snapedit.app"
 HEADERS = {"api-key": API_KEY}
@@ -51,9 +50,9 @@ MODELS = [
     {"slug": "colorize-pro", "label": L("Colorear B/N (Pro)", "Colorize B/W (Pro)"), "icon": "fa-paint-roller", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Colorización avanzada.", "Advanced colorization."), "endpoint": "/v1/images/colorize/pro", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "light-restore", "label": L("Corregir Iluminación", "Fix Lighting"), "icon": "fa-sun", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Arregla fotos oscuras.", "Fixes dark photos."), "endpoint": "/v1/images/light-restore", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    # --- Generación ---
-    {"slug": "generate-zimage", "label": L("Crear: Z-Image (Texto)", "Create: Z-Image (Text)"), "icon": "fa-rocket", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Crea imagen rápida.", "Create image fast."), "endpoint": "/v1/images/generates/zimage", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "select", "label": L("Proporción", "Ratio"), "options": [{"value": "1:1", "label": L("1:1", "1:1")}, {"value": "16:9", "label": L("16:9", "16:9")}, {"value": "9:16", "label": L("9:16", "9:16")}]}]},
-    {"slug": "generate-qwen", "label": L("Crear: Qwen (Texto)", "Create: Qwen (Text)"), "icon": "fa-brain", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Motor HD realista.", "HD realistic engine."), "endpoint": "/v1/images/generates/qwen", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "select", "label": L("Proporción", "Ratio"), "options": [{"value": "1:1", "label": L("1:1", "1:1")}, {"value": "16:9", "label": L("16:9", "16:9")}, {"value": "9:16", "label": L("9:16", "9:16")}]}]},
+    # --- Generación (Con Selector CM Inteligente) ---
+    {"slug": "generate-zimage", "label": L("Crear: Z-Image (Texto)", "Create: Z-Image (Text)"), "icon": "fa-rocket", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Crea imagen rápida.", "Create image fast."), "endpoint": "/v1/images/generates/zimage", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "cm_ratio", "label": L("Medidas (Ancho y Alto cm)", "Size (cm)"), "options": [{"value": "1:1"}, {"value": "16:9"}, {"value": "9:16"}, {"value": "4:3"}, {"value": "3:4"}, {"value": "3:2"}, {"value": "2:3"}]}]},
+    {"slug": "generate-qwen", "label": L("Crear: Qwen (Texto)", "Create: Qwen (Text)"), "icon": "fa-brain", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Motor HD realista.", "HD realistic engine."), "endpoint": "/v1/images/generates/qwen", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "cm_ratio", "label": L("Medidas (Ancho y Alto cm)", "Size (cm)"), "options": [{"value": "1:1"}, {"value": "16:9"}, {"value": "9:16"}, {"value": "4:3"}, {"value": "3:4"}, {"value": "3:2"}, {"value": "2:3"}]}]},
     
     {"slug": "fairy-art", "label": L("Retrato a Arte", "Portrait to Art"), "icon": "fa-wand-magic-sparkles", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Convierte fotos a Anime/3D.", "Convert photos to Anime/3D."), "endpoint": "/v1/images/generates/art", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "style", "type": "select", "label": L("Estilo", "Style"), "required": True, "options_url": "https://storage.googleapis.com/assets.snapedit.app/fairyai/anime_styles_6mar25.json"}]},
     {"slug": "generate-background", "label": L("Generar Fondo Nuevo", "Generate Background"), "icon": "fa-image", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Fondo para productos.", "Background for products."), "endpoint": "/v1/images/generates-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Descripción del fondo", "Background prompt"), "required": True}]},
@@ -199,19 +198,32 @@ def run_model(slug):
         
         content_type = response.headers.get("Content-Type", "")
         
-        # 🚀 RESPUESTA DE SNAPEDIT
+        # 🚀 RESPUESTA DE SNAPEDIT (MEJORADO PARA ATRAPAR LA IMAGEN SIEMPRE)
         if "application/json" in content_type: 
             d_json = response.json()
             
-            # Si dice OK (200)
             if response.status_code == 200:
-                if "data" in d_json and isinstance(d_json["data"], list) and len(d_json["data"]) > 0 and "url" in d_json["data"][0]:
-                    img_url = d_json["data"][0]["url"]
+                img_url = None
+                
+                # Cazador de URL inteligente
+                if "data" in d_json:
+                    if isinstance(d_json["data"], list) and len(d_json["data"]) > 0 and "url" in d_json["data"][0]:
+                        img_url = d_json["data"][0]["url"]
+                    elif isinstance(d_json["data"], dict) and "url" in d_json["data"]:
+                        img_url = d_json["data"]["url"]
+                elif "url" in d_json:
+                    img_url = d_json["url"]
+                elif "image_url" in d_json:
+                    img_url = d_json["image_url"]
+
+                # Si logramos atrapar el URL de la imagen, la descargamos directo
+                if img_url:
                     r_img = requests.get(img_url, timeout=60)
                     if r_img.status_code == 200:
                         return Response(r_img.content, mimetype=r_img.headers.get("Content-Type", "image/png"))
                     else:
-                        return jsonify({"error": True, "message": "Fallo al descargar la imagen final."}), 400
+                        return jsonify({"error": True, "message": "Fallo al descargar la imagen generada."}), 400
+                        
                 return jsonify(d_json), 200
             
             # Si SnapEdit Lanza un Error
@@ -223,7 +235,7 @@ def run_model(slug):
         if response.status_code != 200:
             return jsonify({"error": True, "message": f"Error desconocido ({response.status_code})."}), 400
 
-        # Respuesta normal (imagen)
+        # Respuesta normal (imagen directa en binario)
         return Response(response.content, mimetype=content_type), response.status_code
 
     except Exception as e: 
