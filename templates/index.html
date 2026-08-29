@@ -245,7 +245,7 @@
 
         <div class="canvas-container" id="tray" style="display:none;">
           <div class="viewer-container checkerboard" id="visorContenedor">
-              
+             
               <button id="btnAntes" class="btn-visor" style="top:20px; right:20px; display:none;" onmousedown="mostrar(true)" onmouseup="mostrar(false)" onmouseleave="mostrar(false)">
                   <i class="fa-solid fa-eye mr-2"></i> Mantén: Ver Antes
               </button>
@@ -411,6 +411,71 @@ function renderForm(model) {
   form.innerHTML = "";
   model.fields.forEach(field => {
     const wrap = document.createElement("div"); wrap.className = "field";
+    
+    // 🚀 LÓGICA MÁGICA: Selector de Centímetros Automático para Generación
+    if (field.type === "cm_ratio") {
+        const labelMain = document.createElement("label"); 
+        labelMain.textContent = tl(field.label).split('|')[0].trim();
+        wrap.appendChild(labelMain);
+
+        const row = document.createElement("div"); 
+        row.style = "display: flex; gap: 15px; margin-bottom: 5px;";
+        
+        const colW = document.createElement("div"); colW.style.flex = "1";
+        const inpW = document.createElement("input"); inpW.type = "number"; inpW.placeholder = "Ancho (cm)"; inpW.id = "cm_width"; inpW.required = true;
+        colW.appendChild(inpW);
+        
+        const colH = document.createElement("div"); colH.style.flex = "1";
+        const inpH = document.createElement("input"); inpH.type = "number"; inpH.placeholder = "Alto (cm)"; inpH.id = "cm_height"; inpH.required = true;
+        colH.appendChild(inpH);
+        
+        row.appendChild(colW); row.appendChild(colH);
+        wrap.appendChild(row);
+
+        const selectApi = document.createElement("select");
+        selectApi.id = "field_" + field.name;
+        selectApi.name = field.name;
+        selectApi.style.display = "none";
+        
+        const validRatios = field.options ? field.options.map(o => o.value) : ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"];
+        validRatios.forEach(r => { const opt = document.createElement("option"); opt.value = r; selectApi.appendChild(opt); });
+        selectApi.value = "1:1";
+        wrap.appendChild(selectApi);
+
+        const displayRatio = document.createElement("div");
+        displayRatio.style = "font-size: 0.85rem; color: var(--text-dim); margin-top: 5px;";
+        displayRatio.innerHTML = "La IA ajustará la proporción a: <b id='ratio_badge' style='color:var(--ok);'>1:1</b>";
+        wrap.appendChild(displayRatio);
+
+        const calcRatio = () => {
+            let w = parseFloat(inpW.value); let h = parseFloat(inpH.value);
+            if(w > 0 && h > 0) {
+                let ratio = w / h;
+                let closest = "1:1";
+                let minDiff = Math.abs(ratio - 1);
+                
+                const ratiosDict = {};
+                validRatios.forEach(r => {
+                   let parts = r.split(':');
+                   if(parts.length===2) ratiosDict[r] = parseInt(parts[0]) / parseInt(parts[1]);
+                });
+                
+                for(let k in ratiosDict) {
+                    let diff = Math.abs(ratio - ratiosDict[k]);
+                    if(diff < minDiff) { minDiff = diff; closest = k; }
+                }
+                selectApi.value = closest;
+                document.getElementById('ratio_badge').innerText = closest;
+            }
+        };
+        inpW.addEventListener("input", calcRatio);
+        inpH.addEventListener("input", calcRatio);
+        
+        form.appendChild(wrap);
+        return;
+    }
+    // -------------------------------------------------------------
+
     if (field.type === "checkbox") {
       const row = document.createElement("div"); row.className = "checkbox-row";
       const input = document.createElement("input"); input.type = "checkbox"; input.id = "field_" + field.name; input.name = field.name; input.checked = field.default !== undefined ? field.default : false;
@@ -472,7 +537,6 @@ function renderForm(model) {
   submitBtn.innerHTML = `<i class="fa-solid fa-bolt mr-2"></i> ${t("run_btn")}`; form.appendChild(submitBtn);
 }
 
-// 🚀 REGLA ESPECIAL PARA ESCALAR ARTE (x2/x4 muestra Quitar Fondo. x8 lo oculta para no trabarse)
 function renderQuickActions(slug) {
     const qaContainer = document.querySelector('.qa-buttons');
     qaContainer.innerHTML = '';
@@ -584,8 +648,13 @@ form.addEventListener("submit", async (e) => {
             document.getElementById('btnZoomLabel').style.display = 'block';
         }
         else if (model.response_type === "task") { statusText.textContent = t("processing_task"); pollTask(model.slug, data.task_id); } 
-        else if (data.data || data.url) {
-            let urlF = data.data && Array.isArray(data.data) ? data.data[0].url : (data.data && data.data.url ? data.data.url : data.url);
+        // 🚀 CATCH DE RESPALDO (Por si el servidor de SnapEdit envía JSON en lugar de la imagen)
+        else if (data.data || data.url || data.image_url) {
+            let urlF = data.url || data.image_url;
+            if (!urlF && data.data) {
+                if (Array.isArray(data.data) && data.data.length > 0) urlF = data.data[0].url;
+                else if (data.data.url) urlF = data.data.url;
+            }
             if(urlF) processFinalUrl(urlF);
             else { 
                 statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
@@ -677,8 +746,12 @@ async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
                 });
                 renderQuickActions("detect-objects");
                 quickActionsBar.style.display = "block";
-            } else if(data.data || data.url) {
-                let urlF = data.data && Array.isArray(data.data) ? data.data[0].url : (data.data && data.data.url ? data.data.url : data.url);
+            } else if(data.data || data.url || data.image_url) {
+                let urlF = data.url || data.image_url;
+                if (!urlF && data.data) {
+                    if (Array.isArray(data.data) && data.data.length > 0) urlF = data.data[0].url;
+                    else if (data.data.url) urlF = data.data.url;
+                }
                 if(urlF) { currentSlug = targetSlug; processFinalUrl(urlF); }
             }
         } else {
