@@ -412,7 +412,6 @@ function renderForm(model) {
   model.fields.forEach(field => {
     const wrap = document.createElement("div"); wrap.className = "field";
     
-    // 🚀 LÓGICA DE CENTÍMETROS AUTOMÁTICOS (Input libre sin selector de ratio)
     if (field.type === "cm_auto_magic") {
         const labelMain = document.createElement("label"); 
         labelMain.innerHTML = "Medidas en Centímetros <span class='req'>*</span>";
@@ -433,7 +432,6 @@ function renderForm(model) {
         row.appendChild(colW); row.appendChild(colH);
         wrap.appendChild(row);
 
-        // Input oculto para que SnapEdit reciba la proporción
         const ratioFinalAPI = document.createElement("input");
         ratioFinalAPI.type = "hidden";
         ratioFinalAPI.id = "field_aspect_ratio";
@@ -467,7 +465,6 @@ function renderForm(model) {
         form.appendChild(wrap);
         return;
     }
-    // -------------------------------------------------------------
 
     if (field.type === "checkbox") {
       const row = document.createElement("div"); row.className = "checkbox-row";
@@ -605,7 +602,6 @@ form.addEventListener("submit", async (e) => {
     const res = await fetch(`/run/${model.slug}`, { method: "POST", body: formData });
     mainResultImg.classList.remove("opacity-50", "blur-sm");
     
-    // Si viene la imagen binaria sana de Python
     if (!res.headers.get("content-type").includes("application/json")) {
         const blob = await res.blob(); 
         const localBlobUrl = URL.createObjectURL(blob);
@@ -694,21 +690,28 @@ async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
     }
 }
 
-// 💥 LÍNEA VITAL QUE DA VIDA A LA CAJA DE LA IMAGEN
 function processFinalUrl(url) {
-    urlResultMemoria = url; 
-    mainResultImg.src = url; 
+    let displayUrl = url;
+    let downloadUrl = url;
+    
+    if(url.startsWith("http")) {
+        displayUrl = "/proxy-image?url=" + encodeURIComponent(url);
+        downloadUrl = "/proxy-image?url=" + encodeURIComponent(url) + "&dl=1";
+    }
+    
+    urlResultMemoria = displayUrl; 
+    mainResultImg.src = displayUrl; 
     
     statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
     
-    btnDownloadResult.href = url;
+    btnDownloadResult.href = downloadUrl;
     btnDownloadResult.setAttribute("download", "JJ_Studio_Diseño.png");
     btnDownloadResult.style.display = "block";
+    btnDownloadResult.onclick = null;
     
     renderQuickActions(currentSlug);
     quickActionsBar.style.display = "block"; 
     
-    // 👉 ESTO ENCENDERÁ EL VISOR SÍ O SÍ PARA CUALQUIER IMAGEN
     document.getElementById('tray').style.display = 'block';
 
     document.getElementById('btnAntes').style.display = 'block';
