@@ -61,7 +61,7 @@ MODELS = [
     # --- Edición y Belleza ---
     {"slug": "edit-image", "label": L("Edición Mágica (Texto)", "Magic Edit (Text)"), "icon": "fa-wand-sparkles", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Edita usando órdenes.", "Edit using text prompts."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Instrucción", "Prompt"), "required": True}, {"name": "mode", "type": "select", "label": L("Modo", "Mode"), "required": True, "options": [{"value": "editing", "label": L("General", "General")}, {"value": "inpaint", "label": L("Inpaint", "Inpaint")}]}, {"name": "input_mask", "type": "mask", "label": L("Máscara", "Mask"), "required": False}]},
     
-    # 🚀 NUEVA HERRAMIENTA WEB: Estilos Textiles (Con Prompts súper inteligentes que no borran el fondo)
+    # 🚀 NUEVA HERRAMIENTA WEB: Estilos Textiles
     {"slug": "textile-styles", "label": L("Convertir a Bordado/Crochet", "Convert to Textile"), "icon": "fa-shirt", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Aplica texturas de lana o parche.", "Applies yarn or thread textures."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
         {"name": "input_image", "type": "image", "label": L("Sube tu Diseño Original", "Upload Design"), "required": True}, 
         {"name": "prompt", "type": "select", "label": L("Elige la Textura", "Select Texture"), "required": True, "options": [
@@ -190,7 +190,7 @@ def run_model(slug):
         for key, value in request.form.items():
             if value: data[key] = value
 
-        # 🚀 INYECCIÓN SECRETA: Forzamos el modo "editing" para la herramienta de texturas
+        # 🚀 INYECCIÓN SECRETA: Forzamos el modo "editing"
         if slug == "textile-styles":
             data["mode"] = "editing"
 
@@ -229,6 +229,7 @@ def run_model(slug):
             else:
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
         
+        # 🚀 BLOQUE DE SEGURIDAD ESTRICTA PARA EVITAR IMÁGENES ROTAS
         content_type = response.headers.get("Content-Type", "")
         if "application/json" in content_type:
             datos = response.json()
@@ -251,9 +252,10 @@ def run_model(slug):
                                 img_obj.save(buf, format="PNG", dpi=(300, 300))
                                 return Response(buf.getvalue(), mimetype="image/png")
                             except:
-                                return Response(r_img.content, mimetype="image/png")
+                                # Si no es imagen real, forzamos error rojo
+                                return jsonify({"error": True, "message": "La IA no devolvió un formato de imagen válido."}), 400
                         else:
-                            return jsonify({"error": True, "message": "Fallo al descargar la imagen."}), 400
+                            return jsonify({"error": True, "message": "Fallo al descargar la imagen procesada de la nube."}), 400
                     except Exception as e:
                         return jsonify({"error": True, "message": str(e)}), 400
                 else:
@@ -261,13 +263,18 @@ def run_model(slug):
             else:
                 return jsonify({"error": True, "message": datos.get("message", str(datos))}), 400
         else:
+            # Si SnapEdit falló y devuelve una web de error en vez de JSON
+            if response.status_code != 200:
+                return jsonify({"error": True, "message": f"Servidores de la IA saturados (Código {response.status_code}). Intenta de nuevo."}), 400
+            
             try:
                 img_obj = Image.open(io.BytesIO(response.content))
                 buf = io.BytesIO()
                 img_obj.save(buf, format="PNG", dpi=(300, 300))
                 return Response(buf.getvalue(), mimetype="image/png")
             except:
-                return Response(response.content, mimetype=content_type), response.status_code
+                # Evita que se envíe "código basura" como si fuera una foto
+                return jsonify({"error": True, "message": "La respuesta de la IA está corrupta."}), 400
 
     except Exception as e: 
         print(f"❌ ERROR: {str(e)}")
