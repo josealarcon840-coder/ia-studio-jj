@@ -50,7 +50,7 @@ MODELS = [
     {"slug": "colorize-pro", "label": L("Colorear B/N (Pro)", "Colorize B/W (Pro)"), "icon": "fa-paint-roller", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Colorización avanzada.", "Advanced colorization."), "endpoint": "/v1/images/colorize/pro", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "light-restore", "label": L("Corregir Iluminación", "Fix Lighting"), "icon": "fa-sun", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Arregla fotos oscuras.", "Fixes dark photos."), "endpoint": "/v1/images/light-restore", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    # --- Generación Z-Image & Qwen (CON CALCULADORA CM AUTOMÁTICA) ---
+    # --- Generación Z-Image & Qwen ---
     {"slug": "generate-zimage", "label": L("Crear: Z-Image (Texto)", "Create: Z-Image (Text)"), "icon": "fa-rocket", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Crea imagen rápida.", "Create image fast."), "endpoint": "/v1/images/generates/zimage", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "cm_auto_magic", "label": L("Medidas en Centímetros", "Size (CM)")}]},
     {"slug": "generate-qwen", "label": L("Crear: Qwen (Texto)", "Create: Qwen (Text)"), "icon": "fa-brain", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Motor HD realista.", "HD realistic engine."), "endpoint": "/v1/images/generates/qwen", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "cm_auto_magic", "label": L("Medidas en Centímetros", "Size (CM)")}]},
     
@@ -58,7 +58,19 @@ MODELS = [
     {"slug": "generate-background", "label": L("Generar Fondo Nuevo", "Generate Background"), "icon": "fa-image", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Fondo para productos.", "Background for products."), "endpoint": "/v1/images/generates-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Descripción del fondo", "Background prompt"), "required": True}]},
     {"slug": "sticker", "label": L("Crear Sticker", "Create Sticker"), "icon": "fa-note-sticky", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Haz un sticker de tu foto.", "Make a sticker from photo."), "endpoint": "/v1/images/generates/sticker", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Estilo (Ej: Zombie)", "Style (e.g. Zombie)"), "required": True}]},
 
+    # --- Edición y Belleza ---
     {"slug": "edit-image", "label": L("Edición Mágica (Texto)", "Magic Edit (Text)"), "icon": "fa-wand-sparkles", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Edita usando órdenes.", "Edit using text prompts."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Instrucción", "Prompt"), "required": True}, {"name": "mode", "type": "select", "label": L("Modo", "Mode"), "required": True, "options": [{"value": "editing", "label": L("General", "General")}, {"value": "inpaint", "label": L("Inpaint", "Inpaint")}]}, {"name": "input_mask", "type": "mask", "label": L("Máscara", "Mask"), "required": False}]},
+    
+    # 🚀 NUEVA HERRAMIENTA WEB: Estilos Textiles (Con Prompts súper inteligentes que no borran el fondo)
+    {"slug": "textile-styles", "label": L("Convertir a Bordado/Crochet", "Convert to Textile"), "icon": "fa-shirt", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Aplica texturas de lana o parche.", "Applies yarn or thread textures."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
+        {"name": "input_image", "type": "image", "label": L("Sube tu Diseño Original", "Upload Design"), "required": True}, 
+        {"name": "prompt", "type": "select", "label": L("Elige la Textura", "Select Texture"), "required": True, "options": [
+            {"value": "Apply 3D amigurumi crochet texture to the entire image. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add frames, hoops or white backgrounds. Only change the material of existing elements to knitted yarn.", "label": L("🧶 Crochet / Amigurumi (Lana)", "Crochet / Amigurumi")},
+            {"value": "Highly detailed realistic embroidery of the entire image. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add frames, hoops or white backgrounds. Only change the material of existing elements to thick colorful threads and 3D stitched texture.", "label": L("🧵 Bordado Realista (Hilos 3D)", "Realistic Embroidery")},
+            {"value": "Textile embroidery patch style of the entire image. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Strictly no stitched borders, no background fabric, clean edges.", "label": L("🏷️ Parche Textil (Sin Bordes)", "Textile Patch")}
+        ]}
+    ]},
+
     {"slug": "retouch-skin", "label": L("Retoque Facial", "Skin Retouch"), "icon": "fa-face-smile", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Limpia la piel automáticamente.", "Cleans skin automatically."), "endpoint": "/v1/images/retouch-skin", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]}
 ]
 
@@ -103,6 +115,31 @@ def index(): return render_template("index.html")
 def get_models():
     public_fields = ("slug", "label", "icon", "category", "desc", "fields", "response_type", "needs_image")
     return jsonify([{k: m[k] for k in public_fields if k in m} for m in MODELS])
+
+@app.route("/style-list")
+def style_list():
+    url = request.args.get("url", "")
+    if not url or not any(url.startswith(f"https://{d}") for d in ALLOWED_STYLE_DOMAINS): return jsonify({"error": True}), 400
+    try: return jsonify(requests.get(url, timeout=15).json())
+    except: return jsonify({"error": True}), 500
+
+@app.route("/proxy-image")
+def proxy_image():
+    url = request.args.get("url")
+    dl = request.args.get("dl", "0")
+    if not url: return "No URL", 400
+    try:
+        r = requests.get(url, timeout=60)
+        if r.status_code != 200:
+            return "Error CDN SnapEdit", 400
+            
+        headers = {}
+        if dl == "1":
+            headers["Content-Disposition"] = "attachment; filename=JJ_Studio_Diseño.png"
+            
+        return Response(r.content, mimetype=r.headers.get("Content-Type", "image/png"), headers=headers)
+    except Exception as e:
+        return str(e), 500
 
 @app.route("/verify-telegram", methods=["POST"])
 def verify_telegram():
@@ -153,6 +190,10 @@ def run_model(slug):
         for key, value in request.form.items():
             if value: data[key] = value
 
+        # 🚀 INYECCIÓN SECRETA: Forzamos el modo "editing" para la herramienta de texturas
+        if slug == "textile-styles":
+            data["mode"] = "editing"
+
         if slug in ["detect-text", "detect-wires"]:
             r1 = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files, timeout=120)
             if r1.status_code == 200:
@@ -179,51 +220,47 @@ def run_model(slug):
                 data.pop("input_image", None)
 
             if model.get("needs_image") is False:
-                # 🚀 ESTO USA LA LÓGICA DE TU CÓDIGO (Generar Z-Image en JSON puro)
                 payload = {}
                 if "prompt" in data: payload["prompt"] = data["prompt"]
                 if "aspect_ratio" in data: payload["aspect_ratio"] = data["aspect_ratio"]
-                response = requests.post(BASE + model["endpoint"], headers=HEADERS, data=payload, timeout=120)
+                
+                headers_gen = {"api-key": API_KEY, "Content-Type": "application/json"}
+                response = requests.post(BASE + model["endpoint"], headers=headers_gen, json=payload, timeout=120)
             else:
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
         
-        # 💥 SOLUCIÓN A LA VISTA PREVIA INVISIBLE (DESCARGA DESDE PYTHON)
         content_type = response.headers.get("Content-Type", "")
-        if "application/json" in content_type: 
-            d_json = response.json()
+        if "application/json" in content_type:
+            datos = response.json()
             if response.status_code == 200:
-                # Buscamos la URL generada
                 url_img = None
-                if "data" in d_json and isinstance(d_json["data"], list) and len(d_json["data"]) > 0 and "url" in d_json["data"][0]:
-                    url_img = d_json["data"][0]["url"]
-                elif "data" in d_json and isinstance(d_json["data"], dict) and "url" in d_json["data"]:
-                    url_img = d_json["data"]["url"]
-                elif "url" in d_json:
-                    url_img = d_json["url"]
+                if "data" in datos and isinstance(datos["data"], list) and len(datos["data"]) > 0 and "url" in datos["data"][0]:
+                    url_img = datos["data"][0]["url"]
+                elif "data" in datos and isinstance(datos["data"], dict) and "url" in datos["data"]:
+                    url_img = datos["data"]["url"]
+                elif "url" in datos:
+                    url_img = datos["url"]
 
                 if url_img:
-                    # 🚀 ¡MAGIA DE TELEGRAM! PYTHON LO DESCARGA Y TE LO ENVÍA INTACTO
-                    r_img = requests.get(url_img, timeout=60)
-                    if r_img.status_code == 200:
-                        try:
-                            # Inyecta 300 DPI y devuelve al cliente como PNG Binario
-                            img_obj = Image.open(io.BytesIO(r_img.content))
-                            buf = io.BytesIO()
-                            img_obj.save(buf, format="PNG", dpi=(300, 300))
-                            return Response(buf.getvalue(), mimetype="image/png")
-                        except:
-                            # Si no se puede inyectar, envía la original intacta
-                            return Response(r_img.content, mimetype="image/png")
-                    else:
-                        return jsonify({"error": True, "message": "SnapEdit falló al entregar el archivo."}), 400
+                    try:
+                        r_img = requests.get(url_img, timeout=60)
+                        if r_img.status_code == 200:
+                            try:
+                                img_obj = Image.open(io.BytesIO(r_img.content))
+                                buf = io.BytesIO()
+                                img_obj.save(buf, format="PNG", dpi=(300, 300))
+                                return Response(buf.getvalue(), mimetype="image/png")
+                            except:
+                                return Response(r_img.content, mimetype="image/png")
+                        else:
+                            return jsonify({"error": True, "message": "Fallo al descargar la imagen."}), 400
+                    except Exception as e:
+                        return jsonify({"error": True, "message": str(e)}), 400
                 else:
-                    # Si es el borrador mágico (que no trae URL directa)
-                    return jsonify(d_json), 200
+                    return jsonify(datos), 200
             else:
-                error_msg = d_json.get("message", str(d_json))
-                return jsonify({"error": True, "message": f"Mensaje de la API: {error_msg}"}), 400
+                return jsonify({"error": True, "message": datos.get("message", str(datos))}), 400
         else:
-            # Respuesta Binaria directa de las demás herramientas
             try:
                 img_obj = Image.open(io.BytesIO(response.content))
                 buf = io.BytesIO()
