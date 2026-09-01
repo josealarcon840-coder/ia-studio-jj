@@ -192,7 +192,7 @@ def run_model(slug):
 
     try:
         # =======================================================
-        # 🎬 LÓGICA DE VIDEO ASÍNCRONA (EXTRACCIÓN SEGURA DE URL)
+        # 🎬 LÓGICA DE VIDEO ASÍNCRONA (SOLO PARA VIDEOS)
         # =======================================================
         if model.get("response_type") == "video":
             file_obj = list(request.files.values())[0]
@@ -212,13 +212,14 @@ def run_model(slug):
                 return jsonify({"error": True, "message": f"Fallo al iniciar servidor de video. Detalle: {r1.text}"}), 400
             
             datos_carga = r1.json()
-            
-            # Extracción flexible para evitar errores de claves faltantes
             task_id = datos_carga.get("task_id") or datos_carga.get("data", {}).get("task_id")
             upload_url = (
+                datos_carga.get("image_upload_url") or 
+                datos_carga.get("video_upload_url") or 
                 datos_carga.get("upload_url") or 
                 datos_carga.get("url") or 
                 datos_carga.get("signed_url") or 
+                datos_carga.get("data", {}).get("image_upload_url") or 
                 datos_carga.get("data", {}).get("upload_url") or 
                 datos_carga.get("data", {}).get("url")
             )
@@ -226,13 +227,10 @@ def run_model(slug):
             if not task_id or not upload_url:
                 return jsonify({"error": True, "message": f"Respuesta inesperada de SnapEdit al subir: {datos_carga}"}), 400
 
-            r2 = requests.put(upload_url, data=file_bytes)
-            if r2.status_code != 200: 
-                return jsonify({"error": True, "message": f"Fallo al subir el archivo al servidor. Detalle: {r2.text}"}), 400
-
-            payload["task_id"] = task_id
-            r3 = requests.post(BASE + model["endpoint"], headers={"api-key": API_KEY, "Content-Type": "application/json"}, json=payload)
-            if r3.status_code != 200: return jsonify({"error": True, "message": f"Fallo al procesar el renderizado: {r3.text}"}), 400
+            mime_type = "video/mp4" if "video" in slug and not slug.startswith("image-to") else "image/jpeg"
+            r2 = requests.put(upload_url, data=file_bytes, headers={"Content-Type": mime_type})
+            if r2.status_code not in [200, 201]: 
+                return jsonify({"error": True, "message": f"Fallo al subir el archivo al servidor (Código {r2.status_code}). Detalle: {r2.text}"}), 400
 
             max_intentos = 45 
             for _ in range(max_intentos):
@@ -243,7 +241,7 @@ def run_model(slug):
                     estado = status_data.get("status")
                     
                     if estado == "COMPLETED":
-                        video_url = status_data.get("download_url")
+                        video_url = status_data.get("download_url") or status_data.get("video_url") or status_data.get("url")
                         return jsonify({"is_video": True, "url": video_url})
                     elif estado == "FAILED":
                         return jsonify({"error": True, "message": status_data.get("error_msg", "Error renderizando video.")}), 400
@@ -252,14 +250,20 @@ def run_model(slug):
 
 
         # =======================================================
-        # 🖼️ LÓGICA ORIGINAL DE IMÁGENES (INTACTA)
+        # 🖼️ LÓGICA ORIGINAL DE IMÁGENES (CON TRADUCTOR DE LLAVES)
         # =======================================================
         files, data = {}, {}
         
         for key, file_obj in request.files.items():
             if file_obj and file_obj.filename:
                 buf, fname, mime = resize_if_needed(file_obj.read(), slug, file_obj.filename)
-                api_key = "image" if key == "input_image" and any(x in model["endpoint"] for x in ["generates-background", "pose-suggest", "outpaint"]) else key
+                
+                # 🛠️ CORRECCIÓN: Si es 'generates-background' u otro endpoint, adaptamos la llave de la foto
+                if slug == "generate-background" or any(x in model["endpoint"] for x in ["generates-background", "pose-suggest", "outpaint"]):
+                    api_key = "image"
+                else:
+                    api_key = key
+                    
                 ext = "png" if "png" in mime else "jpg"
                 files[api_key] = (f"imagen.{ext}", buf, mime)
 
