@@ -192,7 +192,7 @@ def run_model(slug):
 
     try:
         # =======================================================
-        # 🎬 LÓGICA DE VIDEO ASÍNCRONA (EXCLUSIVA PARA VIDEOS)
+        # 🎬 LÓGICA DE VIDEO ASÍNCRONA (EXTRACCIÓN SEGURA DE URL)
         # =======================================================
         if model.get("response_type") == "video":
             file_obj = list(request.files.values())[0]
@@ -212,8 +212,19 @@ def run_model(slug):
                 return jsonify({"error": True, "message": f"Fallo al iniciar servidor de video. Detalle: {r1.text}"}), 400
             
             datos_carga = r1.json()
-            task_id = datos_carga["task_id"]
-            upload_url = datos_carga["upload_url"]
+            
+            # Extracción flexible para evitar errores de claves faltantes
+            task_id = datos_carga.get("task_id") or datos_carga.get("data", {}).get("task_id")
+            upload_url = (
+                datos_carga.get("upload_url") or 
+                datos_carga.get("url") or 
+                datos_carga.get("signed_url") or 
+                datos_carga.get("data", {}).get("upload_url") or 
+                datos_carga.get("data", {}).get("url")
+            )
+            
+            if not task_id or not upload_url:
+                return jsonify({"error": True, "message": f"Respuesta inesperada de SnapEdit al subir: {datos_carga}"}), 400
 
             r2 = requests.put(upload_url, data=file_bytes)
             if r2.status_code != 200: 
@@ -241,7 +252,7 @@ def run_model(slug):
 
 
         # =======================================================
-        # 🖼️ LÓGICA ORIGINAL DE IMÁGENES (AISLADA Y SEGURA)
+        # 🖼️ LÓGICA ORIGINAL DE IMÁGENES (INTACTA)
         # =======================================================
         files, data = {}, {}
         
