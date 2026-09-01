@@ -7,7 +7,7 @@ import hmac
 import gc  
 import time 
 from flask import Flask, render_template, request, jsonify, Response
-from PIL import Image, ImageChops
+from PIL import Image
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -58,13 +58,7 @@ MODELS = [
     {"slug": "textile-styles", "label": L("Texturas Mágicas 3D", "3D Magic Textures"), "icon": "fa-cubes", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Aplica lana, hilo o estilo inflado 3D.", "Applies yarn, thread or puffy textures."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Sube tu Diseño Original", "Upload Design"), "required": True}, {"name": "prompt", "type": "select", "label": L("Elige la Textura", "Select Texture"), "required": True, "options": [{"value": "Apply 3D amigurumi crochet texture to the entire image. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add frames, hoops or white backgrounds. Only change the material of existing elements to knitted yarn.", "label": L("🧶 Crochet / Amigurumi (Lana)", "Crochet / Amigurumi")},{"value": "Apply highly detailed realistic embroidery texture to the entire image. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add frames, hoops or white backgrounds. Only change the material of existing elements to thick colorful threads and 3D stitches.", "label": L("🧵 Bordado Realista (Hilos 3D)", "Realistic Embroidery")},{"value": "Apply textile embroidery patch style to the entire image. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add stitched borders if they don't exist, no background fabric. Only change the material of existing elements to high quality thread texture.", "label": L("🏷️ Parche Textil (Sin Bordes)", "Textile Patch")},{"value": "Apply 3D inflated balloon puffy texture to the entire image. Make it look like soft, puffy, glossy plastic or vinyl. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add backgrounds. Only change the material of existing elements to 3D inflated balloon.", "label": L("🎈 Estilo Inflado 3D (Globo/Puffer)", "3D Inflated/Puffer")}]}]},
     {"slug": "retouch-skin", "label": L("Retoque Facial", "Skin Retouch"), "icon": "fa-face-smile", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Limpia la piel automáticamente.", "Cleans skin automatically."), "endpoint": "/v1/images/retouch-skin", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    # 🚀 --- IA PARA VIDEOS Y MOCKUPS AUTOMÁTICOS ---
-    {"slug": "mockup-to-video", "label": L("Mockup a Video 3D", "Mockup to Video 3D"), "icon": "fa-shirt", "category": L("6. IA para Videos", "6. AI Video"), "desc": L("Sube tu logo. Te armamos la prenda y creamos el video HD.", "Upload transparent design for automatic video mockup."), "endpoint": "/v1/videos/image-to-video", "response_type": "video", "fields": [
-        {"name": "input_image", "type": "image", "label": L("Sube tu Diseño (PNG Transparente)", "Upload Design (PNG)"), "required": True},
-        {"name": "tipo_producto", "type": "select", "label": L("Elige el Producto", "Product"), "required": True, "options": [{"value": "playera", "label": L("Playera (Camina / Fashion)", "T-Shirt")}, {"value": "taza", "label": L("Taza (Giro 360°)", "Mug")}]},
-        {"name": "color_hex", "type": "color", "label": L("Color de la Prenda/Taza", "Product Color"), "default": "#ffffff"},
-        {"name": "duration", "type": "select", "label": L("Duración del Video", "Duration"), "required": True, "options": [{"value": "4", "label": L("4 Segundos", "4 Seconds")}, {"value": "8", "label": L("8 Segundos", "8 Seconds")}]}
-    ]},
+    # 🚀 --- IA PARA VIDEOS ---
     {"slug": "enhance-video", "label": L("Mejorar Video 2K/4K", "Enhance Video Pro"), "icon": "fa-film", "category": L("6. IA para Videos", "6. AI Video"), "desc": L("Sube la resolución de videos.", "Upscale video to 2K/4K."), "endpoint": "/v1/videos/enhance-pro", "response_type": "video", "fields": [
         {"name": "input_image", "type": "image", "label": L("Sube tu Video (MP4)", "Upload Video"), "required": True}, 
         {"name": "zoom_factor", "type": "select", "label": L("Resolución", "Resolution"), "required": True, "options": [{"value": "2K", "label": L("2K Calidad Alta", "2K High Quality")}, {"value": "4K", "label": L("4K Ultra HD", "4K Ultra HD")}]},
@@ -193,10 +187,11 @@ def run_model(slug):
 
     try:
         # =======================================================
-        # 🎬 LÓGICA DE VIDEO Y MOCKUP ASÍNCRONO
+        # 🎬 LÓGICA DE VIDEO ASÍNCRONA
         # =======================================================
         if model.get("response_type") == "video":
             file_obj = list(request.files.values())[0]
+            file_bytes = file_obj.read()
             
             payload = {}
             for key, value in request.form.items():
@@ -204,73 +199,6 @@ def run_model(slug):
                 elif value.lower() == "false": payload[key] = False
                 elif value.isdigit(): payload[key] = int(value)
                 else: payload[key] = value
-
-            # 🛠️ MAGIA DE ENSAMBLE: Mockup automático en Backend
-            if slug == "mockup-to-video":
-                diseño_bytes = file_obj.read()
-                try:
-                    diseño = Image.open(io.BytesIO(diseño_bytes)).convert("RGBA")
-                except:
-                    return jsonify({"error": True, "message": "Debes subir un archivo de imagen válido para el diseño."}), 400
-                    
-                tipo = request.form.get("tipo_producto", "playera")
-                color_hex = request.form.get("color_hex", "#ffffff")
-                
-                # BUSCADOR DE ARCHIVOS A PRUEBA DE ERRORES PARA LINUX/RENDER
-                base_dir = os.path.dirname(os.path.abspath(__file__))
-                plantilla_nombre_buscar = "T SHIRT_.png" if tipo == "playera" else "Psd 1.png"
-                plantilla_path = None
-                
-                try:
-                    for archivo in os.listdir(base_dir):
-                        if archivo.lower() == plantilla_nombre_buscar.lower():
-                            plantilla_path = os.path.join(base_dir, archivo)
-                            break
-                except Exception:
-                    pass
-                    
-                if not plantilla_path:
-                    return jsonify({"error": True, "message": f"Falta la imagen {plantilla_nombre_buscar} en la carpeta principal de tu GitHub."}), 400
-                    
-                plantilla = Image.open(plantilla_path).convert("RGBA")
-                
-                # APLICAR COLOR (Se multiplica para mantener sombras)
-                if color_hex and color_hex.lower() != "#ffffff" and color_hex.lower() != "#fff":
-                    color_rgb = tuple(int(color_hex.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
-                    solid_color = Image.new("RGB", plantilla.size, color_rgb)
-                    plantilla_rgb = plantilla.convert("RGB")
-                    plantilla = ImageChops.multiply(plantilla_rgb, solid_color).convert("RGBA")
-                
-                # CÁLCULOS DE POSICIÓN Y TAMAÑO
-                if tipo == "playera":
-                    escala = 0.23 # Diseño ocupa 23% de la foto
-                    prompt = "Highly realistic video of this exact t-shirt worn by an invisible person walking smoothly forward. Dynamic fabric movement, realistic cloth physics, natural folds and wrinkles, photorealistic style, plain studio background, tracking camera shot."
-                    offset_x = (plantilla.width - int(plantilla.width * escala)) // 2
-                    offset_y = int(plantilla.height * 0.35) - (int(diseño.height * (plantilla.width * escala / diseño.width)) // 2)
-                else: # Taza
-                    escala = 0.32 # Diseño ocupa 32% de la foto
-                    prompt = "Photorealistic video of this exact coffee mug placed on a rotating product stand. The mug spins smoothly and continuously 360 degrees, showcasing the entire wraparound design. High quality commercial product rendering, soft lighting, sharp focus, clean background."
-                    offset_x = int(plantilla.width * 0.44) - (int(plantilla.width * escala) // 2)
-                    offset_y = (plantilla.height - int(diseño.height * (plantilla.width * escala / diseño.width))) // 2
-                
-                nuevo_ancho = int(plantilla.width * escala)
-                ratio = nuevo_ancho / float(diseño.width)
-                nuevo_alto = int(diseño.height * ratio)
-                diseño_escalado = diseño.resize((nuevo_ancho, nuevo_alto), Image.LANCZOS)
-                
-                # PEGAR EL LOGO TRANSPARENTE EN LA PLANTILLA
-                plantilla.alpha_composite(diseño_escalado, dest=(offset_x, offset_y))
-                
-                # Guardar el ensamble final en memoria
-                buf = io.BytesIO()
-                plantilla.convert("RGB").save(buf, format="JPEG", quality=95)
-                file_bytes = buf.getvalue()
-                
-                payload["prompt"] = prompt
-                payload.pop("tipo_producto", None)
-                payload.pop("color_hex", None)
-            else:
-                file_bytes = file_obj.read()
 
             url_upload_endpoint = f"{BASE}{model['endpoint']}/upload"
             r1 = requests.post(url_upload_endpoint, headers={"api-key": API_KEY, "Content-Type": "application/json"}, json=payload if payload else None)
@@ -294,12 +222,11 @@ def run_model(slug):
             if not task_id or not upload_url:
                 return jsonify({"error": True, "message": f"Respuesta inesperada de SnapEdit al subir: {datos_carga}"}), 400
 
-            mime_type = "video/mp4" if "video" in slug and not slug.startswith("image-to") and not slug.startswith("mockup") else "image/jpeg"
+            mime_type = "video/mp4" if "video" in slug and not slug.startswith("image-to") else "image/jpeg"
             r2 = requests.put(upload_url, data=file_bytes, headers={"Content-Type": mime_type})
             if r2.status_code not in [200, 201]: 
                 return jsonify({"error": True, "message": f"Fallo al subir el archivo al servidor. Detalle: {r2.text}"}), 400
 
-            # 🟢 AQUÍ ESTÁ LA LÍNEA QUE HABÍA BORRADO POR ERROR. ¡YA ESTÁ RESTAURADA!
             payload["task_id"] = task_id
             
             r3 = requests.post(BASE + model["endpoint"], headers={"api-key": API_KEY, "Content-Type": "application/json"}, json=payload)
