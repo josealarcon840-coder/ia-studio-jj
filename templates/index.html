@@ -239,7 +239,7 @@
           <div class="status-line" id="status"><span class="pulse-dot"></span><span id="statusText"></span></div>
           
           <a href="#" id="btnDownloadResult" class="btn-download" style="display:none;" target="_blank">
-             <i class="fa-solid fa-download mr-2"></i> <span data-i18n="download_btn"></span>
+             <i class="fa-solid fa-download mr-2"></i> <span id="downloadBtnText" data-i18n="download_btn"></span>
           </a>
         </div>
 
@@ -261,7 +261,6 @@
               <div id="viewerWrapper">
                   <div id="imgContainer" style="position:relative; display:inline-block; line-height:0;">
                       <img id="mainResultImg" src="" alt="Resultado">
-                      <!-- REPRODUCTOR DE VIDEO AÑADIDO -->
                       <video id="mainResultVideo" controls loop style="display: none; max-width: 90vw; max-height: 70vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.8);"></video>
                       <div id="boxesContainer" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
                   </div>
@@ -284,10 +283,10 @@
 <script>
 const UI = {
   es: {
-    gate_sub: "Inicia sesión con Telegram para verificar tu acceso.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Ingresar", gate_error: "No tienes acceso. ¡Asegúrate de estar en el grupo VIP!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "¿Cerrar sesión?", home_title: "Panel Premium", home_sub: "Selecciona una herramienta para comenzar.", back: "Volver", run_btn: "Procesar con IA", restart_btn: "Reiniciar Todo", processing: "La IA está procesando...", processing_task: "Tarea asíncrona, espere...", processing_pct: (p) => `Trabajando... (${p}%)`, done: "¡Completado exitosamente!", error_prefix: "Error: ", generic_error: "Fallo de conexión.", task_failed: "La tarea ha fallado.", conn_error: "Error de red: ", conn_error_task: "Error al consultar la tarea.", dropzone_text: "Haz clic o arrastra un archivo", loading_options: "Descargando de internet...", select_placeholder: "Selecciona...", load_error: "Error de red", magic_tags_title: "✨ Toca las etiquetas para borrar:", magic_btn_apply: "Borrar Seleccionados", download_btn: "⬇️ Descargar Diseño (Calidad HD)"
+    gate_sub: "Inicia sesión con Telegram para verificar tu acceso.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Ingresar", gate_error: "No tienes acceso. ¡Asegúrate de estar en el grupo VIP!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "¿Cerrar sesión?", home_title: "Panel Premium", home_sub: "Selecciona una herramienta para comenzar.", back: "Volver", run_btn: "Procesar con IA", restart_btn: "Reiniciar Todo", processing: "La IA está procesando...", processing_task: "Tarea asíncrona, espere...", processing_pct: (p) => `Trabajando... (${p}%)`, done: "¡Completado exitosamente!", error_prefix: "Error: ", generic_error: "Fallo de conexión.", task_failed: "La tarea ha fallado.", conn_error: "Error de red: ", conn_error_task: "Error al consultar la tarea.", dropzone_text: "Haz clic o arrastra un archivo", loading_options: "Descargando de internet...", select_placeholder: "Selecciona...", load_error: "Error de red", magic_tags_title: "✨ Toca las etiquetas para borrar:", magic_btn_apply: "Borrar Seleccionados", download_btn: "Descargar Diseño (Calidad HD)"
   },
   en: {
-    gate_sub: "Login with Telegram to verify access.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Login", gate_error: "Access denied. Make sure you are in the VIP group!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "Log out?", home_title: "Premium Dashboard", home_sub: "Select a tool to begin.", back: "Back", run_btn: "Run AI", restart_btn: "Reset All", processing: "AI is processing...", processing_task: "Async task, wait...", processing_pct: (p) => `Working... (${p}%)`, done: "Successfully completed!", error_prefix: "Error: ", generic_error: "Connection failed.", task_failed: "Task failed.", conn_error: "Network error: ", conn_error_task: "Error checking task.", dropzone_text: "Click or drag a file here", loading_options: "Downloading from cloud...", select_placeholder: "Select...", load_error: "Network error", magic_tags_title: "✨ Tap tags to erase:", magic_btn_apply: "Erase Selected", download_btn: "⬇️ Download Design (HD)"
+    gate_sub: "Login with Telegram to verify access.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Login", gate_error: "Access denied. Make sure you are in the VIP group!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "Log out?", home_title: "Premium Dashboard", home_sub: "Select a tool to begin.", back: "Back", run_btn: "Run AI", restart_btn: "Reset All", processing: "AI is processing...", processing_task: "Async task, wait...", processing_pct: (p) => `Working... (${p}%)`, done: "Successfully completed!", error_prefix: "Error: ", generic_error: "Connection failed.", task_failed: "Task failed.", conn_error: "Network error: ", conn_error_task: "Error checking task.", dropzone_text: "Click or drag a file here", loading_options: "Downloading from cloud...", select_placeholder: "Select...", load_error: "Network error", magic_tags_title: "✨ Tap tags to erase:", magic_btn_apply: "Erase Selected", download_btn: "Download Design (HD)"
   }
 };
 
@@ -399,6 +398,8 @@ function reiniciarHerramienta(keepTool = false) {
     btnDownloadResult.style.display = "none"; btnRestart.style.display = "none";
     magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; quickActionsBar.style.display = "none";
     
+    document.getElementById("downloadBtnText").innerText = t("download_btn");
+
     document.getElementById('btnAntes').style.display = 'none';
     document.getElementById('imgContainer').style.display = 'inline-block';
     document.getElementById('btnCentrar').style.display = 'block';
@@ -637,9 +638,9 @@ form.addEventListener("submit", async (e) => {
             statusLine.className = "status-line show error"; statusText.textContent = t("error_prefix") + (data.message || data.detalle || t("generic_error"));
             submitBtn.disabled = false;
             
-        // 🎬 MANEJO DEL VIDEO CON POLLING
+        // 🎬 POLLING PARA VIDEOS (EVITA EL CORTE DE RENDER)
         } else if (data.is_video_task) {
-            statusText.innerHTML = "Generando Video en la Nube (0%). Por favor espera...";
+            statusText.innerHTML = "Procesando Video en la nube (0%). Por favor espera...";
             
             const polling = setInterval(async () => {
                 try {
@@ -661,8 +662,7 @@ form.addEventListener("submit", async (e) => {
                         btnDownloadResult.href = vUrl;
                         btnDownloadResult.setAttribute("download", "JJ_Video_Magico.mp4");
                         btnDownloadResult.style.display = "block";
-                        // AQUI ASEGURAMOS QUE EL BOTÓN DIGA DESCARGAR VIDEO
-                        btnDownloadResult.innerHTML = `<i class="fa-solid fa-download mr-2"></i> Descargar Video (MP4)`;
+                        document.getElementById("downloadBtnText").innerText = "Descargar Video (MP4)";
                         btnDownloadResult.onclick = null;
                         
                         document.getElementById('tray').style.display = 'block';
@@ -719,6 +719,22 @@ async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
         if (!confirm(msg)) return;
     }
     
+    // 🔴 MAGIA NUEVA: PREGUNTAR POR EL FONDO
+    if (targetSlug === "generate-background") {
+        const userPrompt = prompt(
+            currentLang === 'es' 
+            ? "💡 Escribe la descripción del nuevo fondo:" 
+            : "💡 Describe the new background:", 
+            extraParams.prompt || ""
+        );
+        if (userPrompt === null) return; // Si el usuario cancela, no hacemos nada
+        if (userPrompt.trim() === "") {
+            alert(currentLang === 'es' ? "Debes escribir una descripción para el fondo." : "Prompt cannot be empty.");
+            return;
+        }
+        extraParams.prompt = userPrompt; // Guardamos el nuevo texto del usuario
+    }
+    
     urlOriginalMemoria = urlResultMemoria; 
     
     statusLine.className = "status-line show"; statusText.textContent = t("processing");
@@ -734,15 +750,10 @@ async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
         const formData = new FormData();
         const imgField = targetModel.fields.find(f => f.type === "image").name;
         
-        if (urlResultMemoria.startsWith("blob:")) {
-            const blobReq = await fetch(urlResultMemoria); const blobData = await blobReq.blob();
-            formData.append(imgField, new File([blobData], "edit_chain.png", {type: blobData.type || "image/png"}));
-        } else {
-            // Convierte el enlace en un archivo real para enviar al servidor y que no explote la validación
-            const imgRes = await fetch(urlResultMemoria);
-            const imgBlob = await imgRes.blob();
-            formData.append(imgField, new File([imgBlob], "imagen_sugerida.jpg", {type: imgBlob.type || "image/jpeg"}));
-        }
+        // Convertimos el enlace web a archivo real para enviar
+        const imgRes = await fetch(urlResultMemoria);
+        const imgBlob = await imgRes.blob();
+        formData.append(imgField, new File([imgBlob], "imagen_sugerida.jpg", {type: imgBlob.type || "image/jpeg"}));
         
         for(const [k, v] of Object.entries(extraParams)) formData.append(k, v);
         
@@ -790,8 +801,8 @@ function processFinalUrl(url) {
     btnDownloadResult.href = downloadUrl;
     btnDownloadResult.setAttribute("download", "JJ_Studio_Diseño.png");
     btnDownloadResult.style.display = "block";
-    // RESTAURA EL TEXTO DE LA IMAGEN AQUÍ
-    btnDownloadResult.innerHTML = `<i class="fa-solid fa-download mr-2"></i> <span data-i18n="download_btn">${t("download_btn")}</span>`;
+    
+    document.getElementById("downloadBtnText").innerText = t("download_btn");
     btnDownloadResult.onclick = null;
     
     renderQuickActions(currentSlug);
