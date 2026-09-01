@@ -134,7 +134,7 @@ def style_list():
     url = request.args.get("url", "")
     if not url or not any(url.startswith(f"https://{d}") for d in ALLOWED_STYLE_DOMAINS): return jsonify({"error": True}), 400
     try: return jsonify(requests.get(url, timeout=15).json())
-    except: return jsonify({"error": True}), 500
+    except: return jsonify({"error": True}, 500)
 
 @app.route("/proxy-image")
 def proxy_image():
@@ -192,7 +192,7 @@ def run_model(slug):
 
     try:
         # =======================================================
-        # 🎬 LÓGICA DE VIDEO ASÍNCRONA (SOLO PARA VIDEOS)
+        # 🎬 LÓGICA DE VIDEO ASÍNCRONA
         # =======================================================
         if model.get("response_type") == "video":
             file_obj = list(request.files.values())[0]
@@ -250,7 +250,7 @@ def run_model(slug):
 
 
         # =======================================================
-        # 🖼️ LÓGICA ORIGINAL DE IMÁGENES (CON TRADUCTOR DE LLAVES)
+        # 🖼️ LÓGICA DE IMÁGENES
         # =======================================================
         files, data = {}, {}
         
@@ -258,8 +258,7 @@ def run_model(slug):
             if file_obj and file_obj.filename:
                 buf, fname, mime = resize_if_needed(file_obj.read(), slug, file_obj.filename)
                 
-                # 🛠️ CORRECCIÓN: Si es 'generates-background' u otro endpoint, adaptamos la llave de la foto
-                if slug == "generate-background" or any(x in model["endpoint"] for x in ["generates-background", "pose-suggest", "outpaint"]):
+                if slug == "generate-background" or model["endpoint"] == "/v1/images/generates-background":
                     api_key = "image"
                 else:
                     api_key = key
