@@ -66,27 +66,24 @@ MODELS = [
         {"name": "input_image", "type": "image", "label": L("Sube tu Diseño Original", "Upload Design"), "required": True}, 
         {"name": "prompt", "type": "select", "label": L("Elige la Textura", "Select Texture"), "required": True, "options": [
             {"value": "Apply 3D amigurumi crochet texture to the entire image. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add frames, hoops or white backgrounds. Only change the material of existing elements to knitted yarn.", "label": L("🧶 Crochet / Amigurumi (Lana)", "Crochet / Amigurumi")},
-            
             {"value": "Apply highly detailed realistic embroidery texture to the entire image. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add frames, hoops or white backgrounds. Only change the material of existing elements to thick colorful threads and 3D stitches.", "label": L("🧵 Bordado Realista (Hilos 3D)", "Realistic Embroidery")},
-            
             {"value": "Apply textile embroidery patch style to the entire image. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add stitched borders if they don't exist, no background fabric. Only change the material of existing elements to high quality thread texture.", "label": L("🏷️ Parche Textil (Sin Bordes)", "Textile Patch")},
-            
             {"value": "Apply 3D inflated balloon puffy texture to the entire image. Make it look like soft, puffy, glossy plastic or vinyl. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add backgrounds. Only change the material of existing elements to 3D inflated balloon.", "label": L("🎈 Estilo Inflado 3D (Globo/Puffer)", "3D Inflated/Puffer")}
         ]}
     ]},
 
     {"slug": "retouch-skin", "label": L("Retoque Facial", "Skin Retouch"), "icon": "fa-face-smile", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Limpia la piel automáticamente.", "Cleans skin automatically."), "endpoint": "/v1/images/retouch-skin", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    # 🚀 --- IA PARA VIDEOS (NUEVO) ---
+    # 🚀 --- IA PARA VIDEOS (ARREGLADO ETIQUETAS DE TEXTO) ---
     {"slug": "enhance-video", "label": L("Mejorar Video 2K/4K", "Enhance Video Pro"), "icon": "fa-film", "category": L("6. IA para Videos", "6. AI Video"), "desc": L("Sube la resolución de videos.", "Upscale video to 2K/4K."), "endpoint": "/v1/videos/enhance-pro", "response_type": "video", "fields": [
         {"name": "input_image", "type": "image", "label": L("Sube tu Video (MP4)", "Upload Video"), "required": True}, 
-        {"name": "zoom_factor", "type": "select", "label": L("Resolución", "Resolution"), "required": True, "options": [{"value": "2K", "label": "2K Calidad Alta"}, {"value": "4K", "label": "4K Ultra HD"}]},
-        {"name": "is_preview", "type": "select", "label": L("Duración", "Duration"), "required": True, "options": [{"value": "true", "label": "Muestra rápida (3 Segundos)"}, {"value": "false", "label": "Video Completo"}]}
+        {"name": "zoom_factor", "type": "select", "label": L("Resolución", "Resolution"), "required": True, "options": [{"value": "2K", "label": L("2K Calidad Alta", "2K High Quality")}, {"value": "4K", "label": L("4K Ultra HD", "4K Ultra HD")}]},
+        {"name": "is_preview", "type": "select", "label": L("Duración", "Duration"), "required": True, "options": [{"value": "true", "label": L("Muestra rápida (3 Segundos)", "Preview (3 Sec)")}, {"value": "false", "label": L("Video Completo", "Full Video")}]}
     ]},
     {"slug": "image-to-video", "label": L("Animar Foto a Video", "Image to Video"), "icon": "fa-video", "category": L("6. IA para Videos", "6. AI Video"), "desc": L("Dale vida y movimiento a una imagen.", "Animate photo with AI."), "endpoint": "/v1/videos/image-to-video", "response_type": "video", "fields": [
         {"name": "input_image", "type": "image", "label": L("Sube tu Foto", "Upload Image"), "required": True}, 
         {"name": "prompt", "type": "textarea", "label": L("Instrucción de Movimiento", "Motion Prompt"), "required": True},
-        {"name": "duration", "type": "select", "label": L("Duración", "Duration"), "required": True, "options": [{"value": "4", "label": "4 Segundos"}, {"value": "8", "label": "8 Segundos"}]}
+        {"name": "duration", "type": "select", "label": L("Duración", "Duration"), "required": True, "options": [{"value": "4", "label": L("4 Segundos", "4 Seconds")}, {"value": "8", "label": L("8 Segundos", "8 Seconds")}]}
     ]}
 ]
 
@@ -195,7 +192,7 @@ def run_model(slug):
 
     try:
         # =======================================================
-        # 🎬 LÓGICA DE VIDEO ASÍNCRONA (AÑADIDA SIN ALTERAR EL RESTO)
+        # 🎬 LÓGICA DE VIDEO ASÍNCRONA (MODIFICADA PARA MOSTRAR ERROR)
         # =======================================================
         if model.get("response_type") == "video":
             file_obj = list(request.files.values())[0]
@@ -204,7 +201,10 @@ def run_model(slug):
             # Paso 1: Pedir URL de carga a SnapEdit
             url_upload_endpoint = f"{BASE}{model['endpoint']}/upload"
             r1 = requests.post(url_upload_endpoint, headers=HEADERS)
-            if r1.status_code != 200: return jsonify({"error": True, "message": "Fallo al iniciar el servidor de video."}), 400
+            
+            # 🚨 INYECCIÓN DE DIAGNÓSTICO: Si falla, nos mostrará la respuesta secreta de SnapEdit
+            if r1.status_code != 200: 
+                return jsonify({"error": True, "message": f"Fallo al iniciar servidor de video (Paso 1). Código: {r1.status_code} | Detalle SnapEdit: {r1.text}"}), 400
             
             datos_carga = r1.json()
             task_id = datos_carga["task_id"]
@@ -212,7 +212,8 @@ def run_model(slug):
 
             # Paso 2: Subir el archivo multimedia
             r2 = requests.put(upload_url, data=file_bytes)
-            if r2.status_code != 200: return jsonify({"error": True, "message": "Fallo al subir el archivo multimedia."}), 400
+            if r2.status_code != 200: 
+                return jsonify({"error": True, "message": f"Fallo al subir el archivo (Paso 2). Detalle: {r2.text}"}), 400
 
             # Paso 3: Crear la Tarea de Renderizado
             payload = {"task_id": task_id}
@@ -258,7 +259,6 @@ def run_model(slug):
         for key, value in request.form.items():
             if value: data[key] = value
 
-        # 🚀 INYECCIÓN SECRETA: Forzamos el modo "editing"
         if slug == "textile-styles":
             data["mode"] = "editing"
 
@@ -320,7 +320,6 @@ def run_model(slug):
                                 img_obj.save(buf, format="PNG", dpi=(300, 300))
                                 return Response(buf.getvalue(), mimetype="image/png")
                             except:
-                                # Si no es imagen real, forzamos error rojo
                                 return jsonify({"error": True, "message": "La IA no devolvió un formato de imagen válido."}), 400
                         else:
                             return jsonify({"error": True, "message": "Fallo al descargar la imagen procesada de la nube."}), 400
@@ -331,7 +330,6 @@ def run_model(slug):
             else:
                 return jsonify({"error": True, "message": datos.get("message", str(datos))}), 400
         else:
-            # Si SnapEdit falló y devuelve una web de error en vez de JSON
             if response.status_code != 200:
                 return jsonify({"error": True, "message": f"Servidores de la IA saturados (Código {response.status_code}). Intenta de nuevo."}), 400
             
@@ -341,7 +339,6 @@ def run_model(slug):
                 img_obj.save(buf, format="PNG", dpi=(300, 300))
                 return Response(buf.getvalue(), mimetype="image/png")
             except:
-                # Evita que se envíe "código basura" como si fuera una foto
                 return jsonify({"error": True, "message": "La respuesta de la IA está corrupta."}), 400
 
     except Exception as e: 
