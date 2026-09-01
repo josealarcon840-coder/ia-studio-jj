@@ -19,16 +19,13 @@
   ::selection { background: var(--red); color: #fff; }
   button { font-family: inherit; color: inherit; cursor: pointer; }
 
-  /* Lang switch */
   .lang-switch { display: inline-flex; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
   .lang-switch button { background: none; border: none; color: var(--text-faint); font-size: 0.74rem; font-weight: 700; padding: 6px 11px; transition: 0.2s ease; }
   .lang-switch button.active { background: var(--red); color: #fff; }
 
-  /* Logo */
   .brand-mark { width: 80px; height: 80px; margin: 0 auto 18px; border-radius: 18px; background: linear-gradient(135deg, #111, #300); border: 2px solid var(--red-bright); display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 1.5rem; color: #fff; box-shadow: 0 0 20px rgba(255,45,58,0.5), inset 0 0 15px rgba(122,13,20,0.8); text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
   .brand-mark i { font-size: 0.6em; color: #ffd700; margin-bottom: -2px; }
 
-  /* Login */
   #gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; position: relative; }
   .gate-lang { position: absolute; top: 20px; right: 20px; }
   .gate-card { width: 100%; max-width: 380px; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 36px 30px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
@@ -43,7 +40,6 @@
   .wa-link:hover { filter: brightness(1.2);}
   .wa-subscribe { background: #25D366; color: #05310f !important; }
 
-  /* App shell */
   #app { display: none; min-height: 100vh; }
   .topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 28px; border-bottom: 1px solid var(--border); background: rgba(10,4,4,0.9); position: sticky; top: 0; z-index: 20; flex-wrap: wrap; box-shadow: 0 4px 20px rgba(0,0,0,0.5);}
   .topbar-brand { display: flex; align-items: center; gap: 12px; }
@@ -56,7 +52,6 @@
 
   main { padding: 32px 28px 70px; max-width: 1200px; margin: 0 auto; }
 
-  /* Home */
   .home-title { font-family: var(--font-display); font-size: 2.2rem; text-transform: uppercase; letter-spacing: 0.02em; margin: 0 0 4px; color: var(--text); }
   .home-sub { color: var(--text-dim); font-size: 1rem; margin: 0 0 30px; }
   .cat-heading { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--red-bright); font-weight: 800; margin: 40px 0 15px; border-bottom: 1px solid var(--border); padding-bottom: 8px;}
@@ -70,7 +65,6 @@
   .tool-card h3 { font-size: 1.1rem; font-weight: 800; margin: 0 0 8px; color: var(--text); text-transform: uppercase;}
   .tool-card p { font-size: 0.85rem; color: var(--text-dim); margin: 0; line-height: 1.4; }
 
-  /* Tool detail */
   #toolView { display: none; }
   .back-btn { display: inline-flex; align-items: center; gap: 8px; background: #111; border: 1px solid #333; color: #aaa; font-size: 0.85rem; font-weight: bold; cursor: pointer; padding: 10px 18px; border-radius: 8px; margin-bottom: 25px; transition: 0.2s; text-transform: uppercase;}
   .back-btn:hover { color: #fff; border-color: var(--red-bright); background: var(--red-dim); }
@@ -87,6 +81,7 @@
   .field label .req { color: var(--red-bright); margin-left: 3px; font-size: 1.1em;}
 
   input[type="text"], input[type="number"], select, textarea { width: 100%; background: #050505; border: 1px solid #444; color: var(--text); padding: 12px 14px; border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; transition: 0.2s;}
+  input[type="color"] { width: 100%; height: 45px; background: #050505; border: 1px solid #444; padding: 2px; border-radius: 8px; cursor: pointer;}
   input:focus, select:focus, textarea:focus { outline: none; border-color: var(--red-bright); box-shadow: 0 0 8px rgba(255,45,58,0.3); }
   textarea { min-height: 100px; resize: vertical; }
 
@@ -111,25 +106,21 @@
   .pulse-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red-bright); animation: pulse 1s infinite ease-in-out; flex-shrink: 0; }
   @keyframes pulse { 0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--red-bright);} 50% { opacity: 0.3; } }
 
-  /* Visor Zoomable */
   .checkerboard { background-image: linear-gradient(45deg, #111 25%, transparent 25%), linear-gradient(-45deg, #111 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #111 75%), linear-gradient(-45deg, transparent 75%, #111 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
   .viewer-container { width: 100%; min-height: 450px; height: 100%; border-radius: 16px; border: 1px solid #333; overflow: hidden; position: relative; background: #080808; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); cursor: grab; }
   .viewer-container:active { cursor: grabbing; }
   #viewerWrapper { transform-origin: center center; transition: transform 0.1s ease-out; position: relative; display: inline-block;}
   #mainResultImg { display: block; max-width: 90vw; max-height: 70vh; object-fit: contain; border-radius: 8px;}
   
-  /* Botones sobre el visor */
   .btn-visor { position: absolute; z-index: 200; background: rgba(0,0,0,0.8); color: #fff; border: 1px solid #555; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-family: sans-serif; font-size: 0.8rem; cursor: pointer; transition: 0.2s;}
   .btn-visor:hover { background: #333; border-color: #777;}
   
-  /* Etiquetas del borrador mágico */
   #magicTagsPanel { background: #000; border: 1px solid #500; border-radius: 8px; padding: 15px; margin-top: 20px; display: none; text-align: center;}
   .ai-tag { display: inline-block; padding: 6px 12px; margin: 4px; font-size: 12px; border: 1px solid #500; cursor: pointer; border-radius: 6px; color: #aaa; font-weight: bold; transition: 0.2s; background: #111;}
   .ai-tag.selected { background: var(--red-bright); color: #fff; border-color: var(--red-bright); box-shadow: 0 0 10px rgba(255,45,58,0.5);}
   .ai-box { position: absolute; border: 2px solid transparent; border-radius: 6px; pointer-events: none; transition: 0.2s; }
   .ai-box.selected { border-color: var(--red-bright); background: rgba(255,45,58,0.2); box-shadow: 0 0 15px rgba(255,45,58,0.6); }
 
-  /* BOTONES */
   .btn-primary { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--red-bright), var(--red-dim)); color: #fff; border: none; border-radius: 8px; font-weight: 900; font-size: 0.9rem; text-transform: uppercase; cursor: pointer; transition: 0.2s ease; box-shadow: 0 5px 15px rgba(255,45,58,0.3); margin-top: 15px;}
   .btn-primary:hover:not(:disabled) { transform: scale(1.02); filter: brightness(1.15); }
   .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -184,7 +175,6 @@
 </head>
 <body>
 
-<!-- CONTENEDOR MODAL PARA GENERAR FONDOS (Oculto por defecto) -->
 <div class="custom-modal-overlay" id="promptModal">
     <div class="custom-modal">
         <h3><i class="fa-solid fa-image mr-2 text-red-500"></i> Fondo con IA</h3>
@@ -303,7 +293,6 @@
               <div id="viewerWrapper">
                   <div id="imgContainer" style="position:relative; display:inline-block; line-height:0;">
                       <img id="mainResultImg" src="" alt="Resultado">
-                      <!-- REPRODUCTOR DE VIDEO AÑADIDO -->
                       <video id="mainResultVideo" controls loop style="display: none; max-width: 90vw; max-height: 70vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.8);"></video>
                       <div id="boxesContainer" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
                   </div>
@@ -441,7 +430,6 @@ function reiniciarHerramienta(keepTool = false) {
     btnDownloadResult.style.display = "none"; btnRestart.style.display = "none";
     magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; quickActionsBar.style.display = "none";
     
-    // RESTAURA EL TEXTO ORIGINAL PARA FOTOS
     document.getElementById("downloadBtnText").innerText = t("download_btn");
 
     document.getElementById('btnAntes').style.display = 'none';
@@ -578,6 +566,13 @@ function renderForm(model) {
             items.forEach(item => { const id = typeof item === "string" ? item : (item.id || item.style_id || item.value); const name = typeof item === "string" ? item : (item.name || item.label || id); const o = document.createElement("option"); o.value = id; o.textContent = name + (item.premium ? " 💎 PRO" : ""); input.appendChild(o); });
           }).catch(() => { input.innerHTML = `<option value="">${t("load_error")}</option>`; });
       }
+    } else if (field.type === "color") { 
+        input = document.createElement("input"); 
+        input.type = "color"; 
+        input.style.height = "45px";
+        input.style.padding = "2px";
+        input.style.cursor = "pointer";
+        if (field.default !== undefined) input.value = field.default; 
     } else if (field.type === "number") { input = document.createElement("input"); input.type = "number"; if (field.default !== undefined) input.value = field.default; } 
     else { input = document.createElement("input"); input.type = "text"; }
 
@@ -611,7 +606,7 @@ function renderQuickActions(slug) {
     const zoomEl = document.getElementById("field_zoom_factor");
     if (zoomEl && zoomEl.value === "8") { is8x = true; }
 
-    if (slug.includes("enhance")) {
+    if (slug.includes("enhance") && !slug.includes("video")) {
         if (slug === "enhance-art" && !is8x) {
             qaTitle.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Acciones Sugeridas`;
             keys = ["extract-logo", "remove-bg"];
@@ -620,7 +615,7 @@ function renderQuickActions(slug) {
             qaContainer.innerHTML = `<p style="color:var(--text-dim); font-size:0.85rem; margin:0;">La imagen está en su calidad máxima absoluta. ¡Lista para descargar o imprimir!</p>`;
             return; 
         }
-    } else {
+    } else if (!slug.includes("video")) {
         qaTitle.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Sugerencias de la IA`;
         if (slug.includes("restore") || slug === "light-restore" || slug === "night-flash" || slug === "backlit-fix") { keys = ["colorize", "upscale-faces", "magic-eraser", "light"]; } 
         else if (slug.includes("colorize")) { keys = ["restore", "upscale-faces", "magic-eraser"]; } 
@@ -674,7 +669,6 @@ form.addEventListener("submit", async (e) => {
     if (!res.headers.get("content-type").includes("application/json")) {
         const blob = await res.blob(); 
         const localBlobUrl = URL.createObjectURL(blob);
-        // Le pasamos el currentSlug para que sepa qué sugerencias mostrar sin cambiar la herramienta base
         processFinalUrl(localBlobUrl, currentSlug);
         submitBtn.disabled = false;
     } else {
@@ -753,7 +747,6 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-// VARIABLES PARA EL MODAL PERSONALIZADO
 let pendingQuickAction = null;
 let pendingExtraParams = null;
 
@@ -794,10 +787,9 @@ async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
         if (!confirm(msg)) return;
     }
     
-    // 🔴 SI ES GENERAR FONDO, LANZA EL MODAL BONITO DE J&J
     if (targetSlug === "generate-background") {
         showPromptModal(targetSlug, extraParams);
-        return; // Detiene la función y espera a que el usuario presione "Generar Magia"
+        return; 
     }
     
     proceedWithQuickAction(targetSlug, extraParams);
@@ -836,7 +828,6 @@ async function proceedWithQuickAction(targetSlug, extraParams) {
         mainResultImg.classList.remove("opacity-50", "blur-sm");
         
         if (!res.headers.get("content-type").includes("application/json")) {
-            // NO ALTERAMOS EL CURRENTSLUG PARA QUE EL "REINICIAR TODO" SIGA FUNCIONANDO
             const blobFinal = await res.blob(); 
             processFinalUrl(URL.createObjectURL(blobFinal), targetSlug);
         } else {
@@ -848,7 +839,6 @@ async function proceedWithQuickAction(targetSlug, extraParams) {
     }
 }
 
-// 🟢 FUNCIÓN ACTUALIZADA PARA NO PERDER LA HERRAMIENTA PRINCIPAL
 function processFinalUrl(url, slugToUse = currentSlug) {
     let displayUrl = url;
     let downloadUrl = url;
@@ -874,7 +864,7 @@ function processFinalUrl(url, slugToUse = currentSlug) {
     document.getElementById("downloadBtnText").innerText = t("download_btn");
     btnDownloadResult.onclick = null;
     
-    renderQuickActions(slugToUse); // Muestra las sugerencias correctas
+    renderQuickActions(slugToUse); 
     quickActionsBar.style.display = "block"; 
     
     document.getElementById('tray').style.display = 'block';
