@@ -218,7 +218,8 @@ def run_model(slug):
                 
                 # BUSCADOR DE ARCHIVOS A PRUEBA DE ERRORES PARA LINUX/RENDER
                 base_dir = os.path.dirname(os.path.abspath(__file__))
-                plantilla_nombre_buscar = "T SHIRT_.jpg" if tipo == "playera" else "Psd 1.jpg"
+                # 🟢 AQUÍ ESTÁ EL CAMBIO CRÍTICO: BUSCA LOS .PNG
+                plantilla_nombre_buscar = "T SHIRT_.png" if tipo == "playera" else "Psd 1.png"
                 plantilla_path = None
                 
                 try:
