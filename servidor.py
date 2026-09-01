@@ -56,7 +56,10 @@ MODELS = [
     {"slug": "generate-qwen", "label": L("Crear: Qwen (Texto)", "Create: Qwen (Text)"), "icon": "fa-brain", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Motor HD realista.", "HD realistic engine."), "endpoint": "/v1/images/generates/qwen", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "cm_auto_magic", "label": L("Medidas en Centímetros", "Size (CM)")}]},
     
     {"slug": "fairy-art", "label": L("Retrato a Arte", "Portrait to Art"), "icon": "fa-wand-magic-sparkles", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Convierte fotos a Anime/3D.", "Convert photos to Anime/3D."), "endpoint": "/v1/images/generates/art", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "style", "type": "select", "label": L("Estilo", "Style"), "required": True, "options_url": "https://storage.googleapis.com/assets.snapedit.app/fairyai/anime_styles_6mar25.json"}]},
-    {"slug": "generate-background", "label": L("Generar Fondo Nuevo", "Generate Background"), "icon": "fa-image", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Fondo para productos.", "Background for products."), "endpoint": "/v1/images/generates-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Descripción del fondo", "Background prompt"), "required": True}]},
+    
+    # 🔴 GENERADOR DE FONDO CORREGIDO
+    {"slug": "generate-background", "label": L("Generar Fondo Nuevo", "Generate Background"), "icon": "fa-image", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Fondo para productos. ¡Sube un PNG SIN FONDO!", "Background for products."), "endpoint": "/v1/images/generates-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen (Transparente)", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Descripción del fondo", "Background prompt"), "required": True}]},
+    
     {"slug": "sticker", "label": L("Crear Sticker", "Create Sticker"), "icon": "fa-note-sticky", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Haz un sticker de tu foto.", "Make a sticker from photo."), "endpoint": "/v1/images/generates/sticker", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Estilo (Ej: Zombie)", "Style (e.g. Zombie)"), "required": True}]},
 
     # --- Edición y Belleza ---
@@ -179,6 +182,7 @@ def verify_telegram():
     except Exception as e:
         return jsonify({"access": False, "message": str(e)}), 500
 
+# 🚀 RUTA PARA CONSULTAR VIDEOS Y EVITAR LÍMITE DE RENDER
 @app.route("/check-task", methods=["GET"])
 def check_task():
     task_id = request.args.get("task_id")
@@ -205,7 +209,7 @@ def run_model(slug):
 
     try:
         # =======================================================
-        # 🎬 LÓGICA DE VIDEO ASÍNCRONA
+        # 🎬 LÓGICA DE VIDEO ASÍNCRONA (SIN ESPERAR EN EL BACKEND)
         # =======================================================
         if model.get("response_type") == "video":
             file_obj = list(request.files.values())[0]
@@ -250,6 +254,7 @@ def run_model(slug):
             if r3.status_code != 200: 
                 return jsonify({"error": True, "message": f"Fallo al procesar el renderizado: {r3.text}"}), 400
 
+            # ¡Devolvemos INMEDIATAMENTE para que la página web haga el Polling y Render no corte!
             return jsonify({
                 "is_video_task": True, 
                 "task_id": task_id, 
@@ -257,28 +262,27 @@ def run_model(slug):
             })
 
         # =======================================================
-        # 🖼️ LÓGICA DE IMÁGENES (CON EL TRUCO PARA SNAPEDIT)
+        # 🖼️ LÓGICA DE IMÁGENES
         # =======================================================
         files, data = {}, {}
         
         for key, file_obj in request.files.items():
             if file_obj and file_obj.filename:
                 buf, fname, mime = resize_if_needed(file_obj.read(), slug, file_obj.filename)
-                ext = "png" if "png" in mime else "jpg"
                 
-                # 🚀 EL TRUCO DE INGENIERÍA PARA EL GENERADOR DE FONDOS
-                if slug == "generate-background" or model["endpoint"] == "/v1/images/generates-background":
-                    # Clonamos el archivo en "image" y "input_image" para satisfacer todas las validaciones buggy de SnapEdit
-                    files["image"] = (f"imagen.{ext}", buf, mime)
-                    files["input_image"] = (f"imagen.{ext}", buf, mime)
-                else:
-                    files[key] = (f"imagen.{ext}", buf, mime)
+                # A SnapEdit siempre le enviaremos la foto con su llave original (generalmente 'input_image')
+                ext = "png" if "png" in mime else "jpg"
+                files[key] = (f"imagen.{ext}", buf, mime)
 
         for key, value in request.form.items():
             if value: data[key] = value
 
         if slug == "textile-styles":
             data["mode"] = "editing"
+
+        # Validación extra de seguridad: Generar Fondo EXIGE archivo PNG sin fondo.
+        if slug == "generate-background" and ("png" not in mime.lower()):
+             return jsonify({"error": True, "message": "¡Debes subir una imagen que ya no tenga fondo (PNG transparente)! Tu foto es un archivo sólido (.jpg). Ve primero a 'Quitar Fondo' y luego usa 'Fondo con IA'."}), 400
 
         if slug in ["detect-text", "detect-wires"]:
             r1 = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files, timeout=120)
