@@ -1,28 +1,496 @@
-// Cuando la respuesta del servidor es exitosa (Response 200)
-const contentType = response.headers.get("content-type");
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IA Studio - Comunidad Premium J&J</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f0f11;
+            --panel-bg: #1a1a1d;
+            --primary: #e60000;
+            --primary-hover: #ff1a1a;
+            --text-main: #ffffff;
+            --text-muted: #a0a0a0;
+            --border-color: #333333;
+        }
 
-if (contentType && contentType.includes("application/json")) {
-    const jsonResult = await response.json();
-    
-    // 🎬 SI ES UN VIDEO
-    if (jsonResult.is_video) {
-        // En lugar de una <img>, creas o inyectas un <video>
-        tuContenedorDeResultado.innerHTML = `
-            <video controls autoplay loop style="max-width: 100%; border-radius: 10px;">
-                <source src="${jsonResult.url}" type="video/mp4">
-                Tu navegador no soporta videos.
-            </video>
-        `;
-        // Y el botón de descargar lo apuntas a jsonResult.url
-        botonDescargar.href = jsonResult.url;
-        botonDescargar.download = "video_generado.mp4";
-    } 
-    else if (jsonResult.error) {
-        alert(jsonResult.message);
-    }
-} else {
-    // 🖼️ SI ES UNA IMAGEN NORMAL (Como ya lo tienes programado)
-    const blob = await response.blob();
-    const urlFoto = URL.createObjectURL(blob);
-    // ... pones la foto en tu <img src="">
-}
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background-color: var(--panel-bg);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .navbar-brand i { color: var(--primary); }
+        .user-badge {
+            background-color: var(--border-color);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* CONTENEDOR PRINCIPAL */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        /* PANEL DE HERRAMIENTAS (MENÚ) */
+        #menu-view { display: block; }
+        .category-title {
+            color: var(--primary);
+            font-size: 18px;
+            text-transform: uppercase;
+            margin: 40px 0 20px 0;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .tool-card {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .tool-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(230, 0, 0, 0.15);
+        }
+        .tool-icon {
+            font-size: 35px;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        .tool-title { font-size: 18px; font-weight: bold; margin-bottom: 8px; }
+        .tool-desc { font-size: 13px; color: var(--text-muted); }
+
+        /* VISTA DE TRABAJO (WORKSPACE) */
+        #workspace-view { display: none; }
+        .btn-back {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            padding: 0;
+        }
+        .btn-back:hover { color: var(--text-main); }
+        
+        .workspace-header { margin-bottom: 30px; }
+        .workspace-title { color: var(--primary); font-size: 28px; margin: 0 0 10px 0; text-transform: uppercase; }
+        
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        @media (max-width: 768px) {
+            .workspace-grid { grid-template-columns: 1fr; }
+        }
+
+        /* FORMULARIO Y CONTROLES */
+        .control-panel {
+            background-color: var(--panel-bg);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; margin-bottom: 8px; font-weight: bold; font-size: 14px; color: var(--text-muted); }
+        
+        input[type="file"], select, textarea {
+            width: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+        textarea { resize: vertical; min-height: 80px; }
+        
+        .btn-process {
+            width: 100%;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn-process:hover { background-color: var(--primary-hover); }
+        .btn-process:disabled { background-color: #555; cursor: not-allowed; }
+
+        /* ÁREA DE RESULTADO (IMAGEN/VIDEO) */
+        .result-panel {
+            background-color: var(--panel-bg);
+            border-radius: 12px;
+            border: 1px dashed var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .result-placeholder { color: var(--text-muted); text-align: center; }
+        .result-placeholder i { font-size: 40px; margin-bottom: 10px; opacity: 0.5; }
+        
+        #result-media {
+            max-width: 100%;
+            max-height: 500px;
+            border-radius: 8px;
+            display: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+
+        .btn-download {
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-top: 20px;
+            display: none;
+            gap: 10px;
+            align-items: center;
+            transition: 0.2s;
+        }
+        .btn-download:hover { background-color: #218838; }
+
+        /* LOADER */
+        .loader {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <i class="fa-solid fa-fire"></i> IA STUDIO
+        </div>
+        <div class="user-badge">VIP | J&J</div>
+    </nav>
+
+    <div class="container">
+        <!-- VISTA 1: MENÚ PRINCIPAL -->
+        <div id="menu-view">
+            <h2 style="text-align: center; margin-bottom: 10px;">PANEL PREMIUM</h2>
+            <p style="text-align: center; color: var(--text-muted); margin-bottom: 40px;">Selecciona una herramienta de Inteligencia Artificial para comenzar.</p>
+            
+            <div id="categories-container">
+                <!-- Las categorías y botones se generan aquí con JavaScript -->
+            </div>
+        </div>
+
+        <!-- VISTA 2: ÁREA DE TRABAJO -->
+        <div id="workspace-view">
+            <button class="btn-back" onclick="volverAlMenu()">
+                <i class="fa-solid fa-arrow-left"></i> VOLVER AL PANEL
+            </button>
+
+            <div class="workspace-header">
+                <h2 class="workspace-title" id="ws-title">HERRAMIENTA</h2>
+                <p id="ws-desc" style="color: var(--text-muted); margin: 0;">Descripción de la herramienta.</p>
+            </div>
+
+            <div class="workspace-grid">
+                <!-- Formulario -->
+                <div class="control-panel">
+                    <form id="ai-form" onsubmit="procesarPeticion(event)">
+                        <div id="form-fields">
+                            <!-- Los inputs se generan dinámicamente aquí -->
+                        </div>
+                        <button type="submit" class="btn-process" id="btn-submit">
+                            <i class="fa-solid fa-bolt"></i> PROCESAR CON IA
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Resultado -->
+                <div class="result-panel">
+                    <div class="result-placeholder" id="result-placeholder">
+                        <i class="fa-regular fa-image"></i>
+                        <p>Sube tu archivo y presiona procesar para ver la magia.</p>
+                    </div>
+
+                    <!-- Loader de carga -->
+                    <div class="loader" id="loader">
+                        <div class="spinner"></div>
+                        <span style="color: var(--primary); font-weight: bold;" id="loader-text">La IA está trabajando...</span>
+                    </div>
+
+                    <!-- Contenedor donde se inyectará la Imagen o el Video -->
+                    <div id="media-container" style="width: 100%; text-align: center;"></div>
+                    
+                    <a href="#" class="btn-download" id="btn-download">
+                        <i class="fa-solid fa-download"></i> DESCARGAR RESULTADO
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT: LÓGICA PRINCIPAL -->
+    <script>
+        let modelosActuales = [];
+        let herramientaActiva = null;
+
+        // 1. Cargar las herramientas desde el servidor (app.py) al abrir la página
+        document.addEventListener("DOMContentLoaded", async () => {
+            try {
+                const response = await fetch('/models');
+                modelosActuales = await response.json();
+                renderizarMenu(modelosActuales);
+            } catch (error) {
+                console.error("Error cargando modelos:", error);
+                document.getElementById('categories-container').innerHTML = '<p style="color:red; text-align:center;">Error conectando con el servidor.</p>';
+            }
+        });
+
+        // 2. Dibujar los botones en el menú principal
+        function renderizarMenu(modelos) {
+            const container = document.getElementById('categories-container');
+            container.innerHTML = '';
+            
+            // Agrupar por categoría
+            const categorias = {};
+            modelos.forEach(m => {
+                if (!categorias[m.category]) categorias[m.category] = [];
+                categorias[m.category].push(m);
+            });
+
+            // Crear el HTML para cada categoría
+            for (const cat in categorias) {
+                const catTitle = document.createElement('h3');
+                catTitle.className = 'category-title';
+                catTitle.innerHTML = `<i class="fa-solid fa-folder-open"></i> ${cat}`;
+                container.appendChild(catTitle);
+
+                const grid = document.createElement('div');
+                grid.className = 'tools-grid';
+
+                categorias[cat].forEach(herramienta => {
+                    const card = document.createElement('div');
+                    card.className = 'tool-card';
+                    card.onclick = () => abrirHerramienta(herramienta);
+                    card.innerHTML = `
+                        <i class="fa-solid ${herramienta.icon} tool-icon"></i>
+                        <div class="tool-title">${herramienta.label}</div>
+                        <div class="tool-desc">${herramienta.desc}</div>
+                    `;
+                    grid.appendChild(card);
+                });
+                container.appendChild(grid);
+            }
+        }
+
+        // 3. Abrir la zona de trabajo de una herramienta
+        function abrirHerramienta(herramienta) {
+            herramientaActiva = herramienta;
+            
+            document.getElementById('menu-view').style.display = 'none';
+            document.getElementById('workspace-view').style.display = 'block';
+            
+            document.getElementById('ws-title').innerHTML = `<i class="fa-solid ${herramienta.icon}"></i> ${herramienta.label}`;
+            document.getElementById('ws-desc').innerText = herramienta.desc;
+            
+            // Limpiar resultados anteriores
+            document.getElementById('result-placeholder').style.display = 'block';
+            document.getElementById('media-container').innerHTML = '';
+            document.getElementById('btn-download').style.display = 'none';
+
+            // Generar los campos del formulario (Inputs)
+            const formFields = document.getElementById('form-fields');
+            formFields.innerHTML = '';
+
+            herramienta.fields.forEach(field => {
+                const group = document.createElement('div');
+                group.className = 'form-group';
+                
+                const label = document.createElement('label');
+                label.className = 'form-label';
+                label.innerText = field.label + (field.required ? ' *' : '');
+                group.appendChild(label);
+
+                if (field.type === 'image' || field.type === 'mask') {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.name = field.name;
+                    input.accept = herramienta.response_type === 'video' && field.name === 'input_image' ? 'video/mp4, image/*' : 'image/*';
+                    if (field.required) input.required = true;
+                    group.appendChild(input);
+                } 
+                else if (field.type === 'select') {
+                    const select = document.createElement('select');
+                    select.name = field.name;
+                    field.options.forEach(opt => {
+                        const option = document.createElement('option');
+                        option.value = opt.value;
+                        option.innerText = opt.label;
+                        select.appendChild(option);
+                    });
+                    group.appendChild(select);
+                }
+                else if (field.type === 'textarea') {
+                    const textarea = document.createElement('textarea');
+                    textarea.name = field.name;
+                    textarea.placeholder = 'Escribe aquí tu instrucción...';
+                    if (field.required) textarea.required = true;
+                    group.appendChild(textarea);
+                }
+
+                formFields.appendChild(group);
+            });
+        }
+
+        function volverAlMenu() {
+            document.getElementById('workspace-view').style.display = 'none';
+            document.getElementById('menu-view').style.display = 'block';
+        }
+
+        // 4. Enviar datos al Servidor (AQUÍ ESTÁ LA MAGIA PARA VIDEO E IMÁGENES)
+        async function procesarPeticion(e) {
+            e.preventDefault();
+            
+            const btnSubmit = document.getElementById('btn-submit');
+            const loader = document.getElementById('loader');
+            const placeholder = document.getElementById('result-placeholder');
+            const mediaContainer = document.getElementById('media-container');
+            const btnDownload = document.getElementById('btn-download');
+            const loaderText = document.getElementById('loader-text');
+
+            // Preparar UI de carga
+            btnSubmit.disabled = true;
+            placeholder.style.display = 'none';
+            mediaContainer.innerHTML = '';
+            btnDownload.style.display = 'none';
+            loader.style.display = 'flex';
+
+            // Mensaje especial si es video (tarda más)
+            if (herramientaActiva.response_type === 'video') {
+                loaderText.innerText = "Renderizando Video. Esto puede tardar unos minutos...";
+            } else {
+                loaderText.innerText = "La IA está procesando la imagen...";
+            }
+
+            try {
+                const formData = new FormData(e.target);
+                const response = await fetch(`/run/${herramientaActiva.slug}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const contentType = response.headers.get("content-type");
+
+                // 🎬 CASO A: LA IA DEVUELVE UN JSON (ES UN VIDEO O HUBO UN ERROR)
+                if (contentType && contentType.includes("application/json")) {
+                    const jsonResult = await response.json();
+                    
+                    if (jsonResult.error) {
+                        alert("❌ Error: " + jsonResult.message);
+                        placeholder.style.display = 'block';
+                    } 
+                    else if (jsonResult.is_video) {
+                        // Inyectar reproductor de VIDEO
+                        mediaContainer.innerHTML = `
+                            <video controls autoplay loop style="max-width: 100%; max-height: 500px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); border: 2px solid var(--primary);">
+                                <source src="${jsonResult.url}" type="video/mp4">
+                                Tu navegador no soporta videos.
+                            </video>
+                        `;
+                        btnDownload.href = jsonResult.url;
+                        btnDownload.download = "video_ia_j_y_j.mp4";
+                        btnDownload.style.display = 'flex';
+                    }
+                } 
+                // 🖼️ CASO B: LA IA DEVUELVE DIRECTAMENTE LA IMAGEN (BLOB)
+                else {
+                    const blob = await response.blob();
+                    const urlFoto = URL.createObjectURL(blob);
+                    
+                    // Inyectar etiqueta de IMAGEN
+                    mediaContainer.innerHTML = `<img src="${urlFoto}" style="max-width: 100%; max-height: 500px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">`;
+                    btnDownload.href = urlFoto;
+                    btnDownload.download = "imagen_ia_j_y_j.png";
+                    btnDownload.style.display = 'flex';
+                }
+
+            } catch (error) {
+                alert("❌ Ocurrió un error al comunicarse con el servidor de la IA.");
+                placeholder.style.display = 'block';
+            }
+
+            // Restaurar botones
+            loader.style.display = 'none';
+            btnSubmit.disabled = false;
+        }
+    </script>
+</body>
+</html>
