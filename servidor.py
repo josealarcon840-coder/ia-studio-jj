@@ -182,7 +182,6 @@ def verify_telegram():
     except Exception as e:
         return jsonify({"access": False, "message": str(e)}), 500
 
-# 🚀 RUTA PARA CONSULTAR VIDEOS Y EVITAR LÍMITE DE RENDER
 @app.route("/check-task", methods=["GET"])
 def check_task():
     task_id = request.args.get("task_id")
@@ -209,7 +208,7 @@ def run_model(slug):
 
     try:
         # =======================================================
-        # 🎬 LÓGICA DE VIDEO ASÍNCRONA (SIN ESPERAR EN EL BACKEND)
+        # 🎬 LÓGICA DE VIDEO ASÍNCRONA
         # =======================================================
         if model.get("response_type") == "video":
             file_obj = list(request.files.values())[0]
@@ -254,7 +253,6 @@ def run_model(slug):
             if r3.status_code != 200: 
                 return jsonify({"error": True, "message": f"Fallo al procesar el renderizado: {r3.text}"}), 400
 
-            # ¡Devolvemos INMEDIATAMENTE para que la página web haga el Polling y Render no corte!
             return jsonify({
                 "is_video_task": True, 
                 "task_id": task_id, 
@@ -262,15 +260,13 @@ def run_model(slug):
             })
 
         # =======================================================
-        # 🖼️ LÓGICA DE IMÁGENES
+        # 🖼️ LÓGICA DE IMÁGENES (PASANDO EL DATO DIRECTO AL CLIENTE)
         # =======================================================
         files, data = {}, {}
         
         for key, file_obj in request.files.items():
             if file_obj and file_obj.filename:
                 buf, fname, mime = resize_if_needed(file_obj.read(), slug, file_obj.filename)
-                
-                # A SnapEdit siempre le enviaremos la foto con su llave original (generalmente 'input_image')
                 ext = "png" if "png" in mime else "jpg"
                 files[key] = (f"imagen.{ext}", buf, mime)
 
@@ -280,9 +276,9 @@ def run_model(slug):
         if slug == "textile-styles":
             data["mode"] = "editing"
 
-        # Validación extra de seguridad: Generar Fondo EXIGE archivo PNG sin fondo.
+        # Validamos si es Generar Fondo y el archivo enviado es JPG sólido
         if slug == "generate-background" and ("png" not in mime.lower()):
-             return jsonify({"error": True, "message": "¡Debes subir una imagen que ya no tenga fondo (PNG transparente)! Tu foto es un archivo sólido (.jpg). Ve primero a 'Quitar Fondo' y luego usa 'Fondo con IA'."}), 400
+             return jsonify({"error": True, "message": "¡Debes subir una imagen que ya no tenga fondo (PNG transparente)! Tu foto del perrito es un archivo sólido (.jpg). Ve primero a 'Quitar Fondo' y luego usa 'Fondo con IA'."}), 400
 
         if slug in ["detect-text", "detect-wires"]:
             r1 = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files, timeout=120)
@@ -320,6 +316,7 @@ def run_model(slug):
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
         
         content_type = response.headers.get("Content-Type", "")
+        
         if "application/json" in content_type:
             datos = response.json()
             if response.status_code == 200:
@@ -330,22 +327,30 @@ def run_model(slug):
                     url_img = datos["data"]["url"]
                 elif "url" in datos:
                     url_img = datos["url"]
+                elif "image_url" in datos:
+                    url_img = datos["image_url"]
+                elif "data" in datos and isinstance(datos["data"], dict) and "image_url" in datos["data"]:
+                    url_img = datos["data"]["image_url"]
 
                 if url_img:
+                    # 🚀 MAGIA PURA: En vez de intentar abrir la imagen con Python, 
+                    # simplemente tomamos lo que descargamos y se lo mandamos al navegador web sin tocarlo.
+                    if url_img.startswith("data:image"):
+                        header, encoded = url_img.split(",", 1)
+                        mime_type = header.split(";")[0].split(":")[1]
+                        return Response(base64.b64decode(encoded), mimetype=mime_type)
+                    
                     try:
-                        r_img = requests.get(url_img, timeout=60)
+                        headers_get = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+                        r_img = requests.get(url_img, headers=headers_get, timeout=60)
                         if r_img.status_code == 200:
-                            try:
-                                img_obj = Image.open(io.BytesIO(r_img.content))
-                                buf = io.BytesIO()
-                                img_obj.save(buf, format="PNG", dpi=(300, 300))
-                                return Response(buf.getvalue(), mimetype="image/png")
-                            except:
-                                return jsonify({"error": True, "message": "La IA no devolvió un formato de imagen válido."}), 400
+                            ct = r_img.headers.get("Content-Type", "image/png")
+                            # Devolvemos los datos crudos directamente, sea WebP, AVIF o PNG. El navegador lo entiende.
+                            return Response(r_img.content, mimetype=ct)
                         else:
-                            return jsonify({"error": True, "message": "Fallo al descargar la imagen procesada de la nube."}), 400
+                            return jsonify({"error": True, "message": f"Fallo al descargar la imagen procesada de la nube (HTTP {r_img.status_code})."}), 400
                     except Exception as e:
-                        return jsonify({"error": True, "message": str(e)}), 400
+                        return jsonify({"error": True, "message": f"Error de red: {str(e)}"}), 400
                 else:
                     return jsonify(datos), 200
             else:
@@ -354,13 +359,9 @@ def run_model(slug):
             if response.status_code != 200:
                 return jsonify({"error": True, "message": f"Servidores de la IA saturados (Código {response.status_code}). Intenta de nuevo."}), 400
             
-            try:
-                img_obj = Image.open(io.BytesIO(response.content))
-                buf = io.BytesIO()
-                img_obj.save(buf, format="PNG", dpi=(300, 300))
-                return Response(buf.getvalue(), mimetype="image/png")
-            except:
-                return jsonify({"error": True, "message": "La respuesta de la IA está corrupta."}), 400
+            # ENTREGAMOS DIRECTAMENTE LO QUE DEVUELVE LA NUBE
+            ct = response.headers.get("Content-Type", "image/png")
+            return Response(response.content, mimetype=ct)
 
     except Exception as e: 
         print(f"❌ ERROR: {str(e)}")
