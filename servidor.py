@@ -74,7 +74,7 @@ MODELS = [
 
     {"slug": "retouch-skin", "label": L("Retoque Facial", "Skin Retouch"), "icon": "fa-face-smile", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Limpia la piel automáticamente.", "Cleans skin automatically."), "endpoint": "/v1/images/retouch-skin", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    # 🚀 --- IA PARA VIDEOS (CORREGIDO ENVÍO DE PARÁMETROS) ---
+    # 🚀 --- IA PARA VIDEOS ---
     {"slug": "enhance-video", "label": L("Mejorar Video 2K/4K", "Enhance Video Pro"), "icon": "fa-film", "category": L("6. IA para Videos", "6. AI Video"), "desc": L("Sube la resolución de videos.", "Upscale video to 2K/4K."), "endpoint": "/v1/videos/enhance-pro", "response_type": "video", "fields": [
         {"name": "input_image", "type": "image", "label": L("Sube tu Video (MP4)", "Upload Video"), "required": True}, 
         {"name": "zoom_factor", "type": "select", "label": L("Resolución", "Resolution"), "required": True, "options": [{"value": "2K", "label": L("2K Calidad Alta", "2K High Quality")}, {"value": "4K", "label": L("4K Ultra HD", "4K Ultra HD")}]},
@@ -192,13 +192,12 @@ def run_model(slug):
 
     try:
         # =======================================================
-        # 🎬 LÓGICA DE VIDEO ASÍNCRONA CORREGIDA
+        # 🎬 LÓGICA DE VIDEO ASÍNCRONA (EXCLUSIVA PARA VIDEOS)
         # =======================================================
         if model.get("response_type") == "video":
             file_obj = list(request.files.values())[0]
             file_bytes = file_obj.read()
             
-            # Recolectar los campos del formulario (duration, prompt, zoom_factor, etc.)
             payload = {}
             for key, value in request.form.items():
                 if value.lower() == "true": payload[key] = True
@@ -206,7 +205,6 @@ def run_model(slug):
                 elif value.isdigit(): payload[key] = int(value)
                 else: payload[key] = value
 
-            # Paso 1: Pedir URL de carga a SnapEdit pasando los parámetros que exige la API
             url_upload_endpoint = f"{BASE}{model['endpoint']}/upload"
             r1 = requests.post(url_upload_endpoint, headers={"api-key": API_KEY, "Content-Type": "application/json"}, json=payload if payload else None)
             
@@ -217,17 +215,14 @@ def run_model(slug):
             task_id = datos_carga["task_id"]
             upload_url = datos_carga["upload_url"]
 
-            # Paso 2: Subir el archivo multimedia
             r2 = requests.put(upload_url, data=file_bytes)
             if r2.status_code != 200: 
                 return jsonify({"error": True, "message": f"Fallo al subir el archivo al servidor. Detalle: {r2.text}"}), 400
 
-            # Paso 3: Crear la Tarea de Renderizado final
             payload["task_id"] = task_id
             r3 = requests.post(BASE + model["endpoint"], headers={"api-key": API_KEY, "Content-Type": "application/json"}, json=payload)
             if r3.status_code != 200: return jsonify({"error": True, "message": f"Fallo al procesar el renderizado: {r3.text}"}), 400
 
-            # Paso 4: Bucle de espera (Polling)
             max_intentos = 45 
             for _ in range(max_intentos):
                 time.sleep(5)
@@ -246,7 +241,7 @@ def run_model(slug):
 
 
         # =======================================================
-        # 🖼️ LÓGICA ORIGINAL DE IMÁGENES (INTACTA)
+        # 🖼️ LÓGICA ORIGINAL DE IMÁGENES (AISLADA Y SEGURA)
         # =======================================================
         files, data = {}, {}
         
