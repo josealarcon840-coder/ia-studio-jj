@@ -154,7 +154,6 @@ def proxy_image():
     except Exception as e:
         return str(e), 500
 
-# 🔐 RUTA DE TELEGRAM RESTAURADA
 @app.route("/verify-telegram", methods=["POST"])
 def verify_telegram():
     data = request.json
@@ -193,7 +192,7 @@ def run_model(slug):
 
     try:
         # =======================================================
-        # 🎬 LÓGICA DE VIDEO ASÍNCRONA
+        # 🎬 LÓGICA DE VIDEO ASÍNCRONA (SOLO PARA VIDEOS)
         # =======================================================
         if model.get("response_type") == "video":
             file_obj = list(request.files.values())[0]
@@ -251,7 +250,7 @@ def run_model(slug):
 
 
         # =======================================================
-        # 🖼️ LÓGICA DE IMÁGENES
+        # 🖼️ LÓGICA ORIGINAL DE IMÁGENES (CON TRADUCTOR DE LLAVES)
         # =======================================================
         files, data = {}, {}
         
@@ -259,7 +258,8 @@ def run_model(slug):
             if file_obj and file_obj.filename:
                 buf, fname, mime = resize_if_needed(file_obj.read(), slug, file_obj.filename)
                 
-                if slug == "generate-background" or model["endpoint"] == "/v1/images/generates-background":
+                # 🛠️ CORRECCIÓN: Si es 'generates-background' u otro endpoint, adaptamos la llave de la foto
+                if slug == "generate-background" or any(x in model["endpoint"] for x in ["generates-background", "pose-suggest", "outpaint"]):
                     api_key = "image"
                 else:
                     api_key = key
