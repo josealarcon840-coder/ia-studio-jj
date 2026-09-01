@@ -179,8 +179,6 @@ def verify_telegram():
     except Exception as e:
         return jsonify({"access": False, "message": str(e)}), 500
 
-
-# 🚀 NUEVA RUTA: Permite a la página web consultar cómo va el video sin que Render corte la conexión
 @app.route("/check-task", methods=["GET"])
 def check_task():
     task_id = request.args.get("task_id")
@@ -207,7 +205,7 @@ def run_model(slug):
 
     try:
         # =======================================================
-        # 🎬 LÓGICA DE VIDEO ASÍNCRONA (SIN ESPERAR EN EL BACKEND)
+        # 🎬 LÓGICA DE VIDEO ASÍNCRONA
         # =======================================================
         if model.get("response_type") == "video":
             file_obj = list(request.files.values())[0]
@@ -252,7 +250,6 @@ def run_model(slug):
             if r3.status_code != 200: 
                 return jsonify({"error": True, "message": f"Fallo al procesar el renderizado: {r3.text}"}), 400
 
-            # ¡Devolvemos INMEDIATAMENTE para que la página web haga el Polling y Render no corte!
             return jsonify({
                 "is_video_task": True, 
                 "task_id": task_id, 
@@ -260,17 +257,22 @@ def run_model(slug):
             })
 
         # =======================================================
-        # 🖼️ LÓGICA DE IMÁGENES (SE RESPETA EL NOMBRE EXACTO QUE PIDE SNAPEDIT)
+        # 🖼️ LÓGICA DE IMÁGENES (CON EL TRUCO PARA SNAPEDIT)
         # =======================================================
         files, data = {}, {}
         
         for key, file_obj in request.files.items():
             if file_obj and file_obj.filename:
                 buf, fname, mime = resize_if_needed(file_obj.read(), slug, file_obj.filename)
-                
-                # Se envía siempre con el nombre exacto del formulario (input_image), que es lo que pide SnapEdit
                 ext = "png" if "png" in mime else "jpg"
-                files[key] = (f"imagen.{ext}", buf, mime)
+                
+                # 🚀 EL TRUCO DE INGENIERÍA PARA EL GENERADOR DE FONDOS
+                if slug == "generate-background" or model["endpoint"] == "/v1/images/generates-background":
+                    # Clonamos el archivo en "image" y "input_image" para satisfacer todas las validaciones buggy de SnapEdit
+                    files["image"] = (f"imagen.{ext}", buf, mime)
+                    files["input_image"] = (f"imagen.{ext}", buf, mime)
+                else:
+                    files[key] = (f"imagen.{ext}", buf, mime)
 
         for key, value in request.form.items():
             if value: data[key] = value
