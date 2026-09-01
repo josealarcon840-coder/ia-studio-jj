@@ -1,496 +1,843 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IA Studio - Comunidad Premium J&J</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --bg-color: #0f0f11;
-            --panel-bg: #1a1a1d;
-            --primary: #e60000;
-            --primary-hover: #ff1a1a;
-            --text-main: #ffffff;
-            --text-muted: #a0a0a0;
-            --border-color: #333333;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comunidad J&J | Master Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+  :root {
+    --bg-a: #1a0000; --bg-b: #050505; --panel: #111111; --panel-raised: #1f0a0a;
+    --border: #3a141480; --red: #d81e2c; --red-bright: #ff2d3a; --red-dim: #7a0d14;
+    --text: #f5eeee; --text-dim: #b99; --text-faint: #7a5c5c; --ok: #00ffcc; --danger: #ff5252;
+    --font-display: "Anton", sans-serif; --font-body: "Inter", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 15% 0%, var(--bg-a) 0%, var(--bg-b) 55%); color: var(--text); font-family: var(--font-body); line-height: 1.5; }
+  ::selection { background: var(--red); color: #fff; }
+  button { font-family: inherit; color: inherit; cursor: pointer; }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
+  /* Lang switch */
+  .lang-switch { display: inline-flex; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
+  .lang-switch button { background: none; border: none; color: var(--text-faint); font-size: 0.74rem; font-weight: 700; padding: 6px 11px; transition: 0.2s ease; }
+  .lang-switch button.active { background: var(--red); color: #fff; }
 
-        /* NAVBAR */
-        .navbar {
-            background-color: var(--panel-bg);
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .navbar-brand {
-            font-size: 24px;
-            font-weight: 800;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .navbar-brand i { color: var(--primary); }
-        .user-badge {
-            background-color: var(--border-color);
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: bold;
-        }
+  /* Logo */
+  .brand-mark { width: 80px; height: 80px; margin: 0 auto 18px; border-radius: 18px; background: linear-gradient(135deg, #111, #300); border: 2px solid var(--red-bright); display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 1.5rem; color: #fff; box-shadow: 0 0 20px rgba(255,45,58,0.5), inset 0 0 15px rgba(122,13,20,0.8); text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+  .brand-mark i { font-size: 0.6em; color: #ffd700; margin-bottom: -2px; }
 
-        /* CONTENEDOR PRINCIPAL */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 30px 20px;
-        }
+  /* Login */
+  #gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; position: relative; }
+  .gate-lang { position: absolute; top: 20px; right: 20px; }
+  .gate-card { width: 100%; max-width: 380px; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 36px 30px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
+  .gate-card h1 { font-family: var(--font-display); font-size: 1.8rem; letter-spacing: 0.02em; margin: 0 0 6px; text-transform: uppercase; color: var(--text); }
+  .gate-card p.sub { color: var(--text-dim); font-size: 0.86rem; margin: 0 0 24px; }
+  
+  .gate-error { color: var(--danger); font-size: 0.82rem; font-weight: 600; margin: 12px 0 0; display: none; }
+  .gate-error.show { display: block; }
+  .gate-links { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+  .gate-links p { font-size: 0.76rem; color: var(--text-faint); text-transform: uppercase; font-weight: 700; margin: 0 0 4px; }
+  .wa-link { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.82rem; text-transform: uppercase; transition: 0.2s; color: #fff;}
+  .wa-link:hover { filter: brightness(1.2);}
+  .wa-subscribe { background: #25D366; color: #05310f !important; }
 
-        /* PANEL DE HERRAMIENTAS (MENÚ) */
-        #menu-view { display: block; }
-        .category-title {
-            color: var(--primary);
-            font-size: 18px;
-            text-transform: uppercase;
-            margin: 40px 0 20px 0;
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 10px;
-        }
-        .tools-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-        }
-        .tool-card {
-            background-color: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 25px 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-        .tool-card:hover {
-            border-color: var(--primary);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(230, 0, 0, 0.15);
-        }
-        .tool-icon {
-            font-size: 35px;
-            color: var(--primary);
-            margin-bottom: 15px;
-        }
-        .tool-title { font-size: 18px; font-weight: bold; margin-bottom: 8px; }
-        .tool-desc { font-size: 13px; color: var(--text-muted); }
+  /* App shell */
+  #app { display: none; min-height: 100vh; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 28px; border-bottom: 1px solid var(--border); background: rgba(10,4,4,0.9); position: sticky; top: 0; z-index: 20; flex-wrap: wrap; box-shadow: 0 4px 20px rgba(0,0,0,0.5);}
+  .topbar-brand { display: flex; align-items: center; gap: 12px; }
+  .topbar-brand .brand-mark { width: 40px; height: 40px; margin: 0; font-size: 0.85rem; border-radius: 10px; border-width: 1px;}
+  .topbar-brand h1 { font-family: var(--font-display); font-size: 1.25rem; letter-spacing: 0.05em; text-transform: uppercase; margin: 0; color: var(--text); }
+  .topbar-right { display: flex; align-items: center; gap: 14px; }
+  .topbar-user { font-size: 0.82rem; color: var(--ok); font-weight: bold;}
+  .logout-btn { background: #222; border: 1px solid var(--border); color: var(--text-dim); padding: 7px 13px; border-radius: 7px; font-size: 0.78rem; transition: 0.2s ease; }
+  .logout-btn:hover { border-color: var(--red); background: var(--red-dim); color: #fff;}
 
-        /* VISTA DE TRABAJO (WORKSPACE) */
-        #workspace-view { display: none; }
-        .btn-back {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 20px;
-            padding: 0;
-        }
-        .btn-back:hover { color: var(--text-main); }
-        
-        .workspace-header { margin-bottom: 30px; }
-        .workspace-title { color: var(--primary); font-size: 28px; margin: 0 0 10px 0; text-transform: uppercase; }
-        
-        .workspace-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-        }
-        @media (max-width: 768px) {
-            .workspace-grid { grid-template-columns: 1fr; }
-        }
+  main { padding: 32px 28px 70px; max-width: 1200px; margin: 0 auto; }
 
-        /* FORMULARIO Y CONTROLES */
-        .control-panel {
-            background-color: var(--panel-bg);
-            padding: 25px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-        }
-        .form-group { margin-bottom: 20px; }
-        .form-label { display: block; margin-bottom: 8px; font-weight: bold; font-size: 14px; color: var(--text-muted); }
-        
-        input[type="file"], select, textarea {
-            width: 100%;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 12px;
-            box-sizing: border-box;
-            font-family: inherit;
-        }
-        textarea { resize: vertical; min-height: 80px; }
-        
-        .btn-process {
-            width: 100%;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .btn-process:hover { background-color: var(--primary-hover); }
-        .btn-process:disabled { background-color: #555; cursor: not-allowed; }
+  /* Home */
+  .home-title { font-family: var(--font-display); font-size: 2.2rem; text-transform: uppercase; letter-spacing: 0.02em; margin: 0 0 4px; color: var(--text); }
+  .home-sub { color: var(--text-dim); font-size: 1rem; margin: 0 0 30px; }
+  .cat-heading { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--red-bright); font-weight: 800; margin: 40px 0 15px; border-bottom: 1px solid var(--border); padding-bottom: 8px;}
+  .cat-heading:first-of-type { margin-top: 0; }
 
-        /* ÁREA DE RESULTADO (IMAGEN/VIDEO) */
-        .result-panel {
-            background-color: var(--panel-bg);
-            border-radius: 12px;
-            border: 1px dashed var(--border-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 400px;
-            padding: 20px;
-            position: relative;
-            overflow: hidden;
-        }
-        .result-placeholder { color: var(--text-muted); text-align: center; }
-        .result-placeholder i { font-size: 40px; margin-bottom: 10px; opacity: 0.5; }
-        
-        #result-media {
-            max-width: 100%;
-            max-height: 500px;
-            border-radius: 8px;
-            display: none;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-        }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 18px; }
+  .tool-card { background: var(--panel); border: 1px solid #333; border-radius: 14px; padding: 25px 20px; text-align: center; cursor: pointer; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.5);}
+  .tool-card i { font-size: 2.5rem; color: var(--red-bright); margin-bottom: 15px; transition: 0.3s; }
+  .tool-card:hover { transform: translateY(-5px); border-color: var(--red-bright); background: var(--panel-raised); box-shadow: 0 12px 30px rgba(216,30,44,0.2); }
+  .tool-card:hover i { transform: scale(1.1); text-shadow: 0 0 15px var(--red-bright); }
+  .tool-card h3 { font-size: 1.1rem; font-weight: 800; margin: 0 0 8px; color: var(--text); text-transform: uppercase;}
+  .tool-card p { font-size: 0.85rem; color: var(--text-dim); margin: 0; line-height: 1.4; }
 
-        .btn-download {
-            background-color: #28a745;
-            color: white;
-            text-decoration: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-weight: bold;
-            margin-top: 20px;
-            display: none;
-            gap: 10px;
-            align-items: center;
-            transition: 0.2s;
-        }
-        .btn-download:hover { background-color: #218838; }
+  /* Tool detail */
+  #toolView { display: none; }
+  .back-btn { display: inline-flex; align-items: center; gap: 8px; background: #111; border: 1px solid #333; color: #aaa; font-size: 0.85rem; font-weight: bold; cursor: pointer; padding: 10px 18px; border-radius: 8px; margin-bottom: 25px; transition: 0.2s; text-transform: uppercase;}
+  .back-btn:hover { color: #fff; border-color: var(--red-bright); background: var(--red-dim); }
 
-        /* LOADER */
-        .loader {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-        }
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid var(--border-color);
-            border-top: 4px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
+  .tool-title { font-family: var(--font-display); font-size: 2rem; text-transform: uppercase; margin: 0 0 8px; color: var(--red-bright); }
+  .tool-desc { color: var(--text-dim); font-size: 1rem; margin: 0 0 30px; font-weight: 500;}
+
+  .workspace-layout { display: flex; flex-direction: row; gap: 30px; align-items: flex-start;}
+  .form-container { flex: 1; min-width: 350px; max-width: 400px; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); position: sticky; top: 90px;}
+  .canvas-container { flex: 2; display: flex; flex-direction: column; width: 100%;}
+
+  .field { margin-bottom: 22px; }
+  .field label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; color: #ccc; text-transform: uppercase; letter-spacing: 0.5px;}
+  .field label .req { color: var(--red-bright); margin-left: 3px; font-size: 1.1em;}
+
+  input[type="text"], input[type="number"], select, textarea { width: 100%; background: #050505; border: 1px solid #444; color: var(--text); padding: 12px 14px; border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; transition: 0.2s;}
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--red-bright); box-shadow: 0 0 8px rgba(255,45,58,0.3); }
+  textarea { min-height: 100px; resize: vertical; }
+
+  .dropzone { position: relative; border: 2px dashed #444; border-radius: 12px; padding: 25px 20px; text-align: center; cursor: pointer; background: #080808; transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 10px;}
+  .dropzone i { font-size: 2.5rem; color: #555; transition: 0.2s; }
+  .dropzone:hover { border-color: var(--red-bright); background: #1a0505;}
+  .dropzone:hover i { color: var(--red-bright); transform: scale(1.1); }
+  .dropzone.has-file { border-style: solid; border-color: var(--ok); background: rgba(0, 255, 204, 0.05);}
+  .dropzone.has-file i { color: var(--ok); }
+  .dropzone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .dropzone .dz-text { font-size: 0.9rem; font-weight: bold; color: #888; }
+  .dropzone.has-file .dz-text { color: var(--ok); }
+
+  .checkbox-row { display: flex; align-items: center; gap: 10px; cursor: pointer;}
+  .checkbox-row input { width: 18px; height: 18px; accent-color: var(--red-bright); cursor: pointer;}
+  .checkbox-row label { margin: 0; font-size: 0.95rem; color: #eee; cursor: pointer; text-transform: none;}
+
+  .status-line { margin-top: 20px; font-size: 0.9rem; font-weight: bold; color: var(--text-dim); display: none; align-items: center; justify-content: center; gap: 10px; padding: 15px; border-radius: 8px; background: #111; border: 1px solid #333; text-align: center;}
+  .status-line.show { display: flex; }
+  .status-line.error { color: var(--danger); border-color: var(--danger); background: rgba(255,82,82,0.1);}
+  .status-line.ok { color: var(--ok); border-color: var(--ok); background: rgba(0,255,204,0.1);}
+  .pulse-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red-bright); animation: pulse 1s infinite ease-in-out; flex-shrink: 0; }
+  @keyframes pulse { 0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--red-bright);} 50% { opacity: 0.3; } }
+
+  /* Visor Zoomable */
+  .checkerboard { background-image: linear-gradient(45deg, #111 25%, transparent 25%), linear-gradient(-45deg, #111 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #111 75%), linear-gradient(-45deg, transparent 75%, #111 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
+  .viewer-container { width: 100%; min-height: 450px; height: 100%; border-radius: 16px; border: 1px solid #333; overflow: hidden; position: relative; background: #080808; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); cursor: grab; }
+  .viewer-container:active { cursor: grabbing; }
+  #viewerWrapper { transform-origin: center center; transition: transform 0.1s ease-out; position: relative; display: inline-block;}
+  #mainResultImg { display: block; max-width: 90vw; max-height: 70vh; object-fit: contain; border-radius: 8px;}
+  
+  /* Botones sobre el visor */
+  .btn-visor { position: absolute; z-index: 200; background: rgba(0,0,0,0.8); color: #fff; border: 1px solid #555; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-family: sans-serif; font-size: 0.8rem; cursor: pointer; transition: 0.2s;}
+  .btn-visor:hover { background: #333; border-color: #777;}
+  
+  /* Etiquetas del borrador mágico */
+  #magicTagsPanel { background: #000; border: 1px solid #500; border-radius: 8px; padding: 15px; margin-top: 20px; display: none; text-align: center;}
+  .ai-tag { display: inline-block; padding: 6px 12px; margin: 4px; font-size: 12px; border: 1px solid #500; cursor: pointer; border-radius: 6px; color: #aaa; font-weight: bold; transition: 0.2s; background: #111;}
+  .ai-tag.selected { background: var(--red-bright); color: #fff; border-color: var(--red-bright); box-shadow: 0 0 10px rgba(255,45,58,0.5);}
+  .ai-box { position: absolute; border: 2px solid transparent; border-radius: 6px; pointer-events: none; transition: 0.2s; }
+  .ai-box.selected { border-color: var(--red-bright); background: rgba(255,45,58,0.2); box-shadow: 0 0 15px rgba(255,45,58,0.6); }
+
+  /* BOTONES */
+  .btn-primary { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--red-bright), var(--red-dim)); color: #fff; border: none; border-radius: 8px; font-weight: 900; font-size: 0.9rem; text-transform: uppercase; cursor: pointer; transition: 0.2s ease; box-shadow: 0 5px 15px rgba(255,45,58,0.3); margin-top: 15px;}
+  .btn-primary:hover:not(:disabled) { transform: scale(1.02); filter: brightness(1.15); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-restart { background: #222; border: 1px solid #444; color: #fff; box-shadow: none; margin-top: 10px; }
+  .btn-restart:hover:not(:disabled) { background: #333; border-color: #555; }
+
+  .quick-actions-bar { margin-top: 15px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; animation: rise 0.4s ease;}
+  .quick-actions-bar h4 { margin: 0 0 15px; font-size: 0.9rem; color: var(--ok); text-transform: uppercase; font-weight: 800; letter-spacing: 0.1em;}
+  .qa-buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+  .btn-qa { background: #111; color: #fff; border: 1px solid #444; padding: 12px 15px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: 0.2s; flex: 1; min-width: 140px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);}
+  .btn-qa:hover { background: var(--red-dim); border-color: var(--red-bright); transform: translateY(-2px);}
+
+  .btn-download { display: inline-block; margin-top: 20px; padding: 15px 30px; background: var(--ok); color: #000; text-decoration: none; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 1rem; transition: 0.2s; text-align: center; width: 100%; box-shadow: 0 5px 15px rgba(0,255,204,0.3);}
+  .btn-download:hover { transform: scale(1.02); background: #fff; }
+
+  #jsonViewer { background: #000; color: var(--ok); border: 1px solid #333; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; width: 100%; height: 250px; overflow-y: auto; text-align: left; resize: none; margin-top: 15px; display: none; }
+
+  @media (max-width: 900px) {
+    .workspace-layout { flex-direction: column; }
+    .form-container { max-width: 100%; position: relative; top: 0; }
+    .canvas-container { width: 100%; }
+  }
+</style>
 </head>
 <body>
 
-    <!-- NAVBAR -->
-    <nav class="navbar">
-        <div class="navbar-brand">
-            <i class="fa-solid fa-fire"></i> IA STUDIO
-        </div>
-        <div class="user-badge">VIP | J&J</div>
-    </nav>
-
-    <div class="container">
-        <!-- VISTA 1: MENÚ PRINCIPAL -->
-        <div id="menu-view">
-            <h2 style="text-align: center; margin-bottom: 10px;">PANEL PREMIUM</h2>
-            <p style="text-align: center; color: var(--text-muted); margin-bottom: 40px;">Selecciona una herramienta de Inteligencia Artificial para comenzar.</p>
-            
-            <div id="categories-container">
-                <!-- Las categorías y botones se generan aquí con JavaScript -->
-            </div>
-        </div>
-
-        <!-- VISTA 2: ÁREA DE TRABAJO -->
-        <div id="workspace-view">
-            <button class="btn-back" onclick="volverAlMenu()">
-                <i class="fa-solid fa-arrow-left"></i> VOLVER AL PANEL
-            </button>
-
-            <div class="workspace-header">
-                <h2 class="workspace-title" id="ws-title">HERRAMIENTA</h2>
-                <p id="ws-desc" style="color: var(--text-muted); margin: 0;">Descripción de la herramienta.</p>
-            </div>
-
-            <div class="workspace-grid">
-                <!-- Formulario -->
-                <div class="control-panel">
-                    <form id="ai-form" onsubmit="procesarPeticion(event)">
-                        <div id="form-fields">
-                            <!-- Los inputs se generan dinámicamente aquí -->
-                        </div>
-                        <button type="submit" class="btn-process" id="btn-submit">
-                            <i class="fa-solid fa-bolt"></i> PROCESAR CON IA
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Resultado -->
-                <div class="result-panel">
-                    <div class="result-placeholder" id="result-placeholder">
-                        <i class="fa-regular fa-image"></i>
-                        <p>Sube tu archivo y presiona procesar para ver la magia.</p>
-                    </div>
-
-                    <!-- Loader de carga -->
-                    <div class="loader" id="loader">
-                        <div class="spinner"></div>
-                        <span style="color: var(--primary); font-weight: bold;" id="loader-text">La IA está trabajando...</span>
-                    </div>
-
-                    <!-- Contenedor donde se inyectará la Imagen o el Video -->
-                    <div id="media-container" style="width: 100%; text-align: center;"></div>
-                    
-                    <a href="#" class="btn-download" id="btn-download">
-                        <i class="fa-solid fa-download"></i> DESCARGAR RESULTADO
-                    </a>
-                </div>
-            </div>
-        </div>
+<div id="gate">
+  <div class="gate-lang">
+    <div class="lang-switch" id="gateLangSwitch">
+      <button data-lang="es">ES</button>
+      <button data-lang="en">EN</button>
+    </div>
+  </div>
+  <div class="gate-card">
+    <div class="brand-mark"><i class="fa-solid fa-crown"></i><span>J&J</span></div>
+    <h1>Comunidad J&J</h1>
+    
+    <p class="sub" data-i18n="gate_sub">Inicia sesión con Telegram para acceder.</p>
+    
+    <div style="margin-top:20px; margin-bottom: 20px; display:flex; justify-content:center;">
+        <script async src="https://telegram.org/js/telegram-widget.js?22" 
+                data-telegram-login="Comunidad_premiumbot" 
+                data-size="large" 
+                data-onauth="onTelegramAuth(user)" 
+                data-request-access="write"></script>
     </div>
 
-    <!-- JAVASCRIPT: LÓGICA PRINCIPAL -->
-    <script>
-        let modelosActuales = [];
-        let herramientaActiva = null;
+    <p class="gate-error" id="gateError" data-i18n="gate_error"></p>
+    
+    <div class="gate-links">
+      <p>¿AÚN NO ESTÁS EN EL GRUPO VIP?</p>
+      <a href="https://wa.me/51904503246" target="_blank" class="wa-link wa-subscribe">
+          <i class='fa-brands fa-whatsapp'></i> Contactar Soporte
+      </a>
+    </div>
+  </div>
+</div>
 
-        // 1. Cargar las herramientas desde el servidor (app.py) al abrir la página
-        document.addEventListener("DOMContentLoaded", async () => {
-            try {
-                const response = await fetch('/models');
-                modelosActuales = await response.json();
-                renderizarMenu(modelosActuales);
-            } catch (error) {
-                console.error("Error cargando modelos:", error);
-                document.getElementById('categories-container').innerHTML = '<p style="color:red; text-align:center;">Error conectando con el servidor.</p>';
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="brand-mark" style="width: 40px; height: 40px; font-size: 0.8rem; border-radius: 8px; border-width: 1px;">
+        <i class="fa-solid fa-crown" style="font-size: 0.7em;"></i>
+        <span>J&J</span>
+      </div>
+      <h1>IA STUDIO</h1>
+    </div>
+    <div class="topbar-right">
+      <div class="lang-switch" id="appLangSwitch">
+        <button data-lang="es">ES</button>
+        <button data-lang="en">EN</button>
+      </div>
+      <span class="topbar-user" id="userLabel"></span>
+      <button class="logout-btn" id="logoutBtn" data-i18n="logout"></button>
+    </div>
+  </div>
+
+  <main>
+    <div id="homeView">
+      <h2 class="home-title" data-i18n="home_title"></h2>
+      <p class="home-sub" data-i18n="home_sub"></p>
+      <div id="catContainer"></div>
+    </div>
+
+    <div id="toolView">
+      <button class="back-btn" id="backBtn"><i class="fa-solid fa-arrow-left"></i> <span data-i18n="back"></span></button>
+      <h2 class="tool-title" id="toolTitle"></h2>
+      <p class="tool-desc" id="toolDesc"></p>
+
+      <div class="workspace-layout">
+        <div class="form-container">
+          <form id="form"></form>
+          
+          <button type="button" id="btnRestart" class="btn-primary btn-restart" style="display:none;" onclick="reiniciarHerramienta(true)">
+             <i class="fa-solid fa-rotate-left mr-2"></i> <span data-i18n="restart_btn">Reiniciar Todo</span>
+          </button>
+          
+          <div id="magicTagsPanel">
+             <span style="font-size:12px; font-weight:bold; color:var(--ok);" data-i18n="magic_tags_title"></span>
+             <div id="tagsContainer" style="margin-top:10px;"></div>
+             <button type="button" id="btnExecuteErase" class="btn-primary" style="margin-top: 15px; display: none;">
+                 <i class="fa-solid fa-eraser mr-2"></i> <span data-i18n="magic_btn_apply"></span>
+             </button>
+          </div>
+
+          <div class="status-line" id="status"><span class="pulse-dot"></span><span id="statusText"></span></div>
+          
+          <a href="#" id="btnDownloadResult" class="btn-download" style="display:none;" target="_blank">
+             <i class="fa-solid fa-download mr-2"></i> <span data-i18n="download_btn"></span>
+          </a>
+        </div>
+
+        <div class="canvas-container" id="tray" style="display:none;">
+          <div class="viewer-container checkerboard" id="visorContenedor">
+             
+              <button id="btnAntes" class="btn-visor" style="top:20px; right:20px; display:none;" onmousedown="mostrar(true)" onmouseup="mostrar(false)" onmouseleave="mostrar(false)">
+                  <i class="fa-solid fa-eye mr-2"></i> Mantén: Ver Antes
+              </button>
+              
+              <button class="btn-visor" style="bottom:20px; right:20px;" onclick="resetearZoom()" id="btnCentrar">
+                  <i class="fa-solid fa-expand mr-2"></i> Centrar
+              </button>
+              
+              <span class="btn-visor" style="bottom:20px; left:20px; background:#000; cursor:default;" id="btnZoomLabel">
+                  Zoom: <span id="lblZoom">100%</span>
+              </span>
+
+              <div id="viewerWrapper">
+                  <div id="imgContainer" style="position:relative; display:inline-block; line-height:0;">
+                      <img id="mainResultImg" src="" alt="Resultado">
+                      <!-- NUEVO REPRODUCTOR DE VIDEO AÑADIDO A TU DISEÑO -->
+                      <video id="mainResultVideo" controls loop style="display: none; max-width: 90vw; max-height: 70vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.8);"></video>
+                      <div id="boxesContainer" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
+                  </div>
+              </div>
+
+              <textarea id="jsonViewer" readonly></textarea>
+
+          </div>
+
+          <div class="quick-actions-bar" id="quickActionsBar" style="display:none;">
+              <h4 id="qa-title"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Sugerencias de la IA</h4>
+              <div class="qa-buttons"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const UI = {
+  es: {
+    gate_sub: "Inicia sesión con Telegram para verificar tu acceso.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Ingresar", gate_error: "No tienes acceso. ¡Asegúrate de estar en el grupo VIP!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "¿Cerrar sesión?", home_title: "Panel Premium", home_sub: "Selecciona una herramienta para comenzar.", back: "Volver", run_btn: "Procesar con IA", restart_btn: "Reiniciar Todo", processing: "La IA está procesando...", processing_task: "Tarea asíncrona, espere...", processing_pct: (p) => `Trabajando... (${p}%)`, done: "¡Completado exitosamente!", error_prefix: "Error: ", generic_error: "Fallo de conexión.", task_failed: "La tarea ha fallado.", conn_error: "Error de red: ", conn_error_task: "Error al consultar la tarea.", dropzone_text: "Haz clic o arrastra una imagen", loading_options: "Descargando de internet...", select_placeholder: "Selecciona...", load_error: "Error de red", magic_tags_title: "✨ Toca las etiquetas para borrar:", magic_btn_apply: "Borrar Seleccionados", download_btn: "⬇️ Descargar (Calidad HD)"
+  },
+  en: {
+    gate_sub: "Login with Telegram to verify access.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Login", gate_error: "Access denied. Make sure you are in the VIP group!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "Log out?", home_title: "Premium Dashboard", home_sub: "Select a tool to begin.", back: "Back", run_btn: "Run AI", restart_btn: "Reset All", processing: "AI is processing...", processing_task: "Async task, wait...", processing_pct: (p) => `Working... (${p}%)`, done: "Successfully completed!", error_prefix: "Error: ", generic_error: "Connection failed.", task_failed: "Task failed.", conn_error: "Network error: ", conn_error_task: "Error checking task.", dropzone_text: "Click or drag an image here", loading_options: "Downloading from cloud...", select_placeholder: "Select...", load_error: "Network error", magic_tags_title: "✨ Tap tags to erase:", magic_btn_apply: "Erase Selected", download_btn: "⬇️ Download (HD)"
+  }
+};
+
+let currentLang = localStorage.getItem("jj_lang") || "es";
+function t(key, ...args) { const val = UI[currentLang][key]; return typeof val === "function" ? val(...args) : val; }
+function tl(obj) { if (!obj) return ""; return obj[currentLang] || obj.es || ""; }
+function applyStaticText() {
+  document.querySelectorAll("[data-i18n]").forEach(el => { el.innerHTML = t(el.getAttribute("data-i18n")); });
+  document.documentElement.lang = currentLang;
+}
+function setLang(lang) {
+  currentLang = lang; localStorage.setItem("jj_lang", lang);
+  document.querySelectorAll(".lang-switch button").forEach(btn => { btn.classList.toggle("active", btn.dataset.lang === lang); });
+  applyStaticText();
+  if (MODELS.length) { buildHome(MODELS); if (currentSlug) openTool(currentSlug); }
+}
+document.querySelectorAll(".lang-switch").forEach(sw => { sw.querySelectorAll("button").forEach(btn => { btn.addEventListener("click", () => setLang(btn.dataset.lang)); }); });
+
+const gate = document.getElementById("gate"); const appEl = document.getElementById("app"); const gateError = document.getElementById("gateError"); const userLabel = document.getElementById("userLabel");
+
+function checkSession() {
+  const perm = sessionStorage.getItem("jj_session_perm"); 
+  const name = sessionStorage.getItem("jj_user_name");
+  if (perm === "active") { showApp(name); return true; }
+  return false;
+}
+function showApp(name) { gate.style.display = "none"; appEl.style.display = "block"; userLabel.textContent = name ? name.toUpperCase() : ""; loadModels(); }
+
+async function onTelegramAuth(user) {
+  gateError.classList.remove("show");
+  try {
+      const response = await fetch('/verify-telegram', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(user)
+      });
+      const data = await response.json();
+      
+      if (data.access) {
+          sessionStorage.setItem("jj_session_perm", "active"); 
+          sessionStorage.setItem("jj_user_name", data.nombre || user.first_name); 
+          showApp(data.nombre || user.first_name);
+      } else {
+          gateError.textContent = data.message || t("gate_error");
+          gateError.classList.add("show");
+      }
+  } catch(e) {
+      gateError.textContent = "Error de conexión con el servidor.";
+      gateError.classList.add("show");
+  }
+}
+
+document.getElementById("logoutBtn").addEventListener("click", () => { 
+  if (!confirm(t("logout_confirm"))) return; 
+  sessionStorage.clear(); 
+  location.reload(); 
+});
+
+let MODELS = []; let currentSlug = null; let currentImageData = null;
+let urlOriginalMemoria = ""; let urlResultMemoria = "";
+
+const homeView = document.getElementById("homeView"); const toolView = document.getElementById("toolView"); const catContainer = document.getElementById("catContainer"); const form = document.getElementById("form"); const statusLine = document.getElementById("status"); const statusText = document.getElementById("statusText"); const tray = document.getElementById("tray"); const mainResultImg = document.getElementById("mainResultImg"); const toolTitle = document.getElementById("toolTitle"); const toolDesc = document.getElementById("toolDesc"); const btnDownloadResult = document.getElementById("btnDownloadResult"); const btnRestart = document.getElementById("btnRestart");
+const jsonViewer = document.getElementById("jsonViewer");
+
+let aiSessionId = ""; let aiObjects = []; let aiSelected = new Set();
+const magicTagsPanel = document.getElementById("magicTagsPanel"); const tagsContainer = document.getElementById("tagsContainer"); const boxesContainer = document.getElementById("boxesContainer"); const btnExecuteErase = document.getElementById("btnExecuteErase");
+const quickActionsBar = document.getElementById("quickActionsBar");
+const qaTitle = document.getElementById("qa-title");
+
+function loadModels() { if (MODELS.length) { buildHome(MODELS); return; } fetch("/models").then(r => r.json()).then(models => { MODELS = models; buildHome(models); }); }
+
+function buildHome(models) {
+  const categories = {};
+  models.forEach(m => { const catName = tl(m.category); categories[catName] = categories[catName] || []; categories[catName].push(m); });
+  catContainer.innerHTML = "";
+  Object.keys(categories).forEach(cat => {
+    const heading = document.createElement("div"); heading.className = "cat-heading"; heading.innerHTML = `<i class="fa-solid fa-caret-right mr-2"></i> ${cat}`; catContainer.appendChild(heading);
+    const grid = document.createElement("div"); grid.className = "card-grid";
+    categories[cat].forEach(m => {
+      const card = document.createElement("button"); card.type = "button"; card.className = "tool-card";
+      const icon = m.icon ? m.icon : "fa-wand-magic-sparkles";
+      card.innerHTML = `<i class="fa-solid ${icon}"></i><h3>${tl(m.label).split('|')[0].trim()}</h3><p>${tl(m.desc).split('|')[0].trim()}</p>`;
+      card.addEventListener("click", () => openTool(m.slug)); grid.appendChild(card);
+    });
+    catContainer.appendChild(grid);
+  });
+}
+
+function openTool(slug) {
+  currentSlug = slug; const model = MODELS.find(m => m.slug === slug);
+  homeView.style.display = "none"; toolView.style.display = "block";
+  const icon = model.icon ? model.icon : "fa-wand-magic-sparkles";
+  toolTitle.innerHTML = `<i class="fa-solid ${icon} mr-3"></i> ${tl(model.label).split('|')[0].trim()}`; toolDesc.textContent = tl(model.desc).split('|')[0].trim();
+  reiniciarHerramienta(true);
+}
+
+function reiniciarHerramienta(keepTool = false) {
+    form.reset();
+    tray.style.display = "none"; 
+    mainResultImg.src = ""; 
+    
+    // OCULTAR VIDEO AL REINICIAR
+    const mainResultVideo = document.getElementById("mainResultVideo");
+    if(mainResultVideo) { mainResultVideo.style.display = "none"; mainResultVideo.src = ""; }
+    mainResultImg.style.display = "block";
+
+    currentImageData = null;
+    urlOriginalMemoria = ""; urlResultMemoria = "";
+    statusLine.classList.remove("show", "error", "ok");
+    btnDownloadResult.style.display = "none"; btnRestart.style.display = "none";
+    magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; quickActionsBar.style.display = "none";
+    
+    document.getElementById('btnAntes').style.display = 'none';
+    document.getElementById('imgContainer').style.display = 'inline-block';
+    document.getElementById('btnCentrar').style.display = 'block';
+    document.getElementById('btnZoomLabel').style.display = 'block';
+    jsonViewer.style.display = "none";
+    
+    document.querySelectorAll('.dropzone').forEach(dz => {
+        dz.classList.remove("has-file");
+        dz.querySelector('i').className = "fa-solid fa-cloud-arrow-up";
+        dz.querySelector('.dz-text').textContent = t("dropzone_text");
+    });
+    if (currentSlug && keepTool) renderForm(MODELS.find(m => m.slug === currentSlug));
+    resetearZoom();
+}
+
+document.getElementById("backBtn").addEventListener("click", () => { toolView.style.display = "none"; homeView.style.display = "block"; currentSlug = null; });
+
+function renderForm(model) {
+  form.innerHTML = "";
+  model.fields.forEach(field => {
+    const wrap = document.createElement("div"); wrap.className = "field";
+    
+    if (field.type === "cm_auto_magic") {
+        const labelMain = document.createElement("label"); 
+        labelMain.innerHTML = "Medidas en Centímetros <span class='req'>*</span>";
+        wrap.appendChild(labelMain);
+
+        const row = document.createElement("div"); row.style = "display: flex; gap: 10px;";
+        
+        const colW = document.createElement("div"); colW.style.flex = "1";
+        const labelW = document.createElement("label"); labelW.textContent = "Ancho (cm)"; labelW.style.fontSize="0.75rem"; labelW.style.color="#aaa"; labelW.style.textTransform="none";
+        const inpW = document.createElement("input"); inpW.type = "number"; inpW.value = "20"; inpW.step = "0.01";
+        colW.appendChild(labelW); colW.appendChild(inpW);
+        
+        const colH = document.createElement("div"); colH.style.flex = "1";
+        const labelH = document.createElement("label"); labelH.textContent = "Alto (cm)"; labelH.style.fontSize="0.75rem"; labelH.style.color="#aaa"; labelH.style.textTransform="none";
+        const inpH = document.createElement("input"); inpH.type = "number"; inpH.value = "20"; inpH.step = "0.01";
+        colH.appendChild(labelH); colH.appendChild(inpH);
+        
+        row.appendChild(colW); row.appendChild(colH);
+        wrap.appendChild(row);
+
+        const ratioFinalAPI = document.createElement("input");
+        ratioFinalAPI.type = "hidden";
+        ratioFinalAPI.id = "field_aspect_ratio";
+        ratioFinalAPI.name = "aspect_ratio";
+        ratioFinalAPI.value = "1:1";
+        wrap.appendChild(ratioFinalAPI);
+
+        const info = document.createElement("p");
+        info.style = "font-size: 0.75rem; color: var(--ok); margin-top: 8px;";
+        info.innerHTML = "💡 Escribe cualquier medida, la IA le dará la proporción perfecta de forma automática.";
+        wrap.appendChild(info);
+
+        const calcRatio = () => {
+            let w = parseFloat(inpW.value); let h = parseFloat(inpH.value);
+            if(w > 0 && h > 0) {
+                let ratio = w / h;
+                let closest = "1:1";
+                let minDiff = Math.abs(ratio - 1);
+                const ratiosDict = {"1:1":1, "16:9":16/9, "9:16":9/16, "4:3":4/3, "3:4":3/4, "3:2":3/2, "2:3":2/3};
+                for(let k in ratiosDict) {
+                    let diff = Math.abs(ratio - ratiosDict[k]);
+                    if(diff < minDiff) { minDiff = diff; closest = k; }
+                }
+                ratioFinalAPI.value = closest;
+            }
+        };
+
+        inpW.addEventListener("input", calcRatio);
+        inpH.addEventListener("input", calcRatio);
+        
+        form.appendChild(wrap);
+        return;
+    }
+
+    if (field.type === "checkbox") {
+      const row = document.createElement("div"); row.className = "checkbox-row";
+      const input = document.createElement("input"); input.type = "checkbox"; input.id = "field_" + field.name; input.name = field.name; input.checked = field.default !== undefined ? field.default : false;
+      const label = document.createElement("label"); label.htmlFor = input.id; label.textContent = tl(field.label).split('|')[0].trim();
+      row.appendChild(input); row.appendChild(label); wrap.appendChild(row); form.appendChild(wrap); return;
+    }
+    const label = document.createElement("label"); label.htmlFor = "field_" + field.name; label.textContent = tl(field.label).split('|')[0].trim();
+    if (field.required) { const req = document.createElement("span"); req.className = "req"; req.textContent = "*"; label.appendChild(req); }
+    wrap.appendChild(label);
+
+    if (field.type === "image" || field.type === "mask") {
+      const dz = document.createElement("div"); dz.className = "dropzone";
+      const dzIcon = document.createElement("i"); dzIcon.className = "fa-solid fa-cloud-arrow-up";
+      const dzText = document.createElement("div"); dzText.className = "dz-text"; dzText.textContent = t("dropzone_text");
+      
+      const input = document.createElement("input"); input.type = "file"; 
+      // Permitir MP4 si la herramienta es de video
+      input.accept = model.response_type === "video" ? "video/mp4, image/*" : "image/*"; 
+      input.id = "field_" + field.name; input.name = field.name;
+      
+      if (field.required) input.required = true;
+      input.addEventListener("change", () => {
+        if (input.files[0]) {
+          dz.classList.add("has-file"); dzIcon.className = "fa-solid fa-file-circle-check"; dzText.textContent = input.files[0].name;
+          if(field.name === "input_image" || field.name === "model_image" || field.name === "input_image_0") {
+              currentImageData = input.files[0]; 
+              urlOriginalMemoria = URL.createObjectURL(input.files[0]);
+              urlResultMemoria = urlOriginalMemoria; 
+              mainResultImg.src = urlOriginalMemoria;
+              tray.style.display = "block"; btnDownloadResult.style.display = "none"; btnRestart.style.display = "block"; quickActionsBar.style.display = "none";
+              magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; document.getElementById('btnAntes').style.display = 'none';
+              resetearZoom();
+              document.getElementById('imgContainer').style.display = 'inline-block';
+              document.getElementById('btnCentrar').style.display = 'block';
+              document.getElementById('btnZoomLabel').style.display = 'block';
+              jsonViewer.style.display = "none";
+              
+              const mainResultVideo = document.getElementById("mainResultVideo");
+              if(mainResultVideo) { mainResultVideo.style.display = "none"; mainResultVideo.src = ""; }
+              mainResultImg.style.display = "block";
+          }
+        } else {
+          dz.classList.remove("has-file"); dzIcon.className = "fa-solid fa-cloud-arrow-up"; dzText.textContent = t("dropzone_text");
+        }
+      });
+      dz.appendChild(dzIcon); dz.appendChild(dzText); dz.appendChild(input); wrap.appendChild(dz); form.appendChild(wrap); return;
+    }
+
+    let input;
+    if (field.type === "textarea") { input = document.createElement("textarea"); } 
+    else if (field.type === "select") {
+      input = document.createElement("select"); const placeholder = document.createElement("option"); placeholder.value = ""; placeholder.textContent = field.options_url ? t("loading_options") : t("select_placeholder"); input.appendChild(placeholder);
+      if (field.options) { field.options.forEach(opt => { const o = document.createElement("option"); o.value = opt.value; o.textContent = tl(opt.label).split('|')[0].trim(); input.appendChild(o); }); } 
+      else if (field.options_url) {
+        fetch("/style-list?url=" + encodeURIComponent(field.options_url)).then(r => r.json()).then(data => {
+            const items = Array.isArray(data) ? data : (data.styles || data.data || []); input.innerHTML = "";
+            items.forEach(item => { const id = typeof item === "string" ? item : (item.id || item.style_id || item.value); const name = typeof item === "string" ? item : (item.name || item.label || id); const o = document.createElement("option"); o.value = id; o.textContent = name + (item.premium ? " 💎 PRO" : ""); input.appendChild(o); });
+          }).catch(() => { input.innerHTML = `<option value="">${t("load_error")}</option>`; });
+      }
+    } else if (field.type === "number") { input = document.createElement("input"); input.type = "number"; if (field.default !== undefined) input.value = field.default; } 
+    else { input = document.createElement("input"); input.type = "text"; }
+
+    input.id = "field_" + field.name; input.name = field.name; if (field.required) input.required = true;
+    wrap.appendChild(input); form.appendChild(wrap);
+  });
+
+  const submitBtn = document.createElement("button"); submitBtn.type = "submit"; submitBtn.className = "btn-primary"; submitBtn.id = "btnMainSubmit";
+  submitBtn.innerHTML = `<i class="fa-solid fa-bolt mr-2"></i> ${t("run_btn")}`; form.appendChild(submitBtn);
+}
+
+function renderQuickActions(slug) {
+    const qaContainer = document.querySelector('.qa-buttons');
+    qaContainer.innerHTML = '';
+    const isEs = currentLang === 'es';
+    
+    const actionsDict = {
+        "remove-bg": { slug: "remove-background", label: isEs ? "Quitar Fondo" : "Remove BG", icon: "fa-user-slash text-red-500", params: {} },
+        "extract-logo": { slug: "remove-background-graphic", label: isEs ? "Extraer Logo" : "Extract Logo", icon: "fa-shapes text-orange-500", params: {} },
+        "upscale-8x": { slug: "enhance", label: isEs ? "Escalar Máx (8x)" : "Upscale Max (8x)", icon: "fa-rocket text-purple-500", params: {zoom_factor: "8"} },
+        "upscale-faces": { slug: "enhance-pro", label: isEs ? "Mejorar Rostros" : "Enhance Faces", icon: "fa-user-check text-blue-500", params: {zoom_factor: "2"} },
+        "magic-eraser": { slug: "detect-objects", label: isEs ? "Borrador Mágico" : "Magic Eraser", icon: "fa-magic text-yellow-500", params: {erase_mode: "ultra"} },
+        "colorize": { slug: "colorize-pro", label: isEs ? "Colorear Foto" : "Colorize", icon: "fa-palette text-green-500", params: {} },
+        "restore": { slug: "restore-pro", label: isEs ? "Restaurar Daños" : "Restore Damage", icon: "fa-hammer text-orange-500", params: {} },
+        "light": { slug: "light-restore", label: isEs ? "Corregir Luz" : "Fix Light", icon: "fa-sun text-yellow-400", params: {} },
+        "gen-bg": { slug: "generate-background", label: isEs ? "Fondo con IA" : "AI Background", icon: "fa-image text-emerald-500", params: {prompt: "Fondo de estudio fotográfico profesional, iluminación perfecta, alta calidad"} }
+    };
+
+    let keys = [];
+    let is8x = false;
+    const zoomEl = document.getElementById("field_zoom_factor");
+    if (zoomEl && zoomEl.value === "8") { is8x = true; }
+
+    if (slug.includes("enhance")) {
+        if (slug === "enhance-art" && !is8x) {
+            qaTitle.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Acciones Sugeridas`;
+            keys = ["extract-logo", "remove-bg"];
+        } else {
+            qaTitle.innerHTML = `<i class="fa-solid fa-check-circle text-ok mr-2"></i> Imagen Maximizada`;
+            qaContainer.innerHTML = `<p style="color:var(--text-dim); font-size:0.85rem; margin:0;">La imagen está en su calidad máxima absoluta. ¡Lista para descargar o imprimir!</p>`;
+            return; 
+        }
+    } else {
+        qaTitle.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Sugerencias de la IA`;
+        if (slug.includes("restore") || slug === "light-restore" || slug === "night-flash" || slug === "backlit-fix") { keys = ["colorize", "upscale-faces", "magic-eraser", "light"]; } 
+        else if (slug.includes("colorize")) { keys = ["restore", "upscale-faces", "magic-eraser"]; } 
+        else if (slug.includes("remove-background")) { keys = ["upscale-8x", "gen-bg", "magic-eraser"]; } 
+        else if (slug.includes("generate") || slug.includes("fairy") || slug.includes("sticker")) { keys = ["upscale-8x", "remove-bg", "extract-logo"]; } 
+        else if (slug === "detect-objects" || slug === "remove-objects" || slug === "erase-text" || slug === "erase-wires") { keys = ["upscale-8x", "remove-bg", "light"]; } 
+        else { keys = ["upscale-8x", "remove-bg", "magic-eraser"]; }
+    }
+
+    keys.forEach(k => {
+        const act = actionsDict[k];
+        const btn = document.createElement('button');
+        btn.className = "btn-qa";
+        btn.innerHTML = `<i class="fa-solid ${act.icon} mb-1 block text-lg"></i> ${act.label}`;
+        btn.onclick = () => ejecutarAccionRapida(act.slug, act.params);
+        qaContainer.appendChild(btn);
+    });
+}
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const model = MODELS.find(m => m.slug === currentSlug);
+  const submitBtn = document.getElementById("btnMainSubmit"); submitBtn.disabled = true;
+
+  statusLine.className = "status-line show"; 
+  
+  // AVISO ESPECIAL PARA VIDEO
+  if(model.response_type === "video") {
+      statusText.textContent = "Renderizando Video. Esto puede tardar varios minutos...";
+  } else {
+      statusText.textContent = t("processing");
+  }
+  
+  btnDownloadResult.style.display = "none"; btnRestart.style.display = "block"; quickActionsBar.style.display = "none";
+  magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; document.getElementById('btnAntes').style.display = 'none';
+  mainResultImg.classList.add("opacity-50", "blur-sm");
+  jsonViewer.style.display = "none";
+
+  const formData = new FormData();
+  model.fields.forEach(field => {
+    const el = document.getElementById("field_" + field.name);
+    if (!el) return;
+    if (field.type === "checkbox") { formData.append(field.name, el.checked ? "true" : "false"); } 
+    else if (field.type === "image" || field.type === "mask") { if (el.files[0]) formData.append(field.name, el.files[0]); } 
+    else if (el.value !== "") { formData.append(field.name, el.value); }
+  });
+
+  try {
+    const res = await fetch(`/run/${model.slug}`, { method: "POST", body: formData });
+    mainResultImg.classList.remove("opacity-50", "blur-sm");
+    
+    if (!res.headers.get("content-type").includes("application/json")) {
+        const blob = await res.blob(); 
+        const localBlobUrl = URL.createObjectURL(blob);
+        processFinalUrl(localBlobUrl);
+    } else {
+        const data = await res.json();
+        if (data.error) {
+            statusLine.className = "status-line show error"; statusText.textContent = t("error_prefix") + (data.message || data.detalle || t("generic_error"));
+        
+        // 🎬 MANEJO DEL VIDEO TERMINADO
+        } else if (data.is_video) {
+            statusLine.className = "status-line show ok"; 
+            statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
+            
+            mainResultImg.style.display = "none";
+            const mainResultVideo = document.getElementById("mainResultVideo");
+            mainResultVideo.style.display = "block";
+            mainResultVideo.src = data.url;
+
+            btnDownloadResult.href = data.url;
+            btnDownloadResult.setAttribute("download", "JJ_Video_Magico.mp4");
+            btnDownloadResult.style.display = "block";
+            btnDownloadResult.onclick = null;
+            
+            document.getElementById('tray').style.display = 'block';
+            document.getElementById('imgContainer').style.display = 'inline-block';
+            document.getElementById('btnCentrar').style.display = 'block';
+            document.getElementById('btnZoomLabel').style.display = 'block';
+            jsonViewer.style.display = "none";
+            quickActionsBar.style.display = "none";
+            resetearZoom();
+
+        } else if (model.slug === "detect-objects" && data.detected_objects) {
+            statusLine.classList.remove("show"); aiSessionId = data.session_id; aiObjects = data.detected_objects; aiSelected.clear();
+            magicTagsPanel.style.display = "block"; tagsContainer.innerHTML = ""; boxesContainer.innerHTML = ""; btnExecuteErase.style.display = "none";
+            const natW = mainResultImg.naturalWidth; const natH = mainResultImg.naturalHeight;
+            aiObjects.forEach((obj, i) => {
+                const tag = document.createElement("span"); tag.className = "ai-tag"; tag.textContent = obj.object_description; tag.onclick = () => toggleAiObject(i, tag); tagsContainer.appendChild(tag);
+                if(obj.box && natW) {
+                    const [xmin, ymin, xmax, ymax] = obj.box; const box = document.createElement('div'); box.id = `box_ai_${i}`; box.className = "ai-box";
+                    box.style.left = `${(xmin / natW) * 100}%`; box.style.top = `${(ymin / natH) * 100}%`; box.style.width = `${((xmax - xmin) / natW) * 100}%`; box.style.height = `${((ymax - ymin) / natH) * 100}%`; boxesContainer.appendChild(box);
+                }
+            });
+            tray.style.display = "block"; renderQuickActions(currentSlug); quickActionsBar.style.display = "block";
+            document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block';
+        } else {
+            statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
+            jsonViewer.value = JSON.stringify(data, null, 2); jsonViewer.style.display = "block"; document.getElementById('imgContainer').style.display = 'none';
+        }
+    }
+  } catch (err) {
+    statusLine.className = "status-line show error"; statusText.textContent = t("conn_error") + err.message; mainResultImg.classList.remove("opacity-50", "blur-sm");
+  } finally { submitBtn.disabled = false; }
+});
+
+async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
+    if(!urlResultMemoria) return alert("Primero debes cargar o generar una imagen.");
+
+    if (targetSlug.includes("enhance")) {
+        const msg = currentLang === 'es'
+            ? "⚠️ REGLA DE ORO DE DISEÑO:\n\nSi escalas la imagen a tamaño gigante ahora, ya no podrás quitarle el fondo o borrar objetos después por el límite de memoria de la IA.\n\nSiempre debes QUITAR EL FONDO PRIMERO y ESCALAR AL FINAL.\n\n¿Deseas proceder a escalar la imagen de todos modos?"
+            : "⚠️ DESIGN GOLDEN RULE:\n\nIf you upscale the image to a giant size now, you won't be able to remove the background later due to AI memory limits.\n\nAlways REMOVE BACKGROUND FIRST and UPSCALE LAST.\n\nDo you want to proceed with upscaling anyway?";
+        if (!confirm(msg)) return;
+    }
+    
+    urlOriginalMemoria = urlResultMemoria; 
+    
+    statusLine.className = "status-line show"; statusText.textContent = t("processing");
+    mainResultImg.classList.add("opacity-50", "blur-sm");
+    magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; quickActionsBar.style.display = "none";
+    jsonViewer.style.display = "none";
+    document.getElementById('imgContainer').style.display = 'inline-block';
+    document.getElementById('btnCentrar').style.display = 'block';
+    document.getElementById('btnZoomLabel').style.display = 'block';
+    
+    try {
+        const targetModel = MODELS.find(m => m.slug === targetSlug);
+        const formData = new FormData();
+        const imgField = targetModel.fields.find(f => f.type === "image").name;
+        
+        if (urlResultMemoria.startsWith("blob:")) {
+            const blobReq = await fetch(urlResultMemoria); const blobData = await blobReq.blob();
+            formData.append(imgField, new File([blobData], "edit_chain.png", {type: "image/png"}));
+        } else {
+            formData.append(imgField, urlResultMemoria); 
+        }
+        
+        for(const [k, v] of Object.entries(extraParams)) formData.append(k, v);
+        
+        targetModel.fields.forEach(f => {
+            if(f.name !== imgField && !extraParams[f.name]) {
+                if(f.default) formData.append(f.name, f.default);
+                else if(f.type === "select" && f.options) formData.append(f.name, f.options[0].value);
             }
         });
 
-        // 2. Dibujar los botones en el menú principal
-        function renderizarMenu(modelos) {
-            const container = document.getElementById('categories-container');
-            container.innerHTML = '';
-            
-            // Agrupar por categoría
-            const categorias = {};
-            modelos.forEach(m => {
-                if (!categorias[m.category]) categorias[m.category] = [];
-                categorias[m.category].push(m);
-            });
-
-            // Crear el HTML para cada categoría
-            for (const cat in categorias) {
-                const catTitle = document.createElement('h3');
-                catTitle.className = 'category-title';
-                catTitle.innerHTML = `<i class="fa-solid fa-folder-open"></i> ${cat}`;
-                container.appendChild(catTitle);
-
-                const grid = document.createElement('div');
-                grid.className = 'tools-grid';
-
-                categorias[cat].forEach(herramienta => {
-                    const card = document.createElement('div');
-                    card.className = 'tool-card';
-                    card.onclick = () => abrirHerramienta(herramienta);
-                    card.innerHTML = `
-                        <i class="fa-solid ${herramienta.icon} tool-icon"></i>
-                        <div class="tool-title">${herramienta.label}</div>
-                        <div class="tool-desc">${herramienta.desc}</div>
-                    `;
-                    grid.appendChild(card);
-                });
-                container.appendChild(grid);
-            }
+        const res = await fetch(`/run/${targetSlug}`, { method: "POST", body: formData });
+        mainResultImg.classList.remove("opacity-50", "blur-sm");
+        
+        if (!res.headers.get("content-type").includes("application/json")) {
+            currentSlug = targetSlug;
+            const blobFinal = await res.blob(); 
+            processFinalUrl(URL.createObjectURL(blobFinal));
+        } else {
+            const data = await res.json();
+            if(data.error) throw new Error(data.message);
         }
+    } catch(err) {
+        alert("Atención: La imagen generada puede ser demasiado grande para esta herramienta."); mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block";
+    }
+}
 
-        // 3. Abrir la zona de trabajo de una herramienta
-        function abrirHerramienta(herramienta) {
-            herramientaActiva = herramienta;
-            
-            document.getElementById('menu-view').style.display = 'none';
-            document.getElementById('workspace-view').style.display = 'block';
-            
-            document.getElementById('ws-title').innerHTML = `<i class="fa-solid ${herramienta.icon}"></i> ${herramienta.label}`;
-            document.getElementById('ws-desc').innerText = herramienta.desc;
-            
-            // Limpiar resultados anteriores
-            document.getElementById('result-placeholder').style.display = 'block';
-            document.getElementById('media-container').innerHTML = '';
-            document.getElementById('btn-download').style.display = 'none';
+function processFinalUrl(url) {
+    let displayUrl = url;
+    let downloadUrl = url;
+    
+    if(url.startsWith("http")) {
+        displayUrl = "/proxy-image?url=" + encodeURIComponent(url);
+        downloadUrl = "/proxy-image?url=" + encodeURIComponent(url) + "&dl=1";
+    }
+    
+    urlResultMemoria = displayUrl; 
+    
+    // OCULTAR VIDEO AL MOSTRAR IMAGEN
+    const mainResultVideo = document.getElementById("mainResultVideo");
+    if(mainResultVideo) { mainResultVideo.style.display = "none"; mainResultVideo.src = ""; }
+    mainResultImg.style.display = "block";
+    mainResultImg.src = displayUrl; 
+    
+    statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
+    
+    btnDownloadResult.href = downloadUrl;
+    btnDownloadResult.setAttribute("download", "JJ_Studio_Diseño.png");
+    btnDownloadResult.style.display = "block";
+    btnDownloadResult.onclick = null;
+    
+    renderQuickActions(currentSlug);
+    quickActionsBar.style.display = "block"; 
+    
+    document.getElementById('tray').style.display = 'block';
 
-            // Generar los campos del formulario (Inputs)
-            const formFields = document.getElementById('form-fields');
-            formFields.innerHTML = '';
+    document.getElementById('btnAntes').style.display = 'block';
+    document.getElementById('imgContainer').style.display = 'inline-block';
+    document.getElementById('btnCentrar').style.display = 'block';
+    document.getElementById('btnZoomLabel').style.display = 'block';
+    jsonViewer.style.display = "none";
+    
+    resetearZoom();
+}
 
-            herramienta.fields.forEach(field => {
-                const group = document.createElement('div');
-                group.className = 'form-group';
-                
-                const label = document.createElement('label');
-                label.className = 'form-label';
-                label.innerText = field.label + (field.required ? ' *' : '');
-                group.appendChild(label);
+let escalaImg = 1, estaArrastrando = false, panX = 0, panY = 0, startX, startY;
+const contVisor = document.getElementById('visorContenedor'); const contZoom = document.getElementById('viewerWrapper'); const lblZoom = document.getElementById('lblZoom');
 
-                if (field.type === 'image' || field.type === 'mask') {
-                    const input = document.createElement('input');
-                    input.type = 'file';
-                    input.name = field.name;
-                    input.accept = herramienta.response_type === 'video' && field.name === 'input_image' ? 'video/mp4, image/*' : 'image/*';
-                    if (field.required) input.required = true;
-                    group.appendChild(input);
-                } 
-                else if (field.type === 'select') {
-                    const select = document.createElement('select');
-                    select.name = field.name;
-                    field.options.forEach(opt => {
-                        const option = document.createElement('option');
-                        option.value = opt.value;
-                        option.innerText = opt.label;
-                        select.appendChild(option);
-                    });
-                    group.appendChild(select);
-                }
-                else if (field.type === 'textarea') {
-                    const textarea = document.createElement('textarea');
-                    textarea.name = field.name;
-                    textarea.placeholder = 'Escribe aquí tu instrucción...';
-                    if (field.required) textarea.required = true;
-                    group.appendChild(textarea);
-                }
+function actualizarTransform() { contZoom.style.transform = `translate(${panX}px, ${panY}px) scale(${escalaImg})`; lblZoom.innerText = Math.round(escalaImg * 100) + '%'; }
+function resetearZoom() { escalaImg = 1; panX = 0; panY = 0; actualizarTransform(); }
 
-                formFields.appendChild(group);
-            });
+contVisor.addEventListener('wheel', (e) => {
+    if ((!mainResultImg.src && !document.getElementById("mainResultVideo").src) || jsonViewer.style.display === "block") return; e.preventDefault();
+    if (e.deltaY < 0) escalaImg += 0.15; else escalaImg -= 0.15;
+    escalaImg = Math.max(0.5, Math.min(escalaImg, 8)); if(escalaImg === 1) { panX = 0; panY = 0; } actualizarTransform();
+});
+contVisor.addEventListener('mousedown', (e) => { if (e.button !== 0 || (!mainResultImg.src && !document.getElementById("mainResultVideo").src) || jsonViewer.style.display === "block") return; estaArrastrando = true; startX = e.clientX - panX; startY = e.clientY - panY; });
+window.addEventListener('mousemove', (e) => { if (!estaArrastrando) return; panX = e.clientX - startX; panY = e.clientY - startY; actualizarTransform(); });
+window.addEventListener('mouseup', () => { estaArrastrando = false; });
+
+function mostrar(original) { if(!urlOriginalMemoria || !urlResultMemoria) return; mainResultImg.src = original ? urlOriginalMemoria : urlResultMemoria; document.getElementById('boxesContainer').style.opacity = original ? '0' : '1'; }
+
+function toggleAiObject(index, tagEl) {
+    const box = document.getElementById(`box_ai_${index}`);
+    if (aiSelected.has(index)) { aiSelected.delete(index); tagEl.classList.remove("selected"); if(box) box.classList.remove("selected"); } 
+    else { aiSelected.add(index); tagEl.classList.add("selected"); if(box) box.classList.add("selected"); }
+    btnExecuteErase.style.display = aiSelected.size > 0 ? "inline-block" : "none";
+}
+
+btnExecuteErase.addEventListener("click", async () => {
+    btnExecuteErase.disabled = true; btnExecuteErase.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Procesando...`;
+    mainResultImg.classList.add("opacity-50", "blur-sm"); quickActionsBar.style.display = "none";
+    const formData = new FormData(); 
+    
+    let imageToUse = urlResultMemoria ? urlResultMemoria : currentImageData;
+    
+    if (typeof imageToUse === "string") {
+        if (imageToUse.startsWith("blob:")) {
+            const blobReq = await fetch(imageToUse); const blobData = await blobReq.blob();
+            formData.append("input_image", new File([blobData], "magic.png", {type: "image/png"}));
+        } else { formData.append("input_image", imageToUse); }
+    } else { formData.append("input_image", imageToUse); }
+    
+    formData.append("original_session_id", aiSessionId);
+    formData.append("erase_mode", "ultra");
+    const objectsToErase = []; aiSelected.forEach(i => objectsToErase.push(aiObjects[i])); formData.append("mask_objects", JSON.stringify(objectsToErase));
+    
+    try {
+        const res = await fetch(`/run/execute-magic-erase`, { method: "POST", body: formData });
+        mainResultImg.classList.remove("opacity-50", "blur-sm");
+        
+        if (!res.headers.get("content-type").includes("application/json")) {
+            const blob = await res.blob(); processFinalUrl(URL.createObjectURL(blob));
+        } else {
+            const json = await res.json();
+            if(json.error) throw new Error(json.message || json.detalle || "Parámetros incorrectos");
         }
+        magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = "";
+    } catch(err) { alert("Error al borrar: " + err.message); mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block"; } 
+    finally { btnExecuteErase.disabled = false; btnExecuteErase.innerHTML = `<i class="fa-solid fa-eraser mr-2"></i> ` + t("magic_btn_apply"); }
+});
 
-        function volverAlMenu() {
-            document.getElementById('workspace-view').style.display = 'none';
-            document.getElementById('menu-view').style.display = 'block';
-        }
-
-        // 4. Enviar datos al Servidor (AQUÍ ESTÁ LA MAGIA PARA VIDEO E IMÁGENES)
-        async function procesarPeticion(e) {
-            e.preventDefault();
-            
-            const btnSubmit = document.getElementById('btn-submit');
-            const loader = document.getElementById('loader');
-            const placeholder = document.getElementById('result-placeholder');
-            const mediaContainer = document.getElementById('media-container');
-            const btnDownload = document.getElementById('btn-download');
-            const loaderText = document.getElementById('loader-text');
-
-            // Preparar UI de carga
-            btnSubmit.disabled = true;
-            placeholder.style.display = 'none';
-            mediaContainer.innerHTML = '';
-            btnDownload.style.display = 'none';
-            loader.style.display = 'flex';
-
-            // Mensaje especial si es video (tarda más)
-            if (herramientaActiva.response_type === 'video') {
-                loaderText.innerText = "Renderizando Video. Esto puede tardar unos minutos...";
-            } else {
-                loaderText.innerText = "La IA está procesando la imagen...";
-            }
-
-            try {
-                const formData = new FormData(e.target);
-                const response = await fetch(`/run/${herramientaActiva.slug}`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const contentType = response.headers.get("content-type");
-
-                // 🎬 CASO A: LA IA DEVUELVE UN JSON (ES UN VIDEO O HUBO UN ERROR)
-                if (contentType && contentType.includes("application/json")) {
-                    const jsonResult = await response.json();
-                    
-                    if (jsonResult.error) {
-                        alert("❌ Error: " + jsonResult.message);
-                        placeholder.style.display = 'block';
-                    } 
-                    else if (jsonResult.is_video) {
-                        // Inyectar reproductor de VIDEO
-                        mediaContainer.innerHTML = `
-                            <video controls autoplay loop style="max-width: 100%; max-height: 500px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); border: 2px solid var(--primary);">
-                                <source src="${jsonResult.url}" type="video/mp4">
-                                Tu navegador no soporta videos.
-                            </video>
-                        `;
-                        btnDownload.href = jsonResult.url;
-                        btnDownload.download = "video_ia_j_y_j.mp4";
-                        btnDownload.style.display = 'flex';
-                    }
-                } 
-                // 🖼️ CASO B: LA IA DEVUELVE DIRECTAMENTE LA IMAGEN (BLOB)
-                else {
-                    const blob = await response.blob();
-                    const urlFoto = URL.createObjectURL(blob);
-                    
-                    // Inyectar etiqueta de IMAGEN
-                    mediaContainer.innerHTML = `<img src="${urlFoto}" style="max-width: 100%; max-height: 500px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">`;
-                    btnDownload.href = urlFoto;
-                    btnDownload.download = "imagen_ia_j_y_j.png";
-                    btnDownload.style.display = 'flex';
-                }
-
-            } catch (error) {
-                alert("❌ Ocurrió un error al comunicarse con el servidor de la IA.");
-                placeholder.style.display = 'block';
-            }
-
-            // Restaurar botones
-            loader.style.display = 'none';
-            btnSubmit.disabled = false;
-        }
-    </script>
+document.querySelectorAll(".lang-switch button").forEach(btn => { btn.classList.toggle("active", btn.dataset.lang === currentLang); });
+applyStaticText(); checkSession();
+</script>
 </body>
 </html>
