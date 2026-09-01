@@ -59,7 +59,7 @@ MODELS = [
     {"slug": "retouch-skin", "label": L("Retoque Facial", "Skin Retouch"), "icon": "fa-face-smile", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Limpia la piel automáticamente.", "Cleans skin automatically."), "endpoint": "/v1/images/retouch-skin", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
     # 🚀 --- IA PARA VIDEOS Y MOCKUPS AUTOMÁTICOS ---
-    {"slug": "mockup-to-video", "label": L("Mockup a Video 3D", "Mockup to Video 3D"), "icon": "fa-shirt", "category": L("6. IA para Videos", "6. AI Video"), "desc": L("Sube tu logo. Te armamos la prenda y creamos el video en HD automáticamente.", "Upload transparent design for automatic video mockup."), "endpoint": "/v1/videos/image-to-video", "response_type": "video", "fields": [
+    {"slug": "mockup-to-video", "label": L("Mockup a Video 3D", "Mockup to Video 3D"), "icon": "fa-shirt", "category": L("6. IA para Videos", "6. AI Video"), "desc": L("Sube tu logo. Te armamos la prenda y creamos el video HD.", "Upload transparent design for automatic video mockup."), "endpoint": "/v1/videos/image-to-video", "response_type": "video", "fields": [
         {"name": "input_image", "type": "image", "label": L("Sube tu Diseño (PNG Transparente)", "Upload Design (PNG)"), "required": True},
         {"name": "tipo_producto", "type": "select", "label": L("Elige el Producto", "Product"), "required": True, "options": [{"value": "playera", "label": L("Playera (Camina / Fashion)", "T-Shirt")}, {"value": "taza", "label": L("Taza (Giro 360°)", "Mug")}]},
         {"name": "color_hex", "type": "color", "label": L("Color de la Prenda/Taza", "Product Color"), "default": "#ffffff"},
@@ -216,14 +216,25 @@ def run_model(slug):
                 tipo = request.form.get("tipo_producto", "playera")
                 color_hex = request.form.get("color_hex", "#ffffff")
                 
-                # Nombres exactos de los archivos que subiste
-                plantilla_nombre = "T SHIRT_.jpg" if tipo == "playera" else "Psd 1.jpg"
-                if not os.path.exists(plantilla_nombre):
-                    return jsonify({"error": True, "message": f"Falta el archivo {plantilla_nombre} en el servidor."}), 400
-                    
-                plantilla = Image.open(plantilla_nombre).convert("RGBA")
+                # BUSCADOR DE ARCHIVOS A PRUEBA DE ERRORES PARA LINUX/RENDER
+                base_dir = os.path.dirname(os.path.abspath(__file__))
+                plantilla_nombre_buscar = "T SHIRT_.jpg" if tipo == "playera" else "Psd 1.jpg"
+                plantilla_path = None
                 
-                # APLICAR COLOR (Se multiplica el color para mantener las arrugas y sombras de tu JPG original)
+                try:
+                    for archivo in os.listdir(base_dir):
+                        if archivo.lower() == plantilla_nombre_buscar.lower():
+                            plantilla_path = os.path.join(base_dir, archivo)
+                            break
+                except Exception:
+                    pass
+                    
+                if not plantilla_path:
+                    return jsonify({"error": True, "message": f"Falta la imagen {plantilla_nombre_buscar} en la carpeta principal de tu GitHub."}), 400
+                    
+                plantilla = Image.open(plantilla_path).convert("RGBA")
+                
+                # APLICAR COLOR (Se multiplica para mantener sombras)
                 if color_hex and color_hex.lower() != "#ffffff" and color_hex.lower() != "#fff":
                     color_rgb = tuple(int(color_hex.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
                     solid_color = Image.new("RGB", plantilla.size, color_rgb)
@@ -239,7 +250,7 @@ def run_model(slug):
                 else: # Taza
                     escala = 0.32 # Diseño ocupa 32% de la foto
                     prompt = "Photorealistic video of this exact coffee mug placed on a rotating product stand. The mug spins smoothly and continuously 360 degrees, showcasing the entire wraparound design. High quality commercial product rendering, soft lighting, sharp focus, clean background."
-                    offset_x = int(plantilla.width * 0.44) - (int(plantilla.width * escala) // 2) # Un poco a la izquierda por el asa
+                    offset_x = int(plantilla.width * 0.44) - (int(plantilla.width * escala) // 2)
                     offset_y = (plantilla.height - int(diseño.height * (plantilla.width * escala / diseño.width))) // 2
                 
                 nuevo_ancho = int(plantilla.width * escala)
@@ -255,7 +266,6 @@ def run_model(slug):
                 plantilla.convert("RGB").save(buf, format="JPEG", quality=95)
                 file_bytes = buf.getvalue()
                 
-                # Configurar SnapEdit para recibir la foto armada
                 payload["prompt"] = prompt
                 payload.pop("tipo_producto", None)
                 payload.pop("color_hex", None)
