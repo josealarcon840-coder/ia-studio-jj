@@ -261,7 +261,7 @@
               <div id="viewerWrapper">
                   <div id="imgContainer" style="position:relative; display:inline-block; line-height:0;">
                       <img id="mainResultImg" src="" alt="Resultado">
-                      <!-- REPRODUCTOR DE VIDEO INTEGRADO EXÁCTAMENTE EN TU DISEÑO ORIGINAL -->
+                      <!-- REPRODUCTOR DE VIDEO AÑADIDO A TU DISEÑO -->
                       <video id="mainResultVideo" controls loop style="display: none; max-width: 90vw; max-height: 70vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.8);"></video>
                       <div id="boxesContainer" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
                   </div>
@@ -603,7 +603,7 @@ form.addEventListener("submit", async (e) => {
   statusLine.className = "status-line show"; 
   
   if(model.response_type === "video") {
-      statusText.textContent = "Renderizando Video. Esto puede tardar varios minutos...";
+      statusText.textContent = "Iniciando renderizado del video...";
   } else {
       statusText.textContent = t("processing");
   }
@@ -630,32 +630,57 @@ form.addEventListener("submit", async (e) => {
         const blob = await res.blob(); 
         const localBlobUrl = URL.createObjectURL(blob);
         processFinalUrl(localBlobUrl);
+        submitBtn.disabled = false;
     } else {
         const data = await res.json();
         if (data.error) {
             statusLine.className = "status-line show error"; statusText.textContent = t("error_prefix") + (data.message || data.detalle || t("generic_error"));
-        
-        } else if (data.is_video) {
-            statusLine.className = "status-line show ok"; 
-            statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
+            submitBtn.disabled = false;
             
-            mainResultImg.style.display = "none";
-            const mainResultVideo = document.getElementById("mainResultVideo");
-            mainResultVideo.style.display = "block";
-            mainResultVideo.src = data.url;
+        // 🎬 POLLING PARA VIDEOS (EVITA EL CORTE DE RENDER)
+        } else if (data.is_video_task) {
+            statusText.innerHTML = "Procesando Video en la nube (0%). Por favor espera...";
+            
+            const polling = setInterval(async () => {
+                try {
+                    let rTask = await fetch(`/check-task?task_id=${data.task_id}&endpoint=${data.endpoint}`);
+                    let taskData = await rTask.json();
+                    
+                    if (taskData.status === "COMPLETED") {
+                        clearInterval(polling);
+                        statusLine.className = "status-line show ok"; 
+                        statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
+                        
+                        let vUrl = taskData.download_url || taskData.video_url || taskData.url;
+                        
+                        mainResultImg.style.display = "none";
+                        const mainResultVideo = document.getElementById("mainResultVideo");
+                        mainResultVideo.style.display = "block";
+                        mainResultVideo.src = vUrl;
 
-            btnDownloadResult.href = data.url;
-            btnDownloadResult.setAttribute("download", "JJ_Video_Magico.mp4");
-            btnDownloadResult.style.display = "block";
-            btnDownloadResult.onclick = null;
-            
-            document.getElementById('tray').style.display = 'block';
-            document.getElementById('imgContainer').style.display = 'inline-block';
-            document.getElementById('btnCentrar').style.display = 'block';
-            document.getElementById('btnZoomLabel').style.display = 'block';
-            jsonViewer.style.display = "none";
-            quickActionsBar.style.display = "none";
-            resetearZoom();
+                        btnDownloadResult.href = vUrl;
+                        btnDownloadResult.setAttribute("download", "JJ_Video_Magico.mp4");
+                        btnDownloadResult.style.display = "block";
+                        btnDownloadResult.innerHTML = `<i class="fa-solid fa-download mr-2"></i> Descargar Video (MP4)`;
+                        btnDownloadResult.onclick = null;
+                        
+                        document.getElementById('tray').style.display = 'block';
+                        document.getElementById('imgContainer').style.display = 'inline-block';
+                        document.getElementById('btnCentrar').style.display = 'block';
+                        document.getElementById('btnZoomLabel').style.display = 'block';
+                        submitBtn.disabled = false;
+                        
+                    } else if (taskData.status === "FAILED") {
+                        clearInterval(polling);
+                        statusLine.className = "status-line show error";
+                        statusText.innerHTML = "Error al renderizar el video.";
+                        submitBtn.disabled = false;
+                    } else {
+                        statusText.innerHTML = "Generando Video (" + (taskData.progress || 0) + "%)... No cierres la ventana.";
+                    }
+                } catch(e) { }
+            }, 4000);
+            return;
 
         } else if (model.slug === "detect-objects" && data.detected_objects) {
             statusLine.classList.remove("show"); aiSessionId = data.session_id; aiObjects = data.detected_objects; aiSelected.clear();
@@ -670,14 +695,17 @@ form.addEventListener("submit", async (e) => {
             });
             tray.style.display = "block"; renderQuickActions(currentSlug); quickActionsBar.style.display = "block";
             document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block';
+            submitBtn.disabled = false;
         } else {
             statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
             jsonViewer.value = JSON.stringify(data, null, 2); jsonViewer.style.display = "block"; document.getElementById('imgContainer').style.display = 'none';
+            submitBtn.disabled = false;
         }
     }
   } catch (err) {
     statusLine.className = "status-line show error"; statusText.textContent = t("conn_error") + err.message; mainResultImg.classList.remove("opacity-50", "blur-sm");
-  } finally { submitBtn.disabled = false; }
+    submitBtn.disabled = false;
+  }
 });
 
 async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
@@ -705,12 +733,10 @@ async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
         const formData = new FormData();
         const imgField = targetModel.fields.find(f => f.type === "image").name;
         
-        if (urlResultMemoria.startsWith("blob:")) {
-            const blobReq = await fetch(urlResultMemoria); const blobData = await blobReq.blob();
-            formData.append(imgField, new File([blobData], "edit_chain.png", {type: "image/png"}));
-        } else {
-            formData.append(imgField, urlResultMemoria); 
-        }
+        // CORRECCIÓN: Convierte el enlace a un archivo real siempre
+        const blobReq = await fetch(urlResultMemoria); 
+        const blobData = await blobReq.blob();
+        formData.append(imgField, new File([blobData], "edit_chain.png", {type: blobData.type || "image/png"}));
         
         for(const [k, v] of Object.entries(extraParams)) formData.append(k, v);
         
@@ -733,7 +759,7 @@ async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
             if(data.error) throw new Error(data.message);
         }
     } catch(err) {
-        alert("Atención: La imagen generada puede ser demasiado grande para esta herramienta."); mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block";
+        alert("Error: " + err.message); mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block";
     }
 }
 
