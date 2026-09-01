@@ -227,11 +227,19 @@ def run_model(slug):
             if not task_id or not upload_url:
                 return jsonify({"error": True, "message": f"Respuesta inesperada de SnapEdit al subir: {datos_carga}"}), 400
 
+            # Subir el archivo 
             mime_type = "video/mp4" if "video" in slug and not slug.startswith("image-to") else "image/jpeg"
             r2 = requests.put(upload_url, data=file_bytes, headers={"Content-Type": mime_type})
             if r2.status_code not in [200, 201]: 
-                return jsonify({"error": True, "message": f"Fallo al subir el archivo al servidor (Código {r2.status_code}). Detalle: {r2.text}"}), 400
+                return jsonify({"error": True, "message": f"Fallo al subir el archivo al servidor. Detalle: {r2.text}"}), 400
 
+            # INICIAR EL RENDERIZADO (¡El paso que faltaba y causaba que Render colapsara!)
+            payload["task_id"] = task_id
+            r3 = requests.post(BASE + model["endpoint"], headers={"api-key": API_KEY, "Content-Type": "application/json"}, json=payload)
+            if r3.status_code != 200: 
+                return jsonify({"error": True, "message": f"Fallo al procesar el renderizado: {r3.text}"}), 400
+
+            # Polling
             max_intentos = 45 
             for _ in range(max_intentos):
                 time.sleep(5)
@@ -258,7 +266,8 @@ def run_model(slug):
             if file_obj and file_obj.filename:
                 buf, fname, mime = resize_if_needed(file_obj.read(), slug, file_obj.filename)
                 
-                if slug == "generate-background" or model["endpoint"] == "/v1/images/generates-background":
+                # Para evitar el error "Missing parameter: input_image" eliminamos excepciones raras
+                if key == "input_image" and any(x in model["endpoint"] for x in ["pose-suggest", "outpaint"]):
                     api_key = "image"
                 else:
                     api_key = key
