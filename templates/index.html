@@ -261,7 +261,7 @@
               <div id="viewerWrapper">
                   <div id="imgContainer" style="position:relative; display:inline-block; line-height:0;">
                       <img id="mainResultImg" src="" alt="Resultado">
-                      <!-- REPRODUCTOR DE VIDEO AÑADIDO A TU DISEÑO -->
+                      <!-- REPRODUCTOR DE VIDEO AÑADIDO -->
                       <video id="mainResultVideo" controls loop style="display: none; max-width: 90vw; max-height: 70vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.8);"></video>
                       <div id="boxesContainer" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
                   </div>
@@ -284,10 +284,10 @@
 <script>
 const UI = {
   es: {
-    gate_sub: "Inicia sesión con Telegram para verificar tu acceso.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Ingresar", gate_error: "No tienes acceso. ¡Asegúrate de estar en el grupo VIP!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "¿Cerrar sesión?", home_title: "Panel Premium", home_sub: "Selecciona una herramienta para comenzar.", back: "Volver", run_btn: "Procesar con IA", restart_btn: "Reiniciar Todo", processing: "La IA está procesando...", processing_task: "Tarea asíncrona, espere...", processing_pct: (p) => `Trabajando... (${p}%)`, done: "¡Completado exitosamente!", error_prefix: "Error: ", generic_error: "Fallo de conexión.", task_failed: "La tarea ha fallado.", conn_error: "Error de red: ", conn_error_task: "Error al consultar la tarea.", dropzone_text: "Haz clic o arrastra una imagen", loading_options: "Descargando de internet...", select_placeholder: "Selecciona...", load_error: "Error de red", magic_tags_title: "✨ Toca las etiquetas para borrar:", magic_btn_apply: "Borrar Seleccionados", download_btn: "⬇️ Descargar Diseño (Calidad HD)"
+    gate_sub: "Inicia sesión con Telegram para verificar tu acceso.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Ingresar", gate_error: "No tienes acceso. ¡Asegúrate de estar en el grupo VIP!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "¿Cerrar sesión?", home_title: "Panel Premium", home_sub: "Selecciona una herramienta para comenzar.", back: "Volver", run_btn: "Procesar con IA", restart_btn: "Reiniciar Todo", processing: "La IA está procesando...", processing_task: "Tarea asíncrona, espere...", processing_pct: (p) => `Trabajando... (${p}%)`, done: "¡Completado exitosamente!", error_prefix: "Error: ", generic_error: "Fallo de conexión.", task_failed: "La tarea ha fallado.", conn_error: "Error de red: ", conn_error_task: "Error al consultar la tarea.", dropzone_text: "Haz clic o arrastra un archivo", loading_options: "Descargando de internet...", select_placeholder: "Selecciona...", load_error: "Error de red", magic_tags_title: "✨ Toca las etiquetas para borrar:", magic_btn_apply: "Borrar Seleccionados", download_btn: "⬇️ Descargar Diseño (Calidad HD)"
   },
   en: {
-    gate_sub: "Login with Telegram to verify access.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Login", gate_error: "Access denied. Make sure you are in the VIP group!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "Log out?", home_title: "Premium Dashboard", home_sub: "Select a tool to begin.", back: "Back", run_btn: "Run AI", restart_btn: "Reset All", processing: "AI is processing...", processing_task: "Async task, wait...", processing_pct: (p) => `Working... (${p}%)`, done: "Successfully completed!", error_prefix: "Error: ", generic_error: "Connection failed.", task_failed: "Task failed.", conn_error: "Network error: ", conn_error_task: "Error checking task.", dropzone_text: "Click or drag an image here", loading_options: "Downloading from cloud...", select_placeholder: "Select...", load_error: "Network error", magic_tags_title: "✨ Tap tags to erase:", magic_btn_apply: "Erase Selected", download_btn: "⬇️ Download Design (HD)"
+    gate_sub: "Login with Telegram to verify access.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Login", gate_error: "Access denied. Make sure you are in the VIP group!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "Log out?", home_title: "Premium Dashboard", home_sub: "Select a tool to begin.", back: "Back", run_btn: "Run AI", restart_btn: "Reset All", processing: "AI is processing...", processing_task: "Async task, wait...", processing_pct: (p) => `Working... (${p}%)`, done: "Successfully completed!", error_prefix: "Error: ", generic_error: "Connection failed.", task_failed: "Task failed.", conn_error: "Network error: ", conn_error_task: "Error checking task.", dropzone_text: "Click or drag a file here", loading_options: "Downloading from cloud...", select_placeholder: "Select...", load_error: "Network error", magic_tags_title: "✨ Tap tags to erase:", magic_btn_apply: "Erase Selected", download_btn: "⬇️ Download Design (HD)"
   }
 };
 
@@ -603,7 +603,7 @@ form.addEventListener("submit", async (e) => {
   statusLine.className = "status-line show"; 
   
   if(model.response_type === "video") {
-      statusText.textContent = "Iniciando renderizado del video...";
+      statusText.textContent = "Preparando renderizado del video...";
   } else {
       statusText.textContent = t("processing");
   }
@@ -637,9 +637,9 @@ form.addEventListener("submit", async (e) => {
             statusLine.className = "status-line show error"; statusText.textContent = t("error_prefix") + (data.message || data.detalle || t("generic_error"));
             submitBtn.disabled = false;
             
-        // 🎬 POLLING PARA VIDEOS (EVITA EL CORTE DE RENDER)
+        // 🎬 MANEJO DEL VIDEO CON POLLING
         } else if (data.is_video_task) {
-            statusText.innerHTML = "Procesando Video en la nube (0%). Por favor espera...";
+            statusText.innerHTML = "Generando Video en la Nube (0%). Por favor espera...";
             
             const polling = setInterval(async () => {
                 try {
@@ -661,6 +661,7 @@ form.addEventListener("submit", async (e) => {
                         btnDownloadResult.href = vUrl;
                         btnDownloadResult.setAttribute("download", "JJ_Video_Magico.mp4");
                         btnDownloadResult.style.display = "block";
+                        // AQUI ASEGURAMOS QUE EL BOTÓN DIGA DESCARGAR VIDEO
                         btnDownloadResult.innerHTML = `<i class="fa-solid fa-download mr-2"></i> Descargar Video (MP4)`;
                         btnDownloadResult.onclick = null;
                         
@@ -676,10 +677,10 @@ form.addEventListener("submit", async (e) => {
                         statusText.innerHTML = "Error al renderizar el video.";
                         submitBtn.disabled = false;
                     } else {
-                        statusText.innerHTML = "Generando Video (" + (taskData.progress || 0) + "%)... No cierres la ventana.";
+                        statusText.innerHTML = "Procesando Video (" + (taskData.progress || 0) + "%)... No cierres la ventana.";
                     }
                 } catch(e) { }
-            }, 4000);
+            }, 5000);
             return;
 
         } else if (model.slug === "detect-objects" && data.detected_objects) {
@@ -733,10 +734,15 @@ async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
         const formData = new FormData();
         const imgField = targetModel.fields.find(f => f.type === "image").name;
         
-        // CORRECCIÓN: Convierte el enlace a un archivo real siempre
-        const blobReq = await fetch(urlResultMemoria); 
-        const blobData = await blobReq.blob();
-        formData.append(imgField, new File([blobData], "edit_chain.png", {type: blobData.type || "image/png"}));
+        if (urlResultMemoria.startsWith("blob:")) {
+            const blobReq = await fetch(urlResultMemoria); const blobData = await blobReq.blob();
+            formData.append(imgField, new File([blobData], "edit_chain.png", {type: blobData.type || "image/png"}));
+        } else {
+            // Convierte el enlace en un archivo real para enviar al servidor y que no explote la validación
+            const imgRes = await fetch(urlResultMemoria);
+            const imgBlob = await imgRes.blob();
+            formData.append(imgField, new File([imgBlob], "imagen_sugerida.jpg", {type: imgBlob.type || "image/jpeg"}));
+        }
         
         for(const [k, v] of Object.entries(extraParams)) formData.append(k, v);
         
@@ -759,7 +765,7 @@ async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
             if(data.error) throw new Error(data.message);
         }
     } catch(err) {
-        alert("Error: " + err.message); mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block";
+        alert("Error al procesar: " + err.message); mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block";
     }
 }
 
@@ -784,6 +790,8 @@ function processFinalUrl(url) {
     btnDownloadResult.href = downloadUrl;
     btnDownloadResult.setAttribute("download", "JJ_Studio_Diseño.png");
     btnDownloadResult.style.display = "block";
+    // RESTAURA EL TEXTO DE LA IMAGEN AQUÍ
+    btnDownloadResult.innerHTML = `<i class="fa-solid fa-download mr-2"></i> <span data-i18n="download_btn">${t("download_btn")}</span>`;
     btnDownloadResult.onclick = null;
     
     renderQuickActions(currentSlug);
