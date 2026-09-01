@@ -5,7 +5,7 @@ import requests
 import hashlib
 import hmac
 import gc  
-import time # <- IMPORTANTE: Añadido para el renderizado de video
+import time 
 from flask import Flask, render_template, request, jsonify, Response
 from PIL import Image
 
@@ -74,7 +74,7 @@ MODELS = [
 
     {"slug": "retouch-skin", "label": L("Retoque Facial", "Skin Retouch"), "icon": "fa-face-smile", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Limpia la piel automáticamente.", "Cleans skin automatically."), "endpoint": "/v1/images/retouch-skin", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    # 🚀 --- IA PARA VIDEOS (ARREGLADO ETIQUETAS DE TEXTO) ---
+    # 🚀 --- IA PARA VIDEOS (CORREGIDO ENVÍO DE PARÁMETROS) ---
     {"slug": "enhance-video", "label": L("Mejorar Video 2K/4K", "Enhance Video Pro"), "icon": "fa-film", "category": L("6. IA para Videos", "6. AI Video"), "desc": L("Sube la resolución de videos.", "Upscale video to 2K/4K."), "endpoint": "/v1/videos/enhance-pro", "response_type": "video", "fields": [
         {"name": "input_image", "type": "image", "label": L("Sube tu Video (MP4)", "Upload Video"), "required": True}, 
         {"name": "zoom_factor", "type": "select", "label": L("Resolución", "Resolution"), "required": True, "options": [{"value": "2K", "label": L("2K Calidad Alta", "2K High Quality")}, {"value": "4K", "label": L("4K Ultra HD", "4K Ultra HD")}]},
@@ -192,19 +192,26 @@ def run_model(slug):
 
     try:
         # =======================================================
-        # 🎬 LÓGICA DE VIDEO ASÍNCRONA (MODIFICADA PARA MOSTRAR ERROR)
+        # 🎬 LÓGICA DE VIDEO ASÍNCRONA CORREGIDA
         # =======================================================
         if model.get("response_type") == "video":
             file_obj = list(request.files.values())[0]
             file_bytes = file_obj.read()
             
-            # Paso 1: Pedir URL de carga a SnapEdit
+            # Recolectar los campos del formulario (duration, prompt, zoom_factor, etc.)
+            payload = {}
+            for key, value in request.form.items():
+                if value.lower() == "true": payload[key] = True
+                elif value.lower() == "false": payload[key] = False
+                elif value.isdigit(): payload[key] = int(value)
+                else: payload[key] = value
+
+            # Paso 1: Pedir URL de carga a SnapEdit pasando los parámetros que exige la API
             url_upload_endpoint = f"{BASE}{model['endpoint']}/upload"
-            r1 = requests.post(url_upload_endpoint, headers=HEADERS)
+            r1 = requests.post(url_upload_endpoint, headers={"api-key": API_KEY, "Content-Type": "application/json"}, json=payload if payload else None)
             
-            # 🚨 INYECCIÓN DE DIAGNÓSTICO: Si falla, nos mostrará la respuesta secreta de SnapEdit
             if r1.status_code != 200: 
-                return jsonify({"error": True, "message": f"Fallo al iniciar servidor de video (Paso 1). Código: {r1.status_code} | Detalle SnapEdit: {r1.text}"}), 400
+                return jsonify({"error": True, "message": f"Fallo al iniciar servidor de video. Detalle: {r1.text}"}), 400
             
             datos_carga = r1.json()
             task_id = datos_carga["task_id"]
@@ -213,16 +220,10 @@ def run_model(slug):
             # Paso 2: Subir el archivo multimedia
             r2 = requests.put(upload_url, data=file_bytes)
             if r2.status_code != 200: 
-                return jsonify({"error": True, "message": f"Fallo al subir el archivo (Paso 2). Detalle: {r2.text}"}), 400
+                return jsonify({"error": True, "message": f"Fallo al subir el archivo al servidor. Detalle: {r2.text}"}), 400
 
-            # Paso 3: Crear la Tarea de Renderizado
-            payload = {"task_id": task_id}
-            for key, value in request.form.items():
-                if value.lower() == "true": payload[key] = True
-                elif value.lower() == "false": payload[key] = False
-                elif value.isdigit(): payload[key] = int(value)
-                else: payload[key] = value
-
+            # Paso 3: Crear la Tarea de Renderizado final
+            payload["task_id"] = task_id
             r3 = requests.post(BASE + model["endpoint"], headers={"api-key": API_KEY, "Content-Type": "application/json"}, json=payload)
             if r3.status_code != 200: return jsonify({"error": True, "message": f"Fallo al procesar el renderizado: {r3.text}"}), 400
 
@@ -297,7 +298,6 @@ def run_model(slug):
             else:
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
         
-        # 🚀 BLOQUE DE SEGURIDAD ESTRICTA PARA EVITAR IMÁGENES ROTAS
         content_type = response.headers.get("Content-Type", "")
         if "application/json" in content_type:
             datos = response.json()
