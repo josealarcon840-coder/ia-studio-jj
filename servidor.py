@@ -218,7 +218,6 @@ def run_model(slug):
                 
                 # BUSCADOR DE ARCHIVOS A PRUEBA DE ERRORES PARA LINUX/RENDER
                 base_dir = os.path.dirname(os.path.abspath(__file__))
-                # 🟢 AQUÍ ESTÁ EL CAMBIO CRÍTICO: BUSCA LOS .PNG
                 plantilla_nombre_buscar = "T SHIRT_.png" if tipo == "playera" else "Psd 1.png"
                 plantilla_path = None
                 
@@ -300,6 +299,9 @@ def run_model(slug):
             if r2.status_code not in [200, 201]: 
                 return jsonify({"error": True, "message": f"Fallo al subir el archivo al servidor. Detalle: {r2.text}"}), 400
 
+            # 🟢 AQUÍ ESTÁ LA LÍNEA QUE HABÍA BORRADO POR ERROR. ¡YA ESTÁ RESTAURADA!
+            payload["task_id"] = task_id
+            
             r3 = requests.post(BASE + model["endpoint"], headers={"api-key": API_KEY, "Content-Type": "application/json"}, json=payload)
             if r3.status_code != 200: 
                 return jsonify({"error": True, "message": f"Fallo al procesar el renderizado: {r3.text}"}), 400
