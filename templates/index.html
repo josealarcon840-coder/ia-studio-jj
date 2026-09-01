@@ -148,6 +148,33 @@
 
   #jsonViewer { background: #000; color: var(--ok); border: 1px solid #333; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; width: 100%; height: 250px; overflow-y: auto; text-align: left; resize: none; margin-top: 15px; display: none; }
 
+  /* MODAL DE PROMPT PERSONALIZADO PARA FONDOS */
+  .custom-modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8); z-index: 9999;
+      display: none; align-items: center; justify-content: center;
+      backdrop-filter: blur(5px);
+  }
+  .custom-modal {
+      background: var(--panel); border: 1px solid var(--red-bright);
+      border-radius: 12px; width: 90%; max-width: 450px;
+      padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+      text-align: center;
+  }
+  .custom-modal h3 { margin-top: 0; color: #fff; margin-bottom: 10px;}
+  .custom-modal textarea {
+      width: 100%; height: 100px; background: #050505; border: 1px solid #444;
+      color: #fff; padding: 15px; border-radius: 8px; margin-bottom: 20px;
+      font-family: var(--font-body); font-size: 0.95rem; resize: none;
+  }
+  .custom-modal textarea:focus { border-color: var(--ok); outline: none; box-shadow: 0 0 10px rgba(0,255,204,0.2);}
+  .custom-modal-btns { display: flex; gap: 10px; justify-content: flex-end;}
+  .custom-modal-btns button { padding: 12px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; text-transform: uppercase; font-size: 0.85rem;}
+  .btn-cancel { background: #333; color: #fff;}
+  .btn-cancel:hover { background: #444;}
+  .btn-confirm { background: var(--ok); color: #000; flex: 1;}
+  .btn-confirm:hover { filter: brightness(1.2);}
+
   @media (max-width: 900px) {
     .workspace-layout { flex-direction: column; }
     .form-container { max-width: 100%; position: relative; top: 0; }
@@ -156,6 +183,21 @@
 </style>
 </head>
 <body>
+
+<!-- CONTENEDOR MODAL PARA GENERAR FONDOS (Oculto por defecto) -->
+<div class="custom-modal-overlay" id="promptModal">
+    <div class="custom-modal">
+        <h3><i class="fa-solid fa-image mr-2 text-red-500"></i> Fondo con IA</h3>
+        <p style="font-size: 0.9rem; color: var(--text-dim); margin-bottom: 20px; text-align: left; line-height: 1.4;">
+            Describe detalladamente el escenario que deseas para el nuevo fondo de tu imagen (en inglés funciona mejor):
+        </p>
+        <textarea id="modalPromptText" placeholder="Ej: A busy cyberpunk city street at night, neon lights..."></textarea>
+        <div class="custom-modal-btns">
+            <button class="btn-cancel" onclick="closePromptModal()">Cancelar</button>
+            <button class="btn-confirm" id="btnConfirmPrompt"><i class="fa-solid fa-wand-sparkles mr-2"></i> Generar Magia</button>
+        </div>
+    </div>
+</div>
 
 <div id="gate">
   <div class="gate-lang">
@@ -192,7 +234,7 @@
 <div id="app">
   <div class="topbar">
     <div class="topbar-brand">
-      <div class="brand-mark" style="width: 40px; height: 40px; font-size: 0.8rem; border-radius: 8px; border-width: 1px;">
+      <div class="brand-mark" style="width: 40px; height: 40px; margin: 0; font-size: 0.85rem; border-radius: 10px; border-width: 1px;">
         <i class="fa-solid fa-crown" style="font-size: 0.7em;"></i>
         <span>J&J</span>
       </div>
@@ -261,6 +303,7 @@
               <div id="viewerWrapper">
                   <div id="imgContainer" style="position:relative; display:inline-block; line-height:0;">
                       <img id="mainResultImg" src="" alt="Resultado">
+                      <!-- REPRODUCTOR DE VIDEO AÑADIDO -->
                       <video id="mainResultVideo" controls loop style="display: none; max-width: 90vw; max-height: 70vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.8);"></video>
                       <div id="boxesContainer" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
                   </div>
@@ -398,6 +441,7 @@ function reiniciarHerramienta(keepTool = false) {
     btnDownloadResult.style.display = "none"; btnRestart.style.display = "none";
     magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; quickActionsBar.style.display = "none";
     
+    // RESTAURA EL TEXTO ORIGINAL PARA FOTOS
     document.getElementById("downloadBtnText").innerText = t("download_btn");
 
     document.getElementById('btnAntes').style.display = 'none';
@@ -604,7 +648,7 @@ form.addEventListener("submit", async (e) => {
   statusLine.className = "status-line show"; 
   
   if(model.response_type === "video") {
-      statusText.textContent = "Preparando renderizado del video...";
+      statusText.textContent = "Preparando renderizado de video en la nube...";
   } else {
       statusText.textContent = t("processing");
   }
@@ -630,7 +674,8 @@ form.addEventListener("submit", async (e) => {
     if (!res.headers.get("content-type").includes("application/json")) {
         const blob = await res.blob(); 
         const localBlobUrl = URL.createObjectURL(blob);
-        processFinalUrl(localBlobUrl);
+        // Le pasamos el currentSlug para que sepa qué sugerencias mostrar sin cambiar la herramienta base
+        processFinalUrl(localBlobUrl, currentSlug);
         submitBtn.disabled = false;
     } else {
         const data = await res.json();
@@ -638,9 +683,8 @@ form.addEventListener("submit", async (e) => {
             statusLine.className = "status-line show error"; statusText.textContent = t("error_prefix") + (data.message || data.detalle || t("generic_error"));
             submitBtn.disabled = false;
             
-        // 🎬 POLLING PARA VIDEOS (EVITA EL CORTE DE RENDER)
         } else if (data.is_video_task) {
-            statusText.innerHTML = "Procesando Video en la nube (0%). Por favor espera...";
+            statusText.innerHTML = "Procesando Video en la Nube (0%). Por favor espera...";
             
             const polling = setInterval(async () => {
                 try {
@@ -677,10 +721,10 @@ form.addEventListener("submit", async (e) => {
                         statusText.innerHTML = "Error al renderizar el video.";
                         submitBtn.disabled = false;
                     } else {
-                        statusText.innerHTML = "Procesando Video (" + (taskData.progress || 0) + "%)... No cierres la ventana.";
+                        statusText.innerHTML = "Generando Video (" + (taskData.progress || 0) + "%)... No cierres la ventana.";
                     }
                 } catch(e) { }
-            }, 5000);
+            }, 4000);
             return;
 
         } else if (model.slug === "detect-objects" && data.detected_objects) {
@@ -709,6 +753,37 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
+// VARIABLES PARA EL MODAL PERSONALIZADO
+let pendingQuickAction = null;
+let pendingExtraParams = null;
+
+function closePromptModal() {
+    document.getElementById('promptModal').style.display = 'none';
+    pendingQuickAction = null;
+}
+
+function showPromptModal(targetSlug, extraParams) {
+    document.getElementById('modalPromptText').value = extraParams.prompt || "";
+    document.getElementById('promptModal').style.display = 'flex';
+    pendingQuickAction = targetSlug;
+    pendingExtraParams = extraParams;
+}
+
+document.getElementById('btnConfirmPrompt').addEventListener('click', () => {
+    const val = document.getElementById('modalPromptText').value.trim();
+    if(!val) {
+        alert(currentLang === 'es' ? "Debes escribir una descripción." : "Prompt cannot be empty.");
+        return;
+    }
+    
+    pendingExtraParams.prompt = val;
+    const slug = pendingQuickAction;
+    const params = pendingExtraParams;
+    closePromptModal();
+    
+    proceedWithQuickAction(slug, params);
+});
+
 async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
     if(!urlResultMemoria) return alert("Primero debes cargar o generar una imagen.");
 
@@ -719,22 +794,16 @@ async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
         if (!confirm(msg)) return;
     }
     
-    // 🔴 MAGIA NUEVA: PREGUNTAR POR EL FONDO
+    // 🔴 SI ES GENERAR FONDO, LANZA EL MODAL BONITO DE J&J
     if (targetSlug === "generate-background") {
-        const userPrompt = prompt(
-            currentLang === 'es' 
-            ? "💡 Escribe la descripción del nuevo fondo:" 
-            : "💡 Describe the new background:", 
-            extraParams.prompt || ""
-        );
-        if (userPrompt === null) return; // Si el usuario cancela, no hacemos nada
-        if (userPrompt.trim() === "") {
-            alert(currentLang === 'es' ? "Debes escribir una descripción para el fondo." : "Prompt cannot be empty.");
-            return;
-        }
-        extraParams.prompt = userPrompt; // Guardamos el nuevo texto del usuario
+        showPromptModal(targetSlug, extraParams);
+        return; // Detiene la función y espera a que el usuario presione "Generar Magia"
     }
     
+    proceedWithQuickAction(targetSlug, extraParams);
+}
+
+async function proceedWithQuickAction(targetSlug, extraParams) {
     urlOriginalMemoria = urlResultMemoria; 
     
     statusLine.className = "status-line show"; statusText.textContent = t("processing");
@@ -750,10 +819,9 @@ async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
         const formData = new FormData();
         const imgField = targetModel.fields.find(f => f.type === "image").name;
         
-        // Convertimos el enlace web a archivo real para enviar
         const imgRes = await fetch(urlResultMemoria);
         const imgBlob = await imgRes.blob();
-        formData.append(imgField, new File([imgBlob], "imagen_sugerida.jpg", {type: imgBlob.type || "image/jpeg"}));
+        formData.append(imgField, new File([imgBlob], "imagen_sugerida.png", {type: imgBlob.type || "image/png"}));
         
         for(const [k, v] of Object.entries(extraParams)) formData.append(k, v);
         
@@ -768,9 +836,9 @@ async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
         mainResultImg.classList.remove("opacity-50", "blur-sm");
         
         if (!res.headers.get("content-type").includes("application/json")) {
-            currentSlug = targetSlug;
+            // NO ALTERAMOS EL CURRENTSLUG PARA QUE EL "REINICIAR TODO" SIGA FUNCIONANDO
             const blobFinal = await res.blob(); 
-            processFinalUrl(URL.createObjectURL(blobFinal));
+            processFinalUrl(URL.createObjectURL(blobFinal), targetSlug);
         } else {
             const data = await res.json();
             if(data.error) throw new Error(data.message);
@@ -780,7 +848,8 @@ async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
     }
 }
 
-function processFinalUrl(url) {
+// 🟢 FUNCIÓN ACTUALIZADA PARA NO PERDER LA HERRAMIENTA PRINCIPAL
+function processFinalUrl(url, slugToUse = currentSlug) {
     let displayUrl = url;
     let downloadUrl = url;
     
@@ -805,7 +874,7 @@ function processFinalUrl(url) {
     document.getElementById("downloadBtnText").innerText = t("download_btn");
     btnDownloadResult.onclick = null;
     
-    renderQuickActions(currentSlug);
+    renderQuickActions(slugToUse); // Muestra las sugerencias correctas
     quickActionsBar.style.display = "block"; 
     
     document.getElementById('tray').style.display = 'block';
