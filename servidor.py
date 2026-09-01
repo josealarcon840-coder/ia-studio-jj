@@ -134,7 +134,7 @@ def style_list():
     url = request.args.get("url", "")
     if not url or not any(url.startswith(f"https://{d}") for d in ALLOWED_STYLE_DOMAINS): return jsonify({"error": True}), 400
     try: return jsonify(requests.get(url, timeout=15).json())
-    except: return jsonify({"error": True}, 500)
+    except: return jsonify({"error": True}), 500
 
 @app.route("/proxy-image")
 def proxy_image():
