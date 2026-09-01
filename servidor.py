@@ -7,7 +7,7 @@ import hmac
 import gc  
 import time 
 from flask import Flask, render_template, request, jsonify, Response
-from PIL import Image
+from PIL import Image, ImageChops
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -27,12 +27,10 @@ TELEGRAM_CHAT_ID = "-1002330690954"
 def L(es, en): return {"es": es, "en": en}
 
 MODELS = [
-    # --- Detección y Borrado Mágico ---
     {"slug": "detect-objects", "label": L("Borrador Mágico (Auto)", "Magic Eraser (Auto)"), "icon": "fa-magic", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Encuentra objetos para borrarlos con un clic.", "Finds objects to erase them with a click."), "endpoint": "/v1/images/detect-objects", "response_type": "json", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen Base", "Base Image"), "required": True}, {"name": "lang", "type": "select", "label": L("Idioma", "Language"), "options": [{"value": "es", "label": L("Español", "Spanish")}]}, {"name": "erase_mode", "type": "select", "label": L("Calidad", "Quality"), "options": [{"value": "ultra", "label": L("Ultra HD", "Ultra HD")}, {"value": "super", "label": L("Super", "Super")}, {"value": "normal", "label": L("Normal", "Normal")}]}]},
     {"slug": "detect-text", "label": L("Borrar Texto (Auto)", "Erase Text (Auto)"), "icon": "fa-font", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Detecta y borra los textos automáticamente.", "Detects and erases text automatically."), "endpoint": "/v1/images/detect-text", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "detect-wires", "label": L("Borrar Cables (Auto)", "Erase Wires (Auto)"), "icon": "fa-plug", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Detecta y borra cables/postes.", "Detects and erases wires."), "endpoint": "/v1/images/detect-wires", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    # --- Eliminar y Máscaras ---
     {"slug": "remove-background", "label": L("Quitar Fondo (Fotos)", "Remove Background"), "icon": "fa-user-slash", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Recorte de personas o productos.", "Cutout for people/products."), "endpoint": "/v1/images/remove-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "remove-background-graphic", "label": L("Quitar Fondo (Arte)", "Remove BG (Graphics)"), "icon": "fa-shapes", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Ideal para anime, stickers y logos.", "Ideal for anime, stickers and logos."), "endpoint": "/v1/images/remove-background-graphic", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "remove-objects", "label": L("Borrar Objetos (Máscara)", "Remove Objects (Mask)"), "icon": "fa-eraser", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Sube tu máscara en blanco y negro.", "Upload a B/W mask to erase."), "endpoint": "/v1/images/remove-objects", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "input_mask", "type": "mask", "label": L("Máscara (B/N)", "Mask (B/W)"), "required": True}, {"name": "erase_mode", "type": "select", "label": L("Calidad", "Quality"), "options": [{"value": "ultra", "label": L("Ultra HD", "Ultra HD")}, {"value": "normal", "label": L("Normal", "Normal")}]}]},
@@ -41,7 +39,6 @@ MODELS = [
     {"slug": "remove-reflection", "label": L("Quitar Reflejos", "Remove Reflections"), "icon": "fa-camera", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Suaviza reflejos en vidrios.", "Softens reflections on glass."), "endpoint": "/v1/images/remove-reflection", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "clean-mirror", "label": L("Limpiar Espejo", "Clean Mirror"), "icon": "fa-broom", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Quita destellos de espejos.", "Removes flash glare from mirrors."), "endpoint": "/v1/images/clean-mirror", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    # --- Mejorar ---
     {"slug": "enhance", "label": L("Escalar Resolución", "Upscale Resolution"), "icon": "fa-expand", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Mejora la calidad general.", "Improves overall quality."), "endpoint": "/v1/images/enhance", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen (máx 1500px)", "Image (max)"), "required": True, "resize_max": 1500}, {"name": "zoom_factor", "type": "select", "label": L("Factor", "Factor"), "required": True, "options": [{"value": "2", "label": L("2x", "2x")}, {"value": "4", "label": L("4x", "4x")}, {"value": "8", "label": L("8x (Máximo)", "8x (Max)")}]}, {"name": "enhance_faces", "type": "checkbox", "label": L("Mejorar rostros", "Enhance faces"), "default": True}]},
     {"slug": "enhance-pro", "label": L("Escalar Rostros (Pro)", "Upscale Faces (Pro)"), "icon": "fa-user-check", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Ideal para fotos de personas.", "Ideal for photos of people."), "endpoint": "/v1/images/enhance/pro", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True, "resize_max": 1500}, {"name": "zoom_factor", "type": "select", "label": L("Factor", "Factor"), "required": True, "options": [{"value": "2", "label": L("2x", "2x")}, {"value": "4", "label": L("4x", "4x")}, {"value": "8", "label": L("8x (Máximo)", "8x (Max)")}]}]},
     {"slug": "enhance-art", "label": L("Escalar Arte / Anime", "Upscale Art / Anime"), "icon": "fa-dragon", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Ideal para dibujos.", "Ideal for drawings."), "endpoint": "/v1/images/enhance-art", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True, "resize_max": 1500}, {"name": "zoom_factor", "type": "select", "label": L("Factor", "Factor"), "required": True, "options": [{"value": "2", "label": L("2x", "2x")}, {"value": "4", "label": L("4x", "4x")}, {"value": "8", "label": L("8x (Máximo)", "8x (Max)")}]}]},
@@ -51,33 +48,23 @@ MODELS = [
     {"slug": "colorize-pro", "label": L("Colorear B/N (Pro)", "Colorize B/W (Pro)"), "icon": "fa-paint-roller", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Colorización avanzada.", "Advanced colorization."), "endpoint": "/v1/images/colorize/pro", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "light-restore", "label": L("Corregir Iluminación", "Fix Lighting"), "icon": "fa-sun", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Arregla fotos oscuras.", "Fixes dark photos."), "endpoint": "/v1/images/light-restore", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    # --- Generación Z-Image & Qwen ---
     {"slug": "generate-zimage", "label": L("Crear: Z-Image (Texto)", "Create: Z-Image (Text)"), "icon": "fa-rocket", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Crea imagen rápida.", "Create image fast."), "endpoint": "/v1/images/generates/zimage", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "cm_auto_magic", "label": L("Medidas en Centímetros", "Size (CM)")}]},
     {"slug": "generate-qwen", "label": L("Crear: Qwen (Texto)", "Create: Qwen (Text)"), "icon": "fa-brain", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Motor HD realista.", "HD realistic engine."), "endpoint": "/v1/images/generates/qwen", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "cm_auto_magic", "label": L("Medidas en Centímetros", "Size (CM)")}]},
-    
     {"slug": "fairy-art", "label": L("Retrato a Arte", "Portrait to Art"), "icon": "fa-wand-magic-sparkles", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Convierte fotos a Anime/3D.", "Convert photos to Anime/3D."), "endpoint": "/v1/images/generates/art", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "style", "type": "select", "label": L("Estilo", "Style"), "required": True, "options_url": "https://storage.googleapis.com/assets.snapedit.app/fairyai/anime_styles_6mar25.json"}]},
-    
-    # 🔴 GENERADOR DE FONDO CORREGIDO
     {"slug": "generate-background", "label": L("Generar Fondo Nuevo", "Generate Background"), "icon": "fa-image", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Fondo para productos. ¡Sube un PNG SIN FONDO!", "Background for products."), "endpoint": "/v1/images/generates-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen (Transparente)", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Descripción del fondo", "Background prompt"), "required": True}]},
-    
     {"slug": "sticker", "label": L("Crear Sticker", "Create Sticker"), "icon": "fa-note-sticky", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Haz un sticker de tu foto.", "Make a sticker from photo."), "endpoint": "/v1/images/generates/sticker", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Estilo (Ej: Zombie)", "Style (e.g. Zombie)"), "required": True}]},
 
-    # --- Edición y Belleza ---
     {"slug": "edit-image", "label": L("Edición Mágica (Texto)", "Magic Edit (Text)"), "icon": "fa-wand-sparkles", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Edita usando órdenes.", "Edit using text prompts."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Instrucción", "Prompt"), "required": True}, {"name": "mode", "type": "select", "label": L("Modo", "Mode"), "required": True, "options": [{"value": "editing", "label": L("General", "General")}, {"value": "inpaint", "label": L("Inpaint", "Inpaint")}]}, {"name": "input_mask", "type": "mask", "label": L("Máscara", "Mask"), "required": False}]},
-    
-    {"slug": "textile-styles", "label": L("Texturas Mágicas 3D", "3D Magic Textures"), "icon": "fa-cubes", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Aplica lana, hilo o estilo inflado 3D.", "Applies yarn, thread or puffy textures."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
-        {"name": "input_image", "type": "image", "label": L("Sube tu Diseño Original", "Upload Design"), "required": True}, 
-        {"name": "prompt", "type": "select", "label": L("Elige la Textura", "Select Texture"), "required": True, "options": [
-            {"value": "Apply 3D amigurumi crochet texture to the entire image. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add frames, hoops or white backgrounds. Only change the material of existing elements to knitted yarn.", "label": L("🧶 Crochet / Amigurumi (Lana)", "Crochet / Amigurumi")},
-            {"value": "Apply highly detailed realistic embroidery texture to the entire image. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add frames, hoops or white backgrounds. Only change the material of existing elements to thick colorful threads and 3D stitches.", "label": L("🧵 Bordado Realista (Hilos 3D)", "Realistic Embroidery")},
-            {"value": "Apply textile embroidery patch style to the entire image. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add stitched borders if they don't exist, no background fabric. Only change the material of existing elements to high quality thread texture.", "label": L("🏷️ Parche Textil (Sin Bordes)", "Textile Patch")},
-            {"value": "Apply 3D inflated balloon puffy texture to the entire image. Make it look like soft, puffy, glossy plastic or vinyl. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add backgrounds. Only change the material of existing elements to 3D inflated balloon.", "label": L("🎈 Estilo Inflado 3D (Globo/Puffer)", "3D Inflated/Puffer")}
-        ]}
-    ]},
-
+    {"slug": "textile-styles", "label": L("Texturas Mágicas 3D", "3D Magic Textures"), "icon": "fa-cubes", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Aplica lana, hilo o estilo inflado 3D.", "Applies yarn, thread or puffy textures."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Sube tu Diseño Original", "Upload Design"), "required": True}, {"name": "prompt", "type": "select", "label": L("Elige la Textura", "Select Texture"), "required": True, "options": [{"value": "Apply 3D amigurumi crochet texture to the entire image. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add frames, hoops or white backgrounds. Only change the material of existing elements to knitted yarn.", "label": L("🧶 Crochet / Amigurumi (Lana)", "Crochet / Amigurumi")},{"value": "Apply highly detailed realistic embroidery texture to the entire image. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add frames, hoops or white backgrounds. Only change the material of existing elements to thick colorful threads and 3D stitches.", "label": L("🧵 Bordado Realista (Hilos 3D)", "Realistic Embroidery")},{"value": "Apply textile embroidery patch style to the entire image. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add stitched borders if they don't exist, no background fabric. Only change the material of existing elements to high quality thread texture.", "label": L("🏷️ Parche Textil (Sin Bordes)", "Textile Patch")},{"value": "Apply 3D inflated balloon puffy texture to the entire image. Make it look like soft, puffy, glossy plastic or vinyl. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add backgrounds. Only change the material of existing elements to 3D inflated balloon.", "label": L("🎈 Estilo Inflado 3D (Globo/Puffer)", "3D Inflated/Puffer")}]}]},
     {"slug": "retouch-skin", "label": L("Retoque Facial", "Skin Retouch"), "icon": "fa-face-smile", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Limpia la piel automáticamente.", "Cleans skin automatically."), "endpoint": "/v1/images/retouch-skin", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    # 🚀 --- IA PARA VIDEOS ---
+    # 🚀 --- IA PARA VIDEOS Y MOCKUPS AUTOMÁTICOS ---
+    {"slug": "mockup-to-video", "label": L("Mockup a Video 3D", "Mockup to Video 3D"), "icon": "fa-shirt", "category": L("6. IA para Videos", "6. AI Video"), "desc": L("Sube tu logo. Te armamos la prenda y creamos el video en HD automáticamente.", "Upload transparent design for automatic video mockup."), "endpoint": "/v1/videos/image-to-video", "response_type": "video", "fields": [
+        {"name": "input_image", "type": "image", "label": L("Sube tu Diseño (PNG Transparente)", "Upload Design (PNG)"), "required": True},
+        {"name": "tipo_producto", "type": "select", "label": L("Elige el Producto", "Product"), "required": True, "options": [{"value": "playera", "label": L("Playera (Camina / Fashion)", "T-Shirt")}, {"value": "taza", "label": L("Taza (Giro 360°)", "Mug")}]},
+        {"name": "color_hex", "type": "color", "label": L("Color de la Prenda/Taza", "Product Color"), "default": "#ffffff"},
+        {"name": "duration", "type": "select", "label": L("Duración del Video", "Duration"), "required": True, "options": [{"value": "4", "label": L("4 Segundos", "4 Seconds")}, {"value": "8", "label": L("8 Segundos", "8 Seconds")}]}
+    ]},
     {"slug": "enhance-video", "label": L("Mejorar Video 2K/4K", "Enhance Video Pro"), "icon": "fa-film", "category": L("6. IA para Videos", "6. AI Video"), "desc": L("Sube la resolución de videos.", "Upscale video to 2K/4K."), "endpoint": "/v1/videos/enhance-pro", "response_type": "video", "fields": [
         {"name": "input_image", "type": "image", "label": L("Sube tu Video (MP4)", "Upload Video"), "required": True}, 
         {"name": "zoom_factor", "type": "select", "label": L("Resolución", "Resolution"), "required": True, "options": [{"value": "2K", "label": L("2K Calidad Alta", "2K High Quality")}, {"value": "4K", "label": L("4K Ultra HD", "4K Ultra HD")}]},
@@ -148,11 +135,9 @@ def proxy_image():
         r = requests.get(url, timeout=60)
         if r.status_code != 200:
             return "Error CDN SnapEdit", 400
-            
         headers = {}
         if dl == "1":
             headers["Content-Disposition"] = "attachment; filename=JJ_Studio_Diseño.png"
-            
         return Response(r.content, mimetype=r.headers.get("Content-Type", "image/png"), headers=headers)
     except Exception as e:
         return str(e), 500
@@ -208,11 +193,10 @@ def run_model(slug):
 
     try:
         # =======================================================
-        # 🎬 LÓGICA DE VIDEO ASÍNCRONA
+        # 🎬 LÓGICA DE VIDEO Y MOCKUP ASÍNCRONO
         # =======================================================
         if model.get("response_type") == "video":
             file_obj = list(request.files.values())[0]
-            file_bytes = file_obj.read()
             
             payload = {}
             for key, value in request.form.items():
@@ -220,6 +204,63 @@ def run_model(slug):
                 elif value.lower() == "false": payload[key] = False
                 elif value.isdigit(): payload[key] = int(value)
                 else: payload[key] = value
+
+            # 🛠️ MAGIA DE ENSAMBLE: Mockup automático en Backend
+            if slug == "mockup-to-video":
+                diseño_bytes = file_obj.read()
+                try:
+                    diseño = Image.open(io.BytesIO(diseño_bytes)).convert("RGBA")
+                except:
+                    return jsonify({"error": True, "message": "Debes subir un archivo de imagen válido para el diseño."}), 400
+                    
+                tipo = request.form.get("tipo_producto", "playera")
+                color_hex = request.form.get("color_hex", "#ffffff")
+                
+                # Nombres exactos de los archivos que subiste
+                plantilla_nombre = "T SHIRT_.jpg" if tipo == "playera" else "Psd 1.jpg"
+                if not os.path.exists(plantilla_nombre):
+                    return jsonify({"error": True, "message": f"Falta el archivo {plantilla_nombre} en el servidor."}), 400
+                    
+                plantilla = Image.open(plantilla_nombre).convert("RGBA")
+                
+                # APLICAR COLOR (Se multiplica el color para mantener las arrugas y sombras de tu JPG original)
+                if color_hex and color_hex.lower() != "#ffffff" and color_hex.lower() != "#fff":
+                    color_rgb = tuple(int(color_hex.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
+                    solid_color = Image.new("RGB", plantilla.size, color_rgb)
+                    plantilla_rgb = plantilla.convert("RGB")
+                    plantilla = ImageChops.multiply(plantilla_rgb, solid_color).convert("RGBA")
+                
+                # CÁLCULOS DE POSICIÓN Y TAMAÑO
+                if tipo == "playera":
+                    escala = 0.23 # Diseño ocupa 23% de la foto
+                    prompt = "Highly realistic video of this exact t-shirt worn by an invisible person walking smoothly forward. Dynamic fabric movement, realistic cloth physics, natural folds and wrinkles, photorealistic style, plain studio background, tracking camera shot."
+                    offset_x = (plantilla.width - int(plantilla.width * escala)) // 2
+                    offset_y = int(plantilla.height * 0.35) - (int(diseño.height * (plantilla.width * escala / diseño.width)) // 2)
+                else: # Taza
+                    escala = 0.32 # Diseño ocupa 32% de la foto
+                    prompt = "Photorealistic video of this exact coffee mug placed on a rotating product stand. The mug spins smoothly and continuously 360 degrees, showcasing the entire wraparound design. High quality commercial product rendering, soft lighting, sharp focus, clean background."
+                    offset_x = int(plantilla.width * 0.44) - (int(plantilla.width * escala) // 2) # Un poco a la izquierda por el asa
+                    offset_y = (plantilla.height - int(diseño.height * (plantilla.width * escala / diseño.width))) // 2
+                
+                nuevo_ancho = int(plantilla.width * escala)
+                ratio = nuevo_ancho / float(diseño.width)
+                nuevo_alto = int(diseño.height * ratio)
+                diseño_escalado = diseño.resize((nuevo_ancho, nuevo_alto), Image.LANCZOS)
+                
+                # PEGAR EL LOGO TRANSPARENTE EN LA PLANTILLA
+                plantilla.alpha_composite(diseño_escalado, dest=(offset_x, offset_y))
+                
+                # Guardar el ensamble final en memoria
+                buf = io.BytesIO()
+                plantilla.convert("RGB").save(buf, format="JPEG", quality=95)
+                file_bytes = buf.getvalue()
+                
+                # Configurar SnapEdit para recibir la foto armada
+                payload["prompt"] = prompt
+                payload.pop("tipo_producto", None)
+                payload.pop("color_hex", None)
+            else:
+                file_bytes = file_obj.read()
 
             url_upload_endpoint = f"{BASE}{model['endpoint']}/upload"
             r1 = requests.post(url_upload_endpoint, headers={"api-key": API_KEY, "Content-Type": "application/json"}, json=payload if payload else None)
@@ -243,12 +284,11 @@ def run_model(slug):
             if not task_id or not upload_url:
                 return jsonify({"error": True, "message": f"Respuesta inesperada de SnapEdit al subir: {datos_carga}"}), 400
 
-            mime_type = "video/mp4" if "video" in slug and not slug.startswith("image-to") else "image/jpeg"
+            mime_type = "video/mp4" if "video" in slug and not slug.startswith("image-to") and not slug.startswith("mockup") else "image/jpeg"
             r2 = requests.put(upload_url, data=file_bytes, headers={"Content-Type": mime_type})
             if r2.status_code not in [200, 201]: 
                 return jsonify({"error": True, "message": f"Fallo al subir el archivo al servidor. Detalle: {r2.text}"}), 400
 
-            payload["task_id"] = task_id
             r3 = requests.post(BASE + model["endpoint"], headers={"api-key": API_KEY, "Content-Type": "application/json"}, json=payload)
             if r3.status_code != 200: 
                 return jsonify({"error": True, "message": f"Fallo al procesar el renderizado: {r3.text}"}), 400
@@ -260,10 +300,9 @@ def run_model(slug):
             })
 
         # =======================================================
-        # 🖼️ LÓGICA DE IMÁGENES (PASANDO EL DATO DIRECTO AL CLIENTE)
+        # 🖼️ LÓGICA DE IMÁGENES NORMALES
         # =======================================================
         files, data = {}, {}
-        
         for key, file_obj in request.files.items():
             if file_obj and file_obj.filename:
                 buf, fname, mime = resize_if_needed(file_obj.read(), slug, file_obj.filename)
@@ -276,9 +315,8 @@ def run_model(slug):
         if slug == "textile-styles":
             data["mode"] = "editing"
 
-        # Validamos si es Generar Fondo y el archivo enviado es JPG sólido
         if slug == "generate-background" and ("png" not in mime.lower()):
-             return jsonify({"error": True, "message": "¡Debes subir una imagen que ya no tenga fondo (PNG transparente)! Tu foto del perrito es un archivo sólido (.jpg). Ve primero a 'Quitar Fondo' y luego usa 'Fondo con IA'."}), 400
+             return jsonify({"error": True, "message": "¡Debes subir un PNG transparente (sin fondo)! Ve primero a 'Quitar Fondo'."}), 400
 
         if slug in ["detect-text", "detect-wires"]:
             r1 = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files, timeout=120)
@@ -289,15 +327,11 @@ def run_model(slug):
                     if "," in mask_b64: mask_b64 = mask_b64.split(",", 1)[1]
                     mask_b64 = mask_b64.replace('\n', '').replace('\r', '').strip()
                     mask_b64 += "=" * ((4 - len(mask_b64) % 4) % 4)
-                    
-                    f2 = {
-                        "input_image": files.get("input_image") or files.get("image"),
-                        "input_mask": ("mask.png", base64.b64decode(mask_b64), "image/png")
-                    }
+                    f2 = {"input_image": files.get("input_image") or files.get("image"), "input_mask": ("mask.png", base64.b64decode(mask_b64), "image/png")}
                     ep_remove = "/v1/images/remove-text" if slug == "detect-text" else "/v1/images/remove-wires"
                     response = requests.post(BASE + ep_remove, headers=HEADERS, files=f2, data={"erase_mode": "ultra"}, timeout=300)
                 else:
-                    return jsonify({"error": True, "message": "No se detectó texto o cables en la imagen."}), 400
+                    return jsonify({"error": True, "message": "No se detectó texto o cables."}), 400
             else:
                 response = r1
         else:
@@ -309,59 +343,32 @@ def run_model(slug):
                 payload = {}
                 if "prompt" in data: payload["prompt"] = data["prompt"]
                 if "aspect_ratio" in data: payload["aspect_ratio"] = data["aspect_ratio"]
-                
-                headers_gen = {"api-key": API_KEY, "Content-Type": "application/json"}
-                response = requests.post(BASE + model["endpoint"], headers=headers_gen, json=payload, timeout=120)
+                response = requests.post(BASE + model["endpoint"], headers={"api-key": API_KEY, "Content-Type": "application/json"}, json=payload, timeout=120)
             else:
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
         
         content_type = response.headers.get("Content-Type", "")
-        
         if "application/json" in content_type:
             datos = response.json()
             if response.status_code == 200:
-                url_img = None
-                if "data" in datos and isinstance(datos["data"], list) and len(datos["data"]) > 0 and "url" in datos["data"][0]:
-                    url_img = datos["data"][0]["url"]
-                elif "data" in datos and isinstance(datos["data"], dict) and "url" in datos["data"]:
-                    url_img = datos["data"]["url"]
-                elif "url" in datos:
-                    url_img = datos["url"]
-                elif "image_url" in datos:
-                    url_img = datos["image_url"]
-                elif "data" in datos and isinstance(datos["data"], dict) and "image_url" in datos["data"]:
-                    url_img = datos["data"]["image_url"]
-
+                url_img = datos.get("data", [{}])[0].get("url") if isinstance(datos.get("data"), list) else datos.get("data", {}).get("url", datos.get("url", datos.get("image_url")))
                 if url_img:
-                    # 🚀 MAGIA PURA: En vez de intentar abrir la imagen con Python, 
-                    # simplemente tomamos lo que descargamos y se lo mandamos al navegador web sin tocarlo.
                     if url_img.startswith("data:image"):
                         header, encoded = url_img.split(",", 1)
-                        mime_type = header.split(";")[0].split(":")[1]
-                        return Response(base64.b64decode(encoded), mimetype=mime_type)
-                    
+                        return Response(base64.b64decode(encoded), mimetype=header.split(";")[0].split(":")[1])
                     try:
-                        headers_get = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
-                        r_img = requests.get(url_img, headers=headers_get, timeout=60)
+                        r_img = requests.get(url_img, headers={'User-Agent': 'Mozilla/5.0'}, timeout=60)
                         if r_img.status_code == 200:
-                            ct = r_img.headers.get("Content-Type", "image/png")
-                            # Devolvemos los datos crudos directamente, sea WebP, AVIF o PNG. El navegador lo entiende.
-                            return Response(r_img.content, mimetype=ct)
-                        else:
-                            return jsonify({"error": True, "message": f"Fallo al descargar la imagen procesada de la nube (HTTP {r_img.status_code})."}), 400
+                            return Response(r_img.content, mimetype=r_img.headers.get("Content-Type", "image/png"))
+                        return jsonify({"error": True, "message": "Fallo al descargar la imagen procesada."}), 400
                     except Exception as e:
                         return jsonify({"error": True, "message": f"Error de red: {str(e)}"}), 400
-                else:
-                    return jsonify(datos), 200
-            else:
-                return jsonify({"error": True, "message": datos.get("message", str(datos))}), 400
+                return jsonify(datos), 200
+            return jsonify({"error": True, "message": datos.get("message", str(datos))}), 400
         else:
             if response.status_code != 200:
-                return jsonify({"error": True, "message": f"Servidores de la IA saturados (Código {response.status_code}). Intenta de nuevo."}), 400
-            
-            # ENTREGAMOS DIRECTAMENTE LO QUE DEVUELVE LA NUBE
-            ct = response.headers.get("Content-Type", "image/png")
-            return Response(response.content, mimetype=ct)
+                return jsonify({"error": True, "message": f"Servidores saturados (HTTP {response.status_code})."}), 400
+            return Response(response.content, mimetype=response.headers.get("Content-Type", "image/png"))
 
     except Exception as e: 
         print(f"❌ ERROR: {str(e)}")
