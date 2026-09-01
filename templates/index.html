@@ -81,7 +81,6 @@
   .field label .req { color: var(--red-bright); margin-left: 3px; font-size: 1.1em;}
 
   input[type="text"], input[type="number"], select, textarea { width: 100%; background: #050505; border: 1px solid #444; color: var(--text); padding: 12px 14px; border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; transition: 0.2s;}
-  input[type="color"] { width: 100%; height: 45px; background: #050505; border: 1px solid #444; padding: 2px; border-radius: 8px; cursor: pointer;}
   input:focus, select:focus, textarea:focus { outline: none; border-color: var(--red-bright); box-shadow: 0 0 8px rgba(255,45,58,0.3); }
   textarea { min-height: 100px; resize: vertical; }
 
@@ -315,10 +314,10 @@
 <script>
 const UI = {
   es: {
-    gate_sub: "Inicia sesión con Telegram para verificar tu acceso.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Ingresar", gate_error: "No tienes acceso. ¡Asegúrate de estar en el grupo VIP!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "¿Cerrar sesión?", home_title: "Panel Premium", home_sub: "Selecciona una herramienta para comenzar.", back: "Volver", run_btn: "Procesar con IA", restart_btn: "Reiniciar Todo", processing: "La IA está procesando...", processing_task: "Tarea asíncrona, espere...", processing_pct: (p) => `Trabajando... (${p}%)`, done: "¡Completado exitosamente!", error_prefix: "Error: ", generic_error: "Fallo de conexión.", task_failed: "La tarea ha fallado.", conn_error: "Error de red: ", conn_error_task: "Error al consultar la tarea.", dropzone_text: "Haz clic o arrastra un archivo", loading_options: "Descargando de internet...", select_placeholder: "Selecciona...", load_error: "Error de red", magic_tags_title: "✨ Toca las etiquetas para borrar:", magic_btn_apply: "Borrar Seleccionados", download_btn: "Descargar Diseño (Calidad HD)"
+    gate_sub: "Inicia sesión con Telegram para verificar tu acceso.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Ingresar", gate_error: "No tienes acceso. ¡Asegúrate de estar en el grupo VIP!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "¿Cerrar sesión?", home_title: "Panel Premium", home_sub: "Selecciona una herramienta para comenzar.", back: "Volver", run_btn: "Procesar con IA", restart_btn: "Subir Otra Imagen", processing: "La IA está procesando...", processing_task: "Tarea asíncrona, espere...", processing_pct: (p) => `Trabajando... (${p}%)`, done: "¡Completado exitosamente!", error_prefix: "Error: ", generic_error: "Fallo de conexión.", task_failed: "La tarea ha fallado.", conn_error: "Error de red: ", conn_error_task: "Error al consultar la tarea.", dropzone_text: "Haz clic o arrastra una imagen", loading_options: "Descargando de internet...", select_placeholder: "Selecciona...", load_error: "Error de red", magic_tags_title: "✨ Toca las etiquetas para borrar:", magic_btn_apply: "Borrar Seleccionados", download_btn: "Descargar Diseño (Calidad HD)"
   },
   en: {
-    gate_sub: "Login with Telegram to verify access.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Login", gate_error: "Access denied. Make sure you are in the VIP group!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "Log out?", home_title: "Premium Dashboard", home_sub: "Select a tool to begin.", back: "Back", run_btn: "Run AI", restart_btn: "Reset All", processing: "AI is processing...", processing_task: "Async task, wait...", processing_pct: (p) => `Working... (${p}%)`, done: "Successfully completed!", error_prefix: "Error: ", generic_error: "Connection failed.", task_failed: "Task failed.", conn_error: "Network error: ", conn_error_task: "Error checking task.", dropzone_text: "Click or drag a file here", loading_options: "Downloading from cloud...", select_placeholder: "Select...", load_error: "Network error", magic_tags_title: "✨ Tap tags to erase:", magic_btn_apply: "Erase Selected", download_btn: "Download Design (HD)"
+    gate_sub: "Login with Telegram to verify access.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Login", gate_error: "Access denied. Make sure you are in the VIP group!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "Log out?", home_title: "Premium Dashboard", home_sub: "Select a tool to begin.", back: "Back", run_btn: "Run AI", restart_btn: "Upload Another Image", processing: "AI is processing...", processing_task: "Async task, wait...", processing_pct: (p) => `Working... (${p}%)`, done: "Successfully completed!", error_prefix: "Error: ", generic_error: "Connection failed.", task_failed: "Task failed.", conn_error: "Network error: ", conn_error_task: "Error checking task.", dropzone_text: "Click or drag an image here", loading_options: "Downloading from cloud...", select_placeholder: "Select...", load_error: "Network error", magic_tags_title: "✨ Tap tags to erase:", magic_btn_apply: "Erase Selected", download_btn: "Download Design (HD)"
   }
 };
 
@@ -566,13 +565,6 @@ function renderForm(model) {
             items.forEach(item => { const id = typeof item === "string" ? item : (item.id || item.style_id || item.value); const name = typeof item === "string" ? item : (item.name || item.label || id); const o = document.createElement("option"); o.value = id; o.textContent = name + (item.premium ? " 💎 PRO" : ""); input.appendChild(o); });
           }).catch(() => { input.innerHTML = `<option value="">${t("load_error")}</option>`; });
       }
-    } else if (field.type === "color") { 
-        input = document.createElement("input"); 
-        input.type = "color"; 
-        input.style.height = "45px";
-        input.style.padding = "2px";
-        input.style.cursor = "pointer";
-        if (field.default !== undefined) input.value = field.default; 
     } else if (field.type === "number") { input = document.createElement("input"); input.type = "number"; if (field.default !== undefined) input.value = field.default; } 
     else { input = document.createElement("input"); input.type = "text"; }
 
@@ -598,7 +590,9 @@ function renderQuickActions(slug) {
         "colorize": { slug: "colorize-pro", label: isEs ? "Colorear Foto" : "Colorize", icon: "fa-palette text-green-500", params: {} },
         "restore": { slug: "restore-pro", label: isEs ? "Restaurar Daños" : "Restore Damage", icon: "fa-hammer text-orange-500", params: {} },
         "light": { slug: "light-restore", label: isEs ? "Corregir Luz" : "Fix Light", icon: "fa-sun text-yellow-400", params: {} },
-        "gen-bg": { slug: "generate-background", label: isEs ? "Fondo con IA" : "AI Background", icon: "fa-image text-emerald-500", params: {prompt: "Fondo de estudio fotográfico profesional, iluminación perfecta, alta calidad"} }
+        "gen-bg": { slug: "generate-background", label: isEs ? "Fondo con IA" : "AI Background", icon: "fa-image text-emerald-500", params: {prompt: "Fondo de estudio fotográfico profesional, iluminación perfecta, alta calidad"} },
+        "textile-crochet": { slug: "textile-styles", label: isEs ? "Estilo Crochet" : "Crochet Style", icon: "fa-cubes text-pink-500", params: {prompt: "Apply 3D amigurumi crochet texture to the entire image. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add frames, hoops or white backgrounds. Only change the material of existing elements to knitted yarn."} },
+        "textile-embroidery": { slug: "textile-styles", label: isEs ? "Estilo Bordado" : "Embroidery Style", icon: "fa-cubes text-blue-400", params: {prompt: "Apply highly detailed realistic embroidery texture to the entire image. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add frames, hoops or white backgrounds. Only change the material of existing elements to thick colorful threads and 3D stitches."} }
     };
 
     let keys = [];
@@ -619,7 +613,7 @@ function renderQuickActions(slug) {
         qaTitle.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Sugerencias de la IA`;
         if (slug.includes("restore") || slug === "light-restore" || slug === "night-flash" || slug === "backlit-fix") { keys = ["colorize", "upscale-faces", "magic-eraser", "light"]; } 
         else if (slug.includes("colorize")) { keys = ["restore", "upscale-faces", "magic-eraser"]; } 
-        else if (slug.includes("remove-background")) { keys = ["upscale-8x", "gen-bg", "magic-eraser"]; } 
+        else if (slug.includes("remove-background")) { keys = ["upscale-8x", "gen-bg", "textile-crochet", "textile-embroidery"]; } 
         else if (slug.includes("generate") || slug.includes("fairy") || slug.includes("sticker")) { keys = ["upscale-8x", "remove-bg", "extract-logo"]; } 
         else if (slug === "detect-objects" || slug === "remove-objects" || slug === "erase-text" || slug === "erase-wires") { keys = ["upscale-8x", "remove-bg", "light"]; } 
         else { keys = ["upscale-8x", "remove-bg", "magic-eraser"]; }
@@ -829,6 +823,7 @@ async function proceedWithQuickAction(targetSlug, extraParams) {
         
         if (!res.headers.get("content-type").includes("application/json")) {
             const blobFinal = await res.blob(); 
+            // LE PASAMOS EL targetSlug PARA QUE SEPA QUÉ HERRAMIENTA SE ACABA DE USAR Y NO SE TRABE
             processFinalUrl(URL.createObjectURL(blobFinal), targetSlug);
         } else {
             const data = await res.json();
@@ -925,7 +920,7 @@ btnExecuteErase.addEventListener("click", async () => {
         mainResultImg.classList.remove("opacity-50", "blur-sm");
         
         if (!res.headers.get("content-type").includes("application/json")) {
-            const blob = await res.blob(); processFinalUrl(URL.createObjectURL(blob));
+            const blob = await res.blob(); processFinalUrl(URL.createObjectURL(blob), currentSlug);
         } else {
             const json = await res.json();
             if(json.error) throw new Error(json.message || json.detalle || "Parámetros incorrectos");
