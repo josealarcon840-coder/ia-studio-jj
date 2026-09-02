@@ -15,7 +15,7 @@ app = Flask(__name__)
 
 API_KEY = os.environ.get("SNAPEDIT_API_KEY", "sk-snap-uuh6Z0veQTW7z3DSQ7TUr5yuyaC7HIHAoUchqM_KrfI")
 BASE = "https://api.snapedit.app"
-HEADERS = {"api-key": API_KEY}
+HEADERS = {"api-key": API_KEY, "Authorization": f"Bearer {API_KEY}"}
 ALLOWED_STYLE_DOMAINS = ("storage.googleapis.com",)
 
 TELEGRAM_BOT_TOKEN = "8066431561:AAE4iCEkjw4ynw5VQC4OVsC0liH_lDv9mcY" 
@@ -45,22 +45,33 @@ MODELS = [
     {"slug": "colorize-pro", "label": L("Colorear B/N (Pro)", "Colorize B/W (Pro)"), "icon": "fa-paint-roller", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Colorización avanzada.", "Advanced colorization."), "endpoint": "/v1/images/colorize/pro", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "light-restore", "label": L("Corregir Iluminación", "Fix Lighting"), "icon": "fa-sun", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Arregla fotos oscuras.", "Fixes dark photos."), "endpoint": "/v1/images/light-restore", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    {"slug": "generate-zimage", "label": L("Crear: Z-Image (Texto)", "Create: Z-Image (Text)"), "icon": "fa-rocket", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Crea imagen rápida.", "Create image fast."), "endpoint": "/v1/images/generates/zimage", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "cm_auto_magic", "label": L("Medidas en Centímetros", "Size (CM)")}]},
-    {"slug": "generate-qwen", "label": L("Crear: Qwen (Texto)", "Create: Qwen (Text)"), "icon": "fa-brain", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Motor HD realista.", "HD realistic engine."), "endpoint": "/v1/images/generates/qwen", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción", "Prompt"), "required": True}, {"name": "aspect_ratio", "type": "cm_auto_magic", "label": L("Medidas en Centímetros", "Size (CM)")}]},
+    {"slug": "generate-zimage", "label": L("Crear: Z-Image (Texto)", "Create: Z-Image (Text)"), "icon": "fa-rocket", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Crea imagen rápida. (Solo 1:1)", "Create image fast."), "endpoint": "/v1/images/generates/zimage", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción de la imagen", "Prompt"), "required": True}]},
+    {"slug": "generate-qwen", "label": L("Crear: Qwen (Texto)", "Create: Qwen (Text)"), "icon": "fa-brain", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Motor HD realista. (Solo 1:1)", "HD realistic engine."), "endpoint": "/v1/images/generates/qwen", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción de la imagen", "Prompt"), "required": True}]},
     {"slug": "fairy-art", "label": L("Retrato a Arte", "Portrait to Art"), "icon": "fa-wand-magic-sparkles", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Convierte fotos a Anime/3D.", "Convert photos to Anime/3D."), "endpoint": "/v1/images/generates/art", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "style", "type": "select", "label": L("Estilo", "Style"), "required": True, "options_url": "https://storage.googleapis.com/assets.snapedit.app/fairyai/anime_styles_6mar25.json"}]},
     {"slug": "generate-background", "label": L("Generar Fondo Nuevo", "Generate Background"), "icon": "fa-image", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Fondo para productos. ¡Sube un PNG SIN FONDO!", "Background for products."), "endpoint": "/v1/images/generates-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen (Transparente)", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Descripción del fondo", "Background prompt"), "required": True}]},
     {"slug": "sticker", "label": L("Crear Sticker", "Create Sticker"), "icon": "fa-note-sticky", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Haz un sticker de tu foto.", "Make a sticker from photo."), "endpoint": "/v1/images/generates/sticker", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Estilo (Ej: Zombie)", "Style (e.g. Zombie)"), "required": True}]},
 
+    {"slug": "recolor-ai", "label": L("🎨 Cambiar Colores (IA)", "🎨 Recolor (AI)"), "icon": "fa-palette", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Cambia colores de un elemento sin tocar el resto.", "Change colors of specific elements."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
+        {"name": "input_image", "type": "image", "label": L("Sube tu Diseño", "Upload Design"), "required": True}, 
+        {"name": "target", "type": "text", "label": L("¿Qué elemento? (Ej: las letras 'Super', la moto)", "Which element?"), "required": True},
+        {"name": "color_from", "type": "text", "label": L("Color actual (Ej: naranja)", "Current color"), "required": True},
+        {"name": "color_to", "type": "text", "label": L("Nuevo color (Ej: verde neón)", "New color"), "required": True}
+    ]},
+
+    # 🔴 HERRAMIENTA CORREGIDA: RESPLANDOR (GLOW) CON TRANSPARENCIA
+    {"slug": "studio-vignette", "label": L("🌟 Resplandor (Glow)", "🌟 Outer Glow"), "icon": "fa-star", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Añade un resplandor de color alrededor de tu diseño manteniendo el fondo transparente.", "Adds an outer glow to a transparent design."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
+        {"name": "input_image", "type": "image", "label": L("Sube tu Diseño (Sin Fondo)", "Upload Transparent Design"), "required": True}, 
+        {"name": "bg_color", "type": "color", "label": L("Elige el Color del Resplandor", "Glow Color"), "default": "#ff0000"}
+    ]},
+
     {"slug": "edit-image", "label": L("Edición Mágica (Texto)", "Magic Edit (Text)"), "icon": "fa-wand-sparkles", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Edita usando órdenes.", "Edit using text prompts."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Instrucción", "Prompt"), "required": True}, {"name": "mode", "type": "select", "label": L("Modo", "Mode"), "required": True, "options": [{"value": "editing", "label": L("General", "General")}, {"value": "inpaint", "label": L("Inpaint", "Inpaint")}]}, {"name": "input_mask", "type": "mask", "label": L("Máscara", "Mask"), "required": False}]},
     
-    # 🔴 TEXTURAS ULTRA DEFINIDAS: Control total de fondos, bordes gruesos y colores
-    {"slug": "textile-styles", "label": L("Texturas Mágicas 3D", "3D Magic Textures"), "icon": "fa-cubes", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Aplica lana, bordado, parche o estudio.", "Applies yarn, thread, patch or study styles."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
+    {"slug": "textile-styles", "label": L("Texturas Mágicas 3D", "3D Magic Textures"), "icon": "fa-cubes", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Aplica lana, bordado, parche o inflado.", "Applies yarn, thread, patch or puffy styles."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
         {"name": "input_image", "type": "image", "label": L("Sube tu Diseño Original", "Upload Design"), "required": True}, 
         {"name": "prompt", "type": "select", "label": L("Elige la Textura", "Select Texture"), "required": True, "options": [
-            {"value": "Apply a highly detailed 3D amigurumi crochet texture. Create thick, visible, realistic knitted yarn loops. CRITICAL: Keep EXACT original colors. Do NOT invent colors. If the image has a complex animated background, texture the background too. If the background is transparent, strictly preserve transparency. If the background is a solid flat color, keep the background flat and untextured.", "label": L("🧶 Crochet / Amigurumi HD", "HD Crochet")},
+            {"value": "Apply a highly detailed 3D amigurumi crochet texture. Create thick, visible, realistic knitted yarn loops. CRITICAL: Keep EXACT original colors. Do NOT invent colors. If the background is transparent, strictly preserve transparency. If the background is a solid flat color, keep it flat and untextured.", "label": L("🧶 Crochet / Amigurumi HD", "HD Crochet")},
             {"value": "Apply a highly detailed realistic 3D embroidery texture. Create thick, glossy, visible 3D thread stitches. CRITICAL INSTRUCTION: You MUST keep EXACT original colors. Do NOT invent colors. If transparent, strictly preserve transparency. If background is a solid flat color, keep it flat.", "label": L("🧵 Bordado Realista HD", "Realistic Embroidery")},
-            {"value": "Convert this exact design into a physical 3D embroidered patch. CRITICAL: Add a thick, dense embroidered border outline around the outer edges. Fill the inside with realistic shiny embroidery threads matching the EXACT original colors. Strictly PRESERVE the transparent background. DO NOT add any scene or solid background behind the patch.", "label": L("🏷️ Parche Textil (Borde Grueso)", "Textile Patch")},
-            {"value": "Add professional photo studio lighting to the subject. Generate a dramatic dark vignette background with soft glowing background shadows around the subject to make it pop. Keep the main subject's colors exact.", "label": L("📸 Fondo Estudio (Sombra/Viñeta)", "Studio Vignette Glow")},
+            {"value": "Convert this exact design into a physical 3D embroidered patch. CRITICAL: Add a thick, dense embroidered border outline around the outer edges. Fill the inside with realistic shiny embroidery threads matching the EXACT original colors. Strictly PRESERVE the transparent background. DO NOT add any solid background behind the patch.", "label": L("🏷️ Parche Textil (Borde Grueso)", "Textile Patch")},
             {"value": "Apply 3D inflated balloon puffy texture. Make elements look like thick, soft, highly glossy 3D plastic or vinyl. CRITICAL: Keep EXACT original colors. If transparent, strictly preserve transparency.", "label": L("🎈 Estilo Inflado 3D (Globo)", "3D Inflated/Puffer")}
         ]}
     ]},
@@ -166,7 +177,19 @@ def run_model(slug):
         for key, value in request.form.items():
             if value: data[key] = value
 
-        if slug == "textile-styles": data["mode"] = "editing"
+        if slug in ["textile-styles", "recolor-ai", "studio-vignette"]: 
+            data["mode"] = "editing"
+            
+        if slug == "recolor-ai" and "prompt" in data:
+            target = data.pop("target", "everything")
+            c_from = data.pop("color_from", "current color")
+            c_to = data.pop("color_to", "new color")
+            data["prompt"] = f"CRITICAL INSTRUCTION: Keep exactly the same design, layout, text, lines, transparent background and style. DO NOT invent new objects or alter the image. ONLY change the {c_from} color of the {target} to {c_to}."
+
+        # 🔴 LÓGICA ESTRICTA PARA EVITAR FONDOS Y MANTENER LA TRANSPARENCIA CON GLOW
+        if slug == "studio-vignette":
+            color_val = data.pop("bg_color", "#ff0000")
+            data["prompt"] = f"CRITICAL INSTRUCTION: Keep the main subject exactly as is. Add a soft, luminous {color_val} outer glow, aura or shadow tightly hugging the silhouette of the subject. DO NOT generate any solid background, walls, or rooms. Strictly PRESERVE the transparent background around the glowing subject."
 
         if slug == "generate-background" and ("png" not in mime.lower()):
              return jsonify({"error": True, "message": "¡Debes subir un PNG transparente (sin fondo)! Ve primero a 'Quitar Fondo'."}), 400
@@ -191,11 +214,8 @@ def run_model(slug):
                 data.pop("input_image", None)
 
             if model.get("needs_image") is False:
-                # 🚀 SOLUCIÓN AL ERROR 500: Se envía como "data", NO como "json", igual que en Telegram
-                payload = {}
-                if "prompt" in data: payload["prompt"] = data["prompt"]
-                if "aspect_ratio" in data: payload["aspect_ratio"] = data["aspect_ratio"]
-                response = requests.post(BASE + model["endpoint"], headers=HEADERS, data=payload, timeout=120)
+                payload = {"prompt": data.get("prompt", "")}
+                response = requests.post(BASE + model["endpoint"], headers=HEADERS, json=payload, timeout=120)
             else:
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
         
