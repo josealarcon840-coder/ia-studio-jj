@@ -566,6 +566,7 @@ function renderForm(model) {
           }).catch(() => { input.innerHTML = `<option value="">${t("load_error")}</option>`; });
       }
     } else if (field.type === "number") { input = document.createElement("input"); input.type = "number"; if (field.default !== undefined) input.value = field.default; } 
+    else if (field.type === "color") { input = document.createElement("input"); input.type = "color"; if (field.default !== undefined) input.value = field.default; }
     else { input = document.createElement("input"); input.type = "text"; }
 
     input.id = "field_" + field.name; input.name = field.name; if (field.required) input.required = true;
@@ -581,7 +582,7 @@ function renderQuickActions(slug) {
     qaContainer.innerHTML = '';
     const isEs = currentLang === 'es';
     
-    // 🔴 BOTÓN DE "📸 FONDO (VIÑETA)" DISPONIBLE EN QUITAR FONDO
+    // 🔴 ACTUALIZADO: El botón ahora dice "Resplandor"
     const actionsDict = {
         "remove-bg": { slug: "remove-background", label: isEs ? "Quitar Fondo" : "Remove BG", icon: "fa-user-slash text-red-500", params: {} },
         "extract-logo": { slug: "remove-background-graphic", label: isEs ? "Extraer Logo" : "Extract Logo", icon: "fa-shapes text-orange-500", params: {} },
@@ -596,7 +597,7 @@ function renderQuickActions(slug) {
         "textile-crochet": { slug: "textile-styles", label: isEs ? "Estilo Crochet" : "Crochet Style", icon: "fa-cubes text-pink-500", params: {prompt: "Apply a highly detailed 3D amigurumi crochet texture. Create thick, visible, realistic knitted yarn loops. CRITICAL: Keep EXACT original colors and shapes. Do NOT invent colors. If the image has a complex background, texture it. If transparent, strictly preserve transparency. If the background is a solid flat color, keep it flat and untextured."} },
         "textile-embroidery": { slug: "textile-styles", label: isEs ? "Estilo Bordado" : "Embroidery Style", icon: "fa-cubes text-blue-400", params: {prompt: "Apply a highly detailed realistic 3D embroidery texture. Create thick, glossy, visible 3D thread stitches. CRITICAL INSTRUCTION: You MUST keep EXACT original colors. Do NOT invent colors. If transparent, strictly preserve transparency. If background is a solid flat color, keep it flat."} },
         "textile-patch": { slug: "textile-styles", label: isEs ? "Parche Textil" : "Patch Style", icon: "fa-tag text-purple-400", params: {prompt: "Convert this exact design into a physical 3D embroidered patch. CRITICAL: Add a thick, dense embroidered border outline around the outer edges. Fill the inside with realistic shiny embroidery threads matching the EXACT original colors. Strictly PRESERVE the transparent background. DO NOT add any solid background behind the patch."} },
-        "studio-glow": { slug: "textile-styles", label: isEs ? "📸 Fondo (Viñeta)" : "Studio Glow", icon: "fa-camera text-yellow-400", params: {prompt: "Add professional photo studio lighting to the subject. Generate a dramatic dark vignette background with soft glowing background shadows around the subject to make it pop. Keep the main subject's colors exact."} }
+        "studio-glow": { slug: "studio-vignette", label: isEs ? "🌟 Resplandor" : "🌟 Outer Glow", icon: "fa-star text-yellow-400", params: {bg_color: "#ff0000"} }
     };
 
     let keys = [];
@@ -617,10 +618,7 @@ function renderQuickActions(slug) {
         qaTitle.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Sugerencias de la IA`;
         if (slug.includes("restore") || slug === "light-restore" || slug === "night-flash" || slug === "backlit-fix") { keys = ["colorize", "upscale-faces", "magic-eraser", "light"]; } 
         else if (slug.includes("colorize")) { keys = ["restore", "upscale-faces", "magic-eraser"]; } 
-        else if (slug.includes("remove-background")) { 
-            // 🔴 AQUÍ SE AGREGA EL BOTÓN COMO SUGERENCIA AL QUITAR FONDO
-            keys = ["upscale-8x", "gen-bg", "studio-glow", "textile-crochet", "textile-patch"]; 
-        } 
+        else if (slug.includes("remove-background")) { keys = ["upscale-8x", "gen-bg", "studio-glow", "textile-crochet", "textile-patch"]; } 
         else if (slug.includes("generate") || slug.includes("fairy") || slug.includes("sticker")) { keys = ["upscale-8x", "remove-bg", "extract-logo"]; } 
         else if (slug === "detect-objects" || slug === "remove-objects" || slug === "erase-text" || slug === "erase-wires") { keys = ["upscale-8x", "remove-bg", "light"]; } 
         else { keys = ["upscale-8x", "remove-bg", "magic-eraser"]; }
@@ -631,7 +629,13 @@ function renderQuickActions(slug) {
         const btn = document.createElement('button');
         btn.className = "btn-qa";
         btn.innerHTML = `<i class="fa-solid ${act.icon} mb-1 block text-lg"></i> ${act.label}`;
-        btn.onclick = () => ejecutarAccionRapida(act.slug, act.params);
+        
+        if(act.slug === "studio-vignette") {
+            btn.onclick = () => { openTool("studio-vignette"); };
+        } else {
+            btn.onclick = () => ejecutarAccionRapida(act.slug, act.params);
+        }
+        
         qaContainer.appendChild(btn);
     });
 }
@@ -659,93 +663,102 @@ form.addEventListener("submit", async (e) => {
     const el = document.getElementById("field_" + field.name);
     if (!el) return;
     if (field.type === "checkbox") { formData.append(field.name, el.checked ? "true" : "false"); } 
-    else if (field.type === "image" || field.type === "mask") { if (el.files[0]) formData.append(field.name, el.files[0]); } 
+    else if (field.type === "image" || field.type === "mask") { 
+        if (el.files[0]) formData.append(field.name, el.files[0]); 
+        else if (urlResultMemoria && field.name === "input_image") {
+            fetch(urlResultMemoria).then(r => r.blob()).then(blob => {
+                formData.append(field.name, new File([blob], "imagen_sugerida.png", {type: blob.type || "image/png"}));
+            });
+        }
+    } 
     else if (el.value !== "") { formData.append(field.name, el.value); }
   });
 
-  try {
-    const res = await fetch(`/run/${model.slug}`, { method: "POST", body: formData });
-    mainResultImg.classList.remove("opacity-50", "blur-sm");
-    
-    if (!res.headers.get("content-type").includes("application/json")) {
-        const blob = await res.blob(); 
-        const localBlobUrl = URL.createObjectURL(blob);
-        processFinalUrl(localBlobUrl, currentSlug);
-        submitBtn.disabled = false;
-    } else {
-        const data = await res.json();
-        if (data.error) {
-            statusLine.className = "status-line show error"; statusText.textContent = t("error_prefix") + (data.message || data.detalle || t("generic_error"));
-            submitBtn.disabled = false;
-            
-        } else if (data.is_video_task) {
-            statusText.innerHTML = "Procesando Video en la Nube (0%). Por favor espera...";
-            
-            const polling = setInterval(async () => {
-                try {
-                    let rTask = await fetch(`/check-task?task_id=${data.task_id}&endpoint=${data.endpoint}`);
-                    let taskData = await rTask.json();
-                    
-                    if (taskData.status === "COMPLETED") {
-                        clearInterval(polling);
-                        statusLine.className = "status-line show ok"; 
-                        statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
-                        
-                        let vUrl = taskData.download_url || taskData.video_url || taskData.url;
-                        
-                        mainResultImg.style.display = "none";
-                        const mainResultVideo = document.getElementById("mainResultVideo");
-                        mainResultVideo.style.display = "block";
-                        mainResultVideo.src = vUrl;
-
-                        btnDownloadResult.href = vUrl;
-                        btnDownloadResult.setAttribute("download", "JJ_Video_Magico.mp4");
-                        btnDownloadResult.style.display = "block";
-                        document.getElementById("downloadBtnText").innerText = "Descargar Video (MP4)";
-                        btnDownloadResult.onclick = null;
-                        
-                        document.getElementById('tray').style.display = 'block';
-                        document.getElementById('imgContainer').style.display = 'inline-block';
-                        document.getElementById('btnCentrar').style.display = 'block';
-                        document.getElementById('btnZoomLabel').style.display = 'block';
-                        submitBtn.disabled = false;
-                        
-                    } else if (taskData.status === "FAILED") {
-                        clearInterval(polling);
-                        statusLine.className = "status-line show error";
-                        statusText.innerHTML = "Error al renderizar el video.";
-                        submitBtn.disabled = false;
-                    } else {
-                        statusText.innerHTML = "Generando Video (" + (taskData.progress || 0) + "%)... No cierres la ventana.";
-                    }
-                } catch(e) { }
-            }, 4000);
-            return;
-
-        } else if (model.slug === "detect-objects" && data.detected_objects) {
-            statusLine.classList.remove("show"); aiSessionId = data.session_id; aiObjects = data.detected_objects; aiSelected.clear();
-            magicTagsPanel.style.display = "block"; tagsContainer.innerHTML = ""; boxesContainer.innerHTML = ""; btnExecuteErase.style.display = "none";
-            const natW = mainResultImg.naturalWidth; const natH = mainResultImg.naturalHeight;
-            aiObjects.forEach((obj, i) => {
-                const tag = document.createElement("span"); tag.className = "ai-tag"; tag.textContent = obj.object_description; tag.onclick = () => toggleAiObject(i, tag); tagsContainer.appendChild(tag);
-                if(obj.box && natW) {
-                    const [xmin, ymin, xmax, ymax] = obj.box; const box = document.createElement('div'); box.id = `box_ai_${i}`; box.className = "ai-box";
-                    box.style.left = `${(xmin / natW) * 100}%`; box.style.top = `${(ymin / natH) * 100}%`; box.style.width = `${((xmax - xmin) / natW) * 100}%`; box.style.height = `${((ymax - ymin) / natH) * 100}%`; boxesContainer.appendChild(box);
-                }
-            });
-            tray.style.display = "block"; renderQuickActions(currentSlug); quickActionsBar.style.display = "block";
-            document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block';
+  setTimeout(async () => {
+      try {
+        const res = await fetch(`/run/${model.slug}`, { method: "POST", body: formData });
+        mainResultImg.classList.remove("opacity-50", "blur-sm");
+        
+        if (!res.headers.get("content-type").includes("application/json")) {
+            const blob = await res.blob(); 
+            const localBlobUrl = URL.createObjectURL(blob);
+            processFinalUrl(localBlobUrl, currentSlug);
             submitBtn.disabled = false;
         } else {
-            statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
-            jsonViewer.value = JSON.stringify(data, null, 2); jsonViewer.style.display = "block"; document.getElementById('imgContainer').style.display = 'none';
-            submitBtn.disabled = false;
+            const data = await res.json();
+            if (data.error) {
+                statusLine.className = "status-line show error"; statusText.textContent = t("error_prefix") + (data.message || data.detalle || t("generic_error"));
+                submitBtn.disabled = false;
+                
+            } else if (data.is_video_task) {
+                statusText.innerHTML = "Procesando Video en la Nube (0%). Por favor espera...";
+                
+                const polling = setInterval(async () => {
+                    try {
+                        let rTask = await fetch(`/check-task?task_id=${data.task_id}&endpoint=${data.endpoint}`);
+                        let taskData = await rTask.json();
+                        
+                        if (taskData.status === "COMPLETED") {
+                            clearInterval(polling);
+                            statusLine.className = "status-line show ok"; 
+                            statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
+                            
+                            let vUrl = taskData.download_url || taskData.video_url || taskData.url;
+                            
+                            mainResultImg.style.display = "none";
+                            const mainResultVideo = document.getElementById("mainResultVideo");
+                            mainResultVideo.style.display = "block";
+                            mainResultVideo.src = vUrl;
+
+                            btnDownloadResult.href = vUrl;
+                            btnDownloadResult.setAttribute("download", "JJ_Video_Magico.mp4");
+                            btnDownloadResult.style.display = "block";
+                            document.getElementById("downloadBtnText").innerText = "Descargar Video (MP4)";
+                            btnDownloadResult.onclick = null;
+                            
+                            document.getElementById('tray').style.display = 'block';
+                            document.getElementById('imgContainer').style.display = 'inline-block';
+                            document.getElementById('btnCentrar').style.display = 'block';
+                            document.getElementById('btnZoomLabel').style.display = 'block';
+                            submitBtn.disabled = false;
+                            
+                        } else if (taskData.status === "FAILED") {
+                            clearInterval(polling);
+                            statusLine.className = "status-line show error";
+                            statusText.innerHTML = "Error al renderizar el video.";
+                            submitBtn.disabled = false;
+                        } else {
+                            statusText.innerHTML = "Generando Video (" + (taskData.progress || 0) + "%)... No cierres la ventana.";
+                        }
+                    } catch(e) { }
+                }, 4000);
+                return;
+
+            } else if (model.slug === "detect-objects" && data.detected_objects) {
+                statusLine.classList.remove("show"); aiSessionId = data.session_id; aiObjects = data.detected_objects; aiSelected.clear();
+                magicTagsPanel.style.display = "block"; tagsContainer.innerHTML = ""; boxesContainer.innerHTML = ""; btnExecuteErase.style.display = "none";
+                const natW = mainResultImg.naturalWidth; const natH = mainResultImg.naturalHeight;
+                aiObjects.forEach((obj, i) => {
+                    const tag = document.createElement("span"); tag.className = "ai-tag"; tag.textContent = obj.object_description; tag.onclick = () => toggleAiObject(i, tag); tagsContainer.appendChild(tag);
+                    if(obj.box && natW) {
+                        const [xmin, ymin, xmax, ymax] = obj.box; const box = document.createElement('div'); box.id = `box_ai_${i}`; box.className = "ai-box";
+                        box.style.left = `${(xmin / natW) * 100}%`; box.style.top = `${(ymin / natH) * 100}%`; box.style.width = `${((xmax - xmin) / natW) * 100}%`; box.style.height = `${((ymax - ymin) / natH) * 100}%`; boxesContainer.appendChild(box);
+                    }
+                });
+                tray.style.display = "block"; renderQuickActions(currentSlug); quickActionsBar.style.display = "block";
+                document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block';
+                submitBtn.disabled = false;
+            } else {
+                statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
+                jsonViewer.value = JSON.stringify(data, null, 2); jsonViewer.style.display = "block"; document.getElementById('imgContainer').style.display = 'none';
+                submitBtn.disabled = false;
+            }
         }
-    }
-  } catch (err) {
-    statusLine.className = "status-line show error"; statusText.textContent = t("conn_error") + err.message; mainResultImg.classList.remove("opacity-50", "blur-sm");
-    submitBtn.disabled = false;
-  }
+      } catch (err) {
+        statusLine.className = "status-line show error"; statusText.textContent = t("conn_error") + err.message; mainResultImg.classList.remove("opacity-50", "blur-sm");
+        submitBtn.disabled = false;
+      }
+  }, 300);
 });
 
 let pendingQuickAction = null;
