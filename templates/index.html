@@ -582,7 +582,6 @@ function renderQuickActions(slug) {
     qaContainer.innerHTML = '';
     const isEs = currentLang === 'es';
     
-    // 🔴 ACTUALIZADO: El botón ahora dice "Resplandor"
     const actionsDict = {
         "remove-bg": { slug: "remove-background", label: isEs ? "Quitar Fondo" : "Remove BG", icon: "fa-user-slash text-red-500", params: {} },
         "extract-logo": { slug: "remove-background-graphic", label: isEs ? "Extraer Logo" : "Extract Logo", icon: "fa-shapes text-orange-500", params: {} },
@@ -645,13 +644,70 @@ form.addEventListener("submit", async (e) => {
   const model = MODELS.find(m => m.slug === currentSlug);
   const submitBtn = document.getElementById("btnMainSubmit"); submitBtn.disabled = true;
 
-  statusLine.className = "status-line show"; 
-  
-  if(model.response_type === "video") {
-      statusText.textContent = "Preparando renderizado de video en la nube...";
-  } else {
-      statusText.textContent = t("processing");
+  // 🔴 MOTOR NATIVO (HTML5 CANVAS) PARA RESPLANDOR 100% TRANSPARENTE
+  if (model.slug === "studio-vignette") {
+      statusLine.className = "status-line show"; 
+      statusText.innerHTML = "<i class='fa-solid fa-star fa-spin mr-2'></i> Aplicando resplandor transparente...";
+      mainResultImg.classList.add("opacity-50", "blur-sm");
+      
+      const colorEl = document.getElementById("field_bg_color");
+      const glowColor = colorEl ? colorEl.value : "#ff0000";
+      
+      let imageToUse = urlResultMemoria;
+      if (!imageToUse) {
+          const fileInput = document.getElementById("field_input_image");
+          if (fileInput && fileInput.files[0]) {
+              imageToUse = URL.createObjectURL(fileInput.files[0]);
+          }
+      }
+      
+      if (!imageToUse) {
+          alert("Por favor, sube una imagen transparente primero.");
+          submitBtn.disabled = false;
+          return;
+      }
+
+      const img = new Image();
+      img.crossOrigin = "Anonymous";
+      img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          
+          // Agregamos margen para que el resplandor no se corte
+          const pad = Math.floor(Math.max(img.width, img.height) * 0.1); 
+          canvas.width = img.width + pad * 2;
+          canvas.height = img.height + pad * 2;
+          
+          // Configuramos el resplandor
+          ctx.shadowColor = glowColor;
+          ctx.shadowBlur = Math.floor(pad * 0.8);
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
+          
+          // Dibujamos la imagen varias veces para intensificar el resplandor 
+          // (Manteniendo el fondo 100% transparente)
+          ctx.drawImage(img, pad, pad);
+          ctx.drawImage(img, pad, pad);
+          ctx.drawImage(img, pad, pad);
+          
+          const dataUrl = canvas.toDataURL("image/png");
+          processFinalUrl(dataUrl, currentSlug);
+          
+          mainResultImg.classList.remove("opacity-50", "blur-sm");
+          submitBtn.disabled = false;
+      };
+      img.onerror = () => {
+          alert("Hubo un error cargando la imagen para el resplandor. Intenta quitarle el fondo de nuevo.");
+          submitBtn.disabled = false;
+          mainResultImg.classList.remove("opacity-50", "blur-sm");
+      };
+      img.src = imageToUse;
+      return; 
   }
+
+  statusLine.className = "status-line show"; 
+  if(model.response_type === "video") { statusText.textContent = "Preparando renderizado..."; } 
+  else { statusText.textContent = t("processing"); }
   
   btnDownloadResult.style.display = "none"; btnRestart.style.display = "block"; quickActionsBar.style.display = "none";
   magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; document.getElementById('btnAntes').style.display = 'none';
@@ -679,7 +735,10 @@ form.addEventListener("submit", async (e) => {
         const res = await fetch(`/run/${model.slug}`, { method: "POST", body: formData });
         mainResultImg.classList.remove("opacity-50", "blur-sm");
         
-        if (!res.headers.get("content-type").includes("application/json")) {
+        // 🔴 PROTECCIÓN CONTRA EL ERROR "NULL"
+        const contentType = res.headers.get("content-type") || "";
+        
+        if (!contentType.includes("application/json")) {
             const blob = await res.blob(); 
             const localBlobUrl = URL.createObjectURL(blob);
             processFinalUrl(localBlobUrl, currentSlug);
@@ -938,7 +997,8 @@ btnExecuteErase.addEventListener("click", async () => {
         const res = await fetch(`/run/execute-magic-erase`, { method: "POST", body: formData });
         mainResultImg.classList.remove("opacity-50", "blur-sm");
         
-        if (!res.headers.get("content-type").includes("application/json")) {
+        const contentType = res.headers.get("content-type") || "";
+        if (!contentType.includes("application/json")) {
             const blob = await res.blob(); processFinalUrl(URL.createObjectURL(blob), currentSlug);
         } else {
             const json = await res.json();
