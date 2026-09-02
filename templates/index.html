@@ -581,7 +581,7 @@ function renderQuickActions(slug) {
     qaContainer.innerHTML = '';
     const isEs = currentLang === 'es';
     
-    // 🔴 ACTUALIZACIÓN: LOS PROMPTS AQUÍ TAMBIÉN ESTÁN BLINDADOS PARA LOS BOTONES RÁPIDOS
+    // 🔴 BOTÓN DE "📸 FONDO (VIÑETA)" DISPONIBLE EN QUITAR FONDO
     const actionsDict = {
         "remove-bg": { slug: "remove-background", label: isEs ? "Quitar Fondo" : "Remove BG", icon: "fa-user-slash text-red-500", params: {} },
         "extract-logo": { slug: "remove-background-graphic", label: isEs ? "Extraer Logo" : "Extract Logo", icon: "fa-shapes text-orange-500", params: {} },
@@ -596,7 +596,7 @@ function renderQuickActions(slug) {
         "textile-crochet": { slug: "textile-styles", label: isEs ? "Estilo Crochet" : "Crochet Style", icon: "fa-cubes text-pink-500", params: {prompt: "Apply a highly detailed 3D amigurumi crochet texture. Create thick, visible, realistic knitted yarn loops. CRITICAL: Keep EXACT original colors and shapes. Do NOT invent colors. If the image has a complex background, texture it. If transparent, strictly preserve transparency. If the background is a solid flat color, keep it flat and untextured."} },
         "textile-embroidery": { slug: "textile-styles", label: isEs ? "Estilo Bordado" : "Embroidery Style", icon: "fa-cubes text-blue-400", params: {prompt: "Apply a highly detailed realistic 3D embroidery texture. Create thick, glossy, visible 3D thread stitches. CRITICAL INSTRUCTION: You MUST keep EXACT original colors. Do NOT invent colors. If transparent, strictly preserve transparency. If background is a solid flat color, keep it flat."} },
         "textile-patch": { slug: "textile-styles", label: isEs ? "Parche Textil" : "Patch Style", icon: "fa-tag text-purple-400", params: {prompt: "Convert this exact design into a physical 3D embroidered patch. CRITICAL: Add a thick, dense embroidered border outline around the outer edges. Fill the inside with realistic shiny embroidery threads matching the EXACT original colors. Strictly PRESERVE the transparent background. DO NOT add any solid background behind the patch."} },
-        "studio-glow": { slug: "textile-styles", label: isEs ? "Fondo Estudio" : "Studio Glow", icon: "fa-camera text-yellow-400", params: {prompt: "Add professional photo studio lighting to the subject. Generate a dramatic dark vignette background with soft glowing background shadows around the subject to make it pop. Keep the main subject's colors exact."} }
+        "studio-glow": { slug: "textile-styles", label: isEs ? "📸 Fondo (Viñeta)" : "Studio Glow", icon: "fa-camera text-yellow-400", params: {prompt: "Add professional photo studio lighting to the subject. Generate a dramatic dark vignette background with soft glowing background shadows around the subject to make it pop. Keep the main subject's colors exact."} }
     };
 
     let keys = [];
@@ -617,7 +617,10 @@ function renderQuickActions(slug) {
         qaTitle.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Sugerencias de la IA`;
         if (slug.includes("restore") || slug === "light-restore" || slug === "night-flash" || slug === "backlit-fix") { keys = ["colorize", "upscale-faces", "magic-eraser", "light"]; } 
         else if (slug.includes("colorize")) { keys = ["restore", "upscale-faces", "magic-eraser"]; } 
-        else if (slug.includes("remove-background")) { keys = ["upscale-8x", "gen-bg", "studio-glow", "textile-crochet", "textile-patch"]; } 
+        else if (slug.includes("remove-background")) { 
+            // 🔴 AQUÍ SE AGREGA EL BOTÓN COMO SUGERENCIA AL QUITAR FONDO
+            keys = ["upscale-8x", "gen-bg", "studio-glow", "textile-crochet", "textile-patch"]; 
+        } 
         else if (slug.includes("generate") || slug.includes("fairy") || slug.includes("sticker")) { keys = ["upscale-8x", "remove-bg", "extract-logo"]; } 
         else if (slug === "detect-objects" || slug === "remove-objects" || slug === "erase-text" || slug === "erase-wires") { keys = ["upscale-8x", "remove-bg", "light"]; } 
         else { keys = ["upscale-8x", "remove-bg", "magic-eraser"]; }
