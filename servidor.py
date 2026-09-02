@@ -13,9 +13,6 @@ Image.MAX_IMAGE_PIXELS = None
 
 app = Flask(__name__)
 
-# ========================================================
-# 🚀 CONFIGURACIÓN DE TELEGRAM Y SNAPEDIT
-# ========================================================
 API_KEY = os.environ.get("SNAPEDIT_API_KEY", "sk-snap-uuh6Z0veQTW7z3DSQ7TUr5yuyaC7HIHAoUchqM_KrfI")
 BASE = "https://api.snapedit.app"
 HEADERS = {"api-key": API_KEY}
@@ -55,20 +52,20 @@ MODELS = [
     {"slug": "sticker", "label": L("Crear Sticker", "Create Sticker"), "icon": "fa-note-sticky", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Haz un sticker de tu foto.", "Make a sticker from photo."), "endpoint": "/v1/images/generates/sticker", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Estilo (Ej: Zombie)", "Style (e.g. Zombie)"), "required": True}]},
 
     {"slug": "edit-image", "label": L("Edición Mágica (Texto)", "Magic Edit (Text)"), "icon": "fa-wand-sparkles", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Edita usando órdenes.", "Edit using text prompts."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Instrucción", "Prompt"), "required": True}, {"name": "mode", "type": "select", "label": L("Modo", "Mode"), "required": True, "options": [{"value": "editing", "label": L("General", "General")}, {"value": "inpaint", "label": L("Inpaint", "Inpaint")}]}, {"name": "input_mask", "type": "mask", "label": L("Máscara", "Mask"), "required": False}]},
-    {"slug": "textile-styles", "label": L("Texturas Mágicas 3D", "3D Magic Textures"), "icon": "fa-cubes", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Aplica lana, hilo o estilo inflado 3D.", "Applies yarn, thread or puffy textures."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Sube tu Diseño Original", "Upload Design"), "required": True}, {"name": "prompt", "type": "select", "label": L("Elige la Textura", "Select Texture"), "required": True, "options": [{"value": "Apply 3D amigurumi crochet texture to the entire image. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add frames, hoops or white backgrounds. Only change the material of existing elements to knitted yarn.", "label": L("🧶 Crochet / Amigurumi (Lana)", "Crochet / Amigurumi")},{"value": "Apply highly detailed realistic embroidery texture to the entire image. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add frames, hoops or white backgrounds. Only change the material of existing elements to thick colorful threads and 3D stitches.", "label": L("🧵 Bordado Realista (Hilos 3D)", "Realistic Embroidery")},{"value": "Apply textile embroidery patch style to the entire image. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add stitched borders if they don't exist, no background fabric. Only change the material of existing elements to high quality thread texture.", "label": L("🏷️ Parche Textil (Sin Bordes)", "Textile Patch")},{"value": "Apply 3D inflated balloon puffy texture to the entire image. Make it look like soft, puffy, glossy plastic or vinyl. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add backgrounds. Only change the material of existing elements to 3D inflated balloon.", "label": L("🎈 Estilo Inflado 3D (Globo/Puffer)", "3D Inflated/Puffer")}]}]},
-    {"slug": "retouch-skin", "label": L("Retoque Facial", "Skin Retouch"), "icon": "fa-face-smile", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Limpia la piel automáticamente.", "Cleans skin automatically."), "endpoint": "/v1/images/retouch-skin", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
-
-    # 🚀 --- IA PARA VIDEOS ---
-    {"slug": "enhance-video", "label": L("Mejorar Video 2K/4K", "Enhance Video Pro"), "icon": "fa-film", "category": L("6. IA para Videos", "6. AI Video"), "desc": L("Sube la resolución de videos.", "Upscale video to 2K/4K."), "endpoint": "/v1/videos/enhance-pro", "response_type": "video", "fields": [
-        {"name": "input_image", "type": "image", "label": L("Sube tu Video (MP4)", "Upload Video"), "required": True}, 
-        {"name": "zoom_factor", "type": "select", "label": L("Resolución", "Resolution"), "required": True, "options": [{"value": "2K", "label": L("2K Calidad Alta", "2K High Quality")}, {"value": "4K", "label": L("4K Ultra HD", "4K Ultra HD")}]},
-        {"name": "is_preview", "type": "select", "label": L("Duración", "Duration"), "required": True, "options": [{"value": "true", "label": L("Muestra rápida (3 Segundos)", "Preview (3 Sec)")}, {"value": "false", "label": L("Video Completo", "Full Video")}]}
+    
+    # 🔴 TEXTURAS ULTRA DEFINIDAS: Control total de fondos, bordes gruesos y colores
+    {"slug": "textile-styles", "label": L("Texturas Mágicas 3D", "3D Magic Textures"), "icon": "fa-cubes", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Aplica lana, bordado, parche o estudio.", "Applies yarn, thread, patch or study styles."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
+        {"name": "input_image", "type": "image", "label": L("Sube tu Diseño Original", "Upload Design"), "required": True}, 
+        {"name": "prompt", "type": "select", "label": L("Elige la Textura", "Select Texture"), "required": True, "options": [
+            {"value": "Apply a highly detailed 3D amigurumi crochet texture. Create thick, visible, realistic knitted yarn loops. CRITICAL: Keep EXACT original colors. Do NOT invent colors. If the image has a complex animated background, texture the background too. If the background is transparent, strictly preserve transparency. If the background is a solid flat color, keep the background flat and untextured.", "label": L("🧶 Crochet / Amigurumi HD", "HD Crochet")},
+            {"value": "Apply a highly detailed realistic 3D embroidery texture. Create thick, glossy, visible 3D thread stitches. CRITICAL INSTRUCTION: You MUST keep EXACT original colors. Do NOT invent colors. If transparent, strictly preserve transparency. If background is a solid flat color, keep it flat.", "label": L("🧵 Bordado Realista HD", "Realistic Embroidery")},
+            {"value": "Convert this exact design into a physical 3D embroidered patch. CRITICAL: Add a thick, dense embroidered border outline around the outer edges. Fill the inside with realistic shiny embroidery threads matching the EXACT original colors. Strictly PRESERVE the transparent background. DO NOT add any scene or solid background behind the patch.", "label": L("🏷️ Parche Textil (Borde Grueso)", "Textile Patch")},
+            {"value": "Add professional photo studio lighting to the subject. Generate a dramatic dark vignette background with soft glowing background shadows around the subject to make it pop. Keep the main subject's colors exact.", "label": L("📸 Fondo Estudio (Sombra/Viñeta)", "Studio Vignette Glow")},
+            {"value": "Apply 3D inflated balloon puffy texture. Make elements look like thick, soft, highly glossy 3D plastic or vinyl. CRITICAL: Keep EXACT original colors. If transparent, strictly preserve transparency.", "label": L("🎈 Estilo Inflado 3D (Globo)", "3D Inflated/Puffer")}
+        ]}
     ]},
-    {"slug": "image-to-video", "label": L("Animar Foto a Video", "Image to Video"), "icon": "fa-video", "category": L("6. IA para Videos", "6. AI Video"), "desc": L("Dale vida y movimiento a una imagen.", "Animate photo with AI."), "endpoint": "/v1/videos/image-to-video", "response_type": "video", "fields": [
-        {"name": "input_image", "type": "image", "label": L("Sube tu Foto", "Upload Image"), "required": True}, 
-        {"name": "prompt", "type": "textarea", "label": L("Instrucción de Movimiento", "Motion Prompt"), "required": True},
-        {"name": "duration", "type": "select", "label": L("Duración", "Duration"), "required": True, "options": [{"value": "4", "label": L("4 Segundos", "4 Seconds")}, {"value": "8", "label": L("8 Segundos", "8 Seconds")}]}
-    ]}
+
+    {"slug": "retouch-skin", "label": L("Retoque Facial", "Skin Retouch"), "icon": "fa-face-smile", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Limpia la piel automáticamente.", "Cleans skin automatically."), "endpoint": "/v1/images/retouch-skin", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]}
 ]
 
 MODELS_BY_SLUG = {m["slug"]: m for m in MODELS}
@@ -79,31 +76,19 @@ def resize_if_needed(file_bytes, slug, original_filename="image.jpg"):
         img = Image.open(io.BytesIO(file_bytes))
         img_format = (img.format or "JPEG").upper()
         width, height = img.size
-        
         needs_resize = (max(width, height) > max_dim)
         needs_convert = (img_format == "JPEG" and img.mode in ("RGBA", "P"))
-        
-        if not needs_resize and not needs_convert:
-            return file_bytes, original_filename, f"image/{img_format.lower()}"
-            
+        if not needs_resize and not needs_convert: return file_bytes, original_filename, f"image/{img_format.lower()}"
         if needs_resize:
             scale = max_dim / max(width, height)
             img = img.resize((int(width * scale), int(height * scale)), Image.LANCZOS)
-            
-        if needs_convert: 
-            img = img.convert("RGB")
-            
+        if needs_convert: img = img.convert("RGB")
         buffer = io.BytesIO()
-        if img_format == "JPEG":
-            img.save(buffer, format=img_format, quality=100, subsampling=0)
-        else:
-            img.save(buffer, format=img_format)
-            
+        if img_format == "JPEG": img.save(buffer, format=img_format, quality=100, subsampling=0)
+        else: img.save(buffer, format=img_format)
         return buffer.getvalue(), original_filename, f"image/{img_format.lower()}"
-    except Exception:
-        return file_bytes, original_filename, "image/jpeg"
-    finally:
-        gc.collect()
+    except Exception: return file_bytes, original_filename, "image/jpeg"
+    finally: gc.collect()
 
 @app.route("/")
 def index(): return render_template("index.html")
@@ -127,121 +112,50 @@ def proxy_image():
     if not url: return "No URL", 400
     try:
         r = requests.get(url, timeout=60)
-        if r.status_code != 200:
-            return "Error CDN SnapEdit", 400
+        if r.status_code != 200: return "Error CDN SnapEdit", 400
         headers = {}
-        if dl == "1":
-            headers["Content-Disposition"] = "attachment; filename=JJ_Studio_Diseño.png"
+        if dl == "1": headers["Content-Disposition"] = "attachment; filename=JJ_Studio_Diseño.png"
         return Response(r.content, mimetype=r.headers.get("Content-Type", "image/png"), headers=headers)
-    except Exception as e:
-        return str(e), 500
+    except Exception as e: return str(e), 500
 
 @app.route("/verify-telegram", methods=["POST"])
 def verify_telegram():
     data = request.json
-    if not data or 'hash' not in data:
-        return jsonify({"access": False, "message": "Datos inválidos"}), 400
-
+    if not data or 'hash' not in data: return jsonify({"access": False, "message": "Datos inválidos"}), 400
     data_check_arr = [f'{k}={v}' for k, v in data.items() if k != 'hash']
     data_check_string = '\n'.join(sorted(data_check_arr))
     secret_key = hashlib.sha256(TELEGRAM_BOT_TOKEN.encode('utf-8')).digest()
     hash_calc = hmac.new(secret_key, data_check_string.encode('utf-8'), hashlib.sha256).hexdigest()
-
     if hash_calc != data['hash']: return jsonify({"access": False, "message": "Firma no válida"}), 403
-
     user_id = data.get('id')
     first_name = data.get('first_name', 'Usuario')
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getChatMember"
-    
     try:
         resp = requests.get(url, params={"chat_id": TELEGRAM_CHAT_ID, "user_id": user_id}, timeout=10).json()
-        if resp.get('ok') and resp['result']['status'] in ['member', 'administrator', 'creator']:
-            return jsonify({"access": True, "nombre": first_name})
+        if resp.get('ok') and resp['result']['status'] in ['member', 'administrator', 'creator']: return jsonify({"access": True, "nombre": first_name})
         return jsonify({"access": False, "message": "No eres miembro del grupo VIP."})
-    except Exception as e:
-        return jsonify({"access": False, "message": str(e)}), 500
+    except Exception as e: return jsonify({"access": False, "message": str(e)}), 500
 
 @app.route("/check-task", methods=["GET"])
 def check_task():
     task_id = request.args.get("task_id")
     endpoint = request.args.get("endpoint")
-    if not task_id or not endpoint: 
-        return jsonify({"error": True, "message": "Faltan datos de la tarea."})
+    if not task_id or not endpoint: return jsonify({"error": True, "message": "Faltan datos de la tarea."})
     try:
         r = requests.get(f"{BASE}{endpoint}/tasks/{task_id}", headers=HEADERS, timeout=15)
         return jsonify(r.json())
-    except Exception as e:
-        return jsonify({"error": True, "message": str(e)})
-
+    except Exception as e: return jsonify({"error": True, "message": str(e)})
 
 @app.route("/run/<slug>", methods=["POST"])
 def run_model(slug):
     model = MODELS_BY_SLUG.get(slug)
-    
     if slug == "execute-magic-erase": model = {"endpoint": "/v1/images/remove-objects", "fields": []}
     elif slug in ["erase-text", "erase-wires"]:
         model = model.copy()
         model["endpoint"] = "/v1/images/remove-objects"
-        
     if not model: return jsonify({"error": True, "message": "Herramienta desconocida"}), 404
 
     try:
-        # =======================================================
-        # 🎬 LÓGICA DE VIDEO ASÍNCRONA
-        # =======================================================
-        if model.get("response_type") == "video":
-            file_obj = list(request.files.values())[0]
-            file_bytes = file_obj.read()
-            
-            payload = {}
-            for key, value in request.form.items():
-                if value.lower() == "true": payload[key] = True
-                elif value.lower() == "false": payload[key] = False
-                elif value.isdigit(): payload[key] = int(value)
-                else: payload[key] = value
-
-            url_upload_endpoint = f"{BASE}{model['endpoint']}/upload"
-            r1 = requests.post(url_upload_endpoint, headers={"api-key": API_KEY, "Content-Type": "application/json"}, json=payload if payload else None)
-            
-            if r1.status_code != 200: 
-                return jsonify({"error": True, "message": f"Fallo al iniciar servidor de video. Detalle: {r1.text}"}), 400
-            
-            datos_carga = r1.json()
-            task_id = datos_carga.get("task_id") or datos_carga.get("data", {}).get("task_id")
-            upload_url = (
-                datos_carga.get("image_upload_url") or 
-                datos_carga.get("video_upload_url") or 
-                datos_carga.get("upload_url") or 
-                datos_carga.get("url") or 
-                datos_carga.get("signed_url") or 
-                datos_carga.get("data", {}).get("image_upload_url") or 
-                datos_carga.get("data", {}).get("upload_url") or 
-                datos_carga.get("data", {}).get("url")
-            )
-            
-            if not task_id or not upload_url:
-                return jsonify({"error": True, "message": f"Respuesta inesperada de SnapEdit al subir: {datos_carga}"}), 400
-
-            mime_type = "video/mp4" if "video" in slug and not slug.startswith("image-to") else "image/jpeg"
-            r2 = requests.put(upload_url, data=file_bytes, headers={"Content-Type": mime_type})
-            if r2.status_code not in [200, 201]: 
-                return jsonify({"error": True, "message": f"Fallo al subir el archivo al servidor. Detalle: {r2.text}"}), 400
-
-            payload["task_id"] = task_id
-            
-            r3 = requests.post(BASE + model["endpoint"], headers={"api-key": API_KEY, "Content-Type": "application/json"}, json=payload)
-            if r3.status_code != 200: 
-                return jsonify({"error": True, "message": f"Fallo al procesar el renderizado: {r3.text}"}), 400
-
-            return jsonify({
-                "is_video_task": True, 
-                "task_id": task_id, 
-                "endpoint": model["endpoint"]
-            })
-
-        # =======================================================
-        # 🖼️ LÓGICA DE IMÁGENES NORMALES
-        # =======================================================
         files, data = {}, {}
         for key, file_obj in request.files.items():
             if file_obj and file_obj.filename:
@@ -252,8 +166,7 @@ def run_model(slug):
         for key, value in request.form.items():
             if value: data[key] = value
 
-        if slug == "textile-styles":
-            data["mode"] = "editing"
+        if slug == "textile-styles": data["mode"] = "editing"
 
         if slug == "generate-background" and ("png" not in mime.lower()):
              return jsonify({"error": True, "message": "¡Debes subir un PNG transparente (sin fondo)! Ve primero a 'Quitar Fondo'."}), 400
@@ -270,20 +183,19 @@ def run_model(slug):
                     f2 = {"input_image": files.get("input_image") or files.get("image"), "input_mask": ("mask.png", base64.b64decode(mask_b64), "image/png")}
                     ep_remove = "/v1/images/remove-text" if slug == "detect-text" else "/v1/images/remove-wires"
                     response = requests.post(BASE + ep_remove, headers=HEADERS, files=f2, data={"erase_mode": "ultra"}, timeout=300)
-                else:
-                    return jsonify({"error": True, "message": "No se detectó texto o cables."}), 400
-            else:
-                response = r1
+                else: return jsonify({"error": True, "message": "No se detectó texto o cables."}), 400
+            else: response = r1
         else:
             if slug == "execute-magic-erase":
                 files = None
                 data.pop("input_image", None)
 
             if model.get("needs_image") is False:
+                # 🚀 SOLUCIÓN AL ERROR 500: Se envía como "data", NO como "json", igual que en Telegram
                 payload = {}
                 if "prompt" in data: payload["prompt"] = data["prompt"]
                 if "aspect_ratio" in data: payload["aspect_ratio"] = data["aspect_ratio"]
-                response = requests.post(BASE + model["endpoint"], headers={"api-key": API_KEY, "Content-Type": "application/json"}, json=payload, timeout=120)
+                response = requests.post(BASE + model["endpoint"], headers=HEADERS, data=payload, timeout=120)
             else:
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
         
@@ -298,23 +210,19 @@ def run_model(slug):
                         return Response(base64.b64decode(encoded), mimetype=header.split(";")[0].split(":")[1])
                     try:
                         r_img = requests.get(url_img, headers={'User-Agent': 'Mozilla/5.0'}, timeout=60)
-                        if r_img.status_code == 200:
-                            return Response(r_img.content, mimetype=r_img.headers.get("Content-Type", "image/png"))
+                        if r_img.status_code == 200: return Response(r_img.content, mimetype=r_img.headers.get("Content-Type", "image/png"))
                         return jsonify({"error": True, "message": "Fallo al descargar la imagen procesada."}), 400
-                    except Exception as e:
-                        return jsonify({"error": True, "message": f"Error de red: {str(e)}"}), 400
+                    except Exception as e: return jsonify({"error": True, "message": f"Error de red: {str(e)}"}), 400
                 return jsonify(datos), 200
             return jsonify({"error": True, "message": datos.get("message", str(datos))}), 400
         else:
-            if response.status_code != 200:
-                return jsonify({"error": True, "message": f"Servidores saturados (HTTP {response.status_code})."}), 400
+            if response.status_code != 200: return jsonify({"error": True, "message": f"Servidores saturados (HTTP {response.status_code})."}), 400
             return Response(response.content, mimetype=response.headers.get("Content-Type", "image/png"))
 
     except Exception as e: 
         print(f"❌ ERROR: {str(e)}")
         return jsonify({"error": True, "message": f"Error interno: {str(e)}"}), 400
-    finally:
-        gc.collect()
+    finally: gc.collect()
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=10000)
