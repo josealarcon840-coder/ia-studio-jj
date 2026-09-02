@@ -51,6 +51,7 @@ MODELS = [
     {"slug": "generate-background", "label": L("Generar Fondo Nuevo", "Generate Background"), "icon": "fa-image", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Fondo para productos. ¡Sube un PNG SIN FONDO!", "Background for products."), "endpoint": "/v1/images/generates-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen (Transparente)", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Descripción del fondo", "Background prompt"), "required": True}]},
     {"slug": "sticker", "label": L("Crear Sticker", "Create Sticker"), "icon": "fa-note-sticky", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Haz un sticker de tu foto.", "Make a sticker from photo."), "endpoint": "/v1/images/generates/sticker", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Estilo (Ej: Zombie)", "Style (e.g. Zombie)"), "required": True}]},
 
+    # 🔴 HERRAMIENTA RECOLOREAR CORREGIDA
     {"slug": "recolor-ai", "label": L("🎨 Cambiar Colores (IA)", "🎨 Recolor (AI)"), "icon": "fa-palette", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Cambia colores de un elemento sin tocar el resto.", "Change colors of specific elements."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
         {"name": "input_image", "type": "image", "label": L("Sube tu Diseño", "Upload Design"), "required": True}, 
         {"name": "target", "type": "text", "label": L("¿Qué elemento? (Ej: las letras 'Super', la moto)", "Which element?"), "required": True},
@@ -58,8 +59,8 @@ MODELS = [
         {"name": "color_to", "type": "text", "label": L("Nuevo color (Ej: verde neón)", "New color"), "required": True}
     ]},
 
-    # 🔴 HERRAMIENTA CORREGIDA: RESPLANDOR (GLOW) CON TRANSPARENCIA
-    {"slug": "studio-vignette", "label": L("🌟 Resplandor (Glow)", "🌟 Outer Glow"), "icon": "fa-star", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Añade un resplandor de color alrededor de tu diseño manteniendo el fondo transparente.", "Adds an outer glow to a transparent design."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
+    # 🔴 HERRAMIENTA RESPLANDOR (AHORA SE PROCESA 100% NATIVA EN JAVASCRIPT SIN USAR IA)
+    {"slug": "studio-vignette", "label": L("🌟 Resplandor Mágico", "🌟 Magic Glow"), "icon": "fa-star", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Añade resplandor HD a diseños sin fondo.", "Adds a glow to a transparent design."), "endpoint": "/local/canvas", "response_type": "image", "fields": [
         {"name": "input_image", "type": "image", "label": L("Sube tu Diseño (Sin Fondo)", "Upload Transparent Design"), "required": True}, 
         {"name": "bg_color", "type": "color", "label": L("Elige el Color del Resplandor", "Glow Color"), "default": "#ff0000"}
     ]},
@@ -177,19 +178,15 @@ def run_model(slug):
         for key, value in request.form.items():
             if value: data[key] = value
 
-        if slug in ["textile-styles", "recolor-ai", "studio-vignette"]: 
+        if slug in ["textile-styles", "recolor-ai"]: 
             data["mode"] = "editing"
             
-        if slug == "recolor-ai" and "prompt" in data:
+        # 🔴 LÓGICA CORREGIDA PARA RECOLOREAR (Ya no pide "prompt" en el form)
+        if slug == "recolor-ai":
             target = data.pop("target", "everything")
             c_from = data.pop("color_from", "current color")
             c_to = data.pop("color_to", "new color")
             data["prompt"] = f"CRITICAL INSTRUCTION: Keep exactly the same design, layout, text, lines, transparent background and style. DO NOT invent new objects or alter the image. ONLY change the {c_from} color of the {target} to {c_to}."
-
-        # 🔴 LÓGICA ESTRICTA PARA EVITAR FONDOS Y MANTENER LA TRANSPARENCIA CON GLOW
-        if slug == "studio-vignette":
-            color_val = data.pop("bg_color", "#ff0000")
-            data["prompt"] = f"CRITICAL INSTRUCTION: Keep the main subject exactly as is. Add a soft, luminous {color_val} outer glow, aura or shadow tightly hugging the silhouette of the subject. DO NOT generate any solid background, walls, or rooms. Strictly PRESERVE the transparent background around the glowing subject."
 
         if slug == "generate-background" and ("png" not in mime.lower()):
              return jsonify({"error": True, "message": "¡Debes subir un PNG transparente (sin fondo)! Ve primero a 'Quitar Fondo'."}), 400
