@@ -81,6 +81,7 @@
   .field label .req { color: var(--red-bright); margin-left: 3px; font-size: 1.1em;}
 
   input[type="text"], input[type="number"], select, textarea { width: 100%; background: #050505; border: 1px solid #444; color: var(--text); padding: 12px 14px; border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; transition: 0.2s;}
+  input[type="color"] { width: 100%; height: 45px; background: #050505; border: 1px solid #444; padding: 2px; border-radius: 8px; cursor: pointer;}
   input:focus, select:focus, textarea:focus { outline: none; border-color: var(--red-bright); box-shadow: 0 0 8px rgba(255,45,58,0.3); }
   textarea { min-height: 100px; resize: vertical; }
 
@@ -138,7 +139,6 @@
 
   #jsonViewer { background: #000; color: var(--ok); border: 1px solid #333; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; width: 100%; height: 250px; overflow-y: auto; text-align: left; resize: none; margin-top: 15px; display: none; }
 
-  /* MODAL DE PROMPT PERSONALIZADO PARA FONDOS */
   .custom-modal-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.8); z-index: 9999;
@@ -256,7 +256,7 @@
           <form id="form"></form>
           
           <button type="button" id="btnRestart" class="btn-primary btn-restart" style="display:none;" onclick="reiniciarHerramienta(true)">
-             <i class="fa-solid fa-rotate-left mr-2"></i> <span data-i18n="restart_btn">Reiniciar Todo</span>
+             <i class="fa-solid fa-rotate-left mr-2"></i> <span data-i18n="restart_btn">Subir Otra Imagen</span>
           </button>
           
           <div id="magicTagsPanel">
@@ -581,6 +581,7 @@ function renderQuickActions(slug) {
     qaContainer.innerHTML = '';
     const isEs = currentLang === 'es';
     
+    // 🔴 ACTUALIZACIÓN: LOS PROMPTS AQUÍ TAMBIÉN ESTÁN BLINDADOS PARA LOS BOTONES RÁPIDOS
     const actionsDict = {
         "remove-bg": { slug: "remove-background", label: isEs ? "Quitar Fondo" : "Remove BG", icon: "fa-user-slash text-red-500", params: {} },
         "extract-logo": { slug: "remove-background-graphic", label: isEs ? "Extraer Logo" : "Extract Logo", icon: "fa-shapes text-orange-500", params: {} },
@@ -591,8 +592,11 @@ function renderQuickActions(slug) {
         "restore": { slug: "restore-pro", label: isEs ? "Restaurar Daños" : "Restore Damage", icon: "fa-hammer text-orange-500", params: {} },
         "light": { slug: "light-restore", label: isEs ? "Corregir Luz" : "Fix Light", icon: "fa-sun text-yellow-400", params: {} },
         "gen-bg": { slug: "generate-background", label: isEs ? "Fondo con IA" : "AI Background", icon: "fa-image text-emerald-500", params: {prompt: "Fondo de estudio fotográfico profesional, iluminación perfecta, alta calidad"} },
-        "textile-crochet": { slug: "textile-styles", label: isEs ? "Estilo Crochet" : "Crochet Style", icon: "fa-cubes text-pink-500", params: {prompt: "Apply 3D amigurumi crochet texture to the entire image. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add frames, hoops or white backgrounds. Only change the material of existing elements to knitted yarn."} },
-        "textile-embroidery": { slug: "textile-styles", label: isEs ? "Estilo Bordado" : "Embroidery Style", icon: "fa-cubes text-blue-400", params: {prompt: "Apply highly detailed realistic embroidery texture to the entire image. Strictly preserve the exact original background, all elements, composition, original colors, and transparent areas. Do not remove anything, do not add frames, hoops or white backgrounds. Only change the material of existing elements to thick colorful threads and 3D stitches."} }
+        
+        "textile-crochet": { slug: "textile-styles", label: isEs ? "Estilo Crochet" : "Crochet Style", icon: "fa-cubes text-pink-500", params: {prompt: "Apply a highly detailed 3D amigurumi crochet texture. Create thick, visible, realistic knitted yarn loops. CRITICAL: Keep EXACT original colors and shapes. Do NOT invent colors. If the image has a complex background, texture it. If transparent, strictly preserve transparency. If the background is a solid flat color, keep it flat and untextured."} },
+        "textile-embroidery": { slug: "textile-styles", label: isEs ? "Estilo Bordado" : "Embroidery Style", icon: "fa-cubes text-blue-400", params: {prompt: "Apply a highly detailed realistic 3D embroidery texture. Create thick, glossy, visible 3D thread stitches. CRITICAL INSTRUCTION: You MUST keep EXACT original colors. Do NOT invent colors. If transparent, strictly preserve transparency. If background is a solid flat color, keep it flat."} },
+        "textile-patch": { slug: "textile-styles", label: isEs ? "Parche Textil" : "Patch Style", icon: "fa-tag text-purple-400", params: {prompt: "Convert this exact design into a physical 3D embroidered patch. CRITICAL: Add a thick, dense embroidered border outline around the outer edges. Fill the inside with realistic shiny embroidery threads matching the EXACT original colors. Strictly PRESERVE the transparent background. DO NOT add any solid background behind the patch."} },
+        "studio-glow": { slug: "textile-styles", label: isEs ? "Fondo Estudio" : "Studio Glow", icon: "fa-camera text-yellow-400", params: {prompt: "Add professional photo studio lighting to the subject. Generate a dramatic dark vignette background with soft glowing background shadows around the subject to make it pop. Keep the main subject's colors exact."} }
     };
 
     let keys = [];
@@ -613,7 +617,7 @@ function renderQuickActions(slug) {
         qaTitle.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Sugerencias de la IA`;
         if (slug.includes("restore") || slug === "light-restore" || slug === "night-flash" || slug === "backlit-fix") { keys = ["colorize", "upscale-faces", "magic-eraser", "light"]; } 
         else if (slug.includes("colorize")) { keys = ["restore", "upscale-faces", "magic-eraser"]; } 
-        else if (slug.includes("remove-background")) { keys = ["upscale-8x", "gen-bg", "textile-crochet", "textile-embroidery"]; } 
+        else if (slug.includes("remove-background")) { keys = ["upscale-8x", "gen-bg", "studio-glow", "textile-crochet", "textile-patch"]; } 
         else if (slug.includes("generate") || slug.includes("fairy") || slug.includes("sticker")) { keys = ["upscale-8x", "remove-bg", "extract-logo"]; } 
         else if (slug === "detect-objects" || slug === "remove-objects" || slug === "erase-text" || slug === "erase-wires") { keys = ["upscale-8x", "remove-bg", "light"]; } 
         else { keys = ["upscale-8x", "remove-bg", "magic-eraser"]; }
@@ -823,7 +827,6 @@ async function proceedWithQuickAction(targetSlug, extraParams) {
         
         if (!res.headers.get("content-type").includes("application/json")) {
             const blobFinal = await res.blob(); 
-            // LE PASAMOS EL targetSlug PARA QUE SEPA QUÉ HERRAMIENTA SE ACABA DE USAR Y NO SE TRABE
             processFinalUrl(URL.createObjectURL(blobFinal), targetSlug);
         } else {
             const data = await res.json();
