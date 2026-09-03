@@ -582,6 +582,7 @@ function renderQuickActions(slug) {
     qaContainer.innerHTML = '';
     const isEs = currentLang === 'es';
     
+    // 🔴 ACTUALIZADO: Botón de Vectorizer como Sugerencia Rápida
     const actionsDict = {
         "remove-bg": { slug: "remove-background", label: isEs ? "Quitar Fondo" : "Remove BG", icon: "fa-user-slash text-red-500", params: {} },
         "extract-logo": { slug: "remove-background-graphic", label: isEs ? "Extraer Logo" : "Extract Logo", icon: "fa-shapes text-orange-500", params: {} },
@@ -592,6 +593,7 @@ function renderQuickActions(slug) {
         "restore": { slug: "restore-pro", label: isEs ? "Restaurar Daños" : "Restore Damage", icon: "fa-hammer text-orange-500", params: {} },
         "light": { slug: "light-restore", label: isEs ? "Corregir Luz" : "Fix Light", icon: "fa-sun text-yellow-400", params: {} },
         "gen-bg": { slug: "generate-background", label: isEs ? "Fondo con IA" : "AI Background", icon: "fa-image text-emerald-500", params: {prompt: "Fondo de estudio fotográfico profesional, iluminación perfecta, alta calidad"} },
+        "vectorize": { slug: "vectorize", label: isEs ? "Convertir a Vector" : "Vectorize", icon: "fa-bezier-curve text-teal-500", params: {} },
         
         "textile-crochet": { slug: "textile-styles", label: isEs ? "Estilo Crochet" : "Crochet Style", icon: "fa-cubes text-pink-500", params: {prompt: "Apply a highly detailed 3D amigurumi crochet texture. Create thick, visible, realistic knitted yarn loops. CRITICAL: Keep EXACT original colors and shapes. Do NOT invent colors. If the image has a complex background, texture it. If transparent, strictly preserve transparency. If the background is a solid flat color, keep it flat and untextured."} },
         "textile-embroidery": { slug: "textile-styles", label: isEs ? "Estilo Bordado" : "Embroidery Style", icon: "fa-cubes text-blue-400", params: {prompt: "Apply a highly detailed realistic 3D embroidery texture. Create thick, glossy, visible 3D thread stitches. CRITICAL INSTRUCTION: You MUST keep EXACT original colors. Do NOT invent colors. If transparent, strictly preserve transparency. If background is a solid flat color, keep it flat."} },
@@ -617,9 +619,10 @@ function renderQuickActions(slug) {
         qaTitle.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Sugerencias de la IA`;
         if (slug.includes("restore") || slug === "light-restore" || slug === "night-flash" || slug === "backlit-fix") { keys = ["colorize", "upscale-faces", "magic-eraser", "light"]; } 
         else if (slug.includes("colorize")) { keys = ["restore", "upscale-faces", "magic-eraser"]; } 
-        else if (slug.includes("remove-background")) { keys = ["upscale-8x", "gen-bg", "studio-glow", "textile-crochet", "textile-patch"]; } 
-        else if (slug.includes("generate") || slug.includes("fairy") || slug.includes("sticker")) { keys = ["upscale-8x", "remove-bg", "extract-logo"]; } 
+        else if (slug.includes("remove-background")) { keys = ["vectorize", "upscale-8x", "gen-bg", "studio-glow", "textile-crochet"]; } 
+        else if (slug.includes("generate") || slug.includes("fairy") || slug.includes("sticker")) { keys = ["remove-bg", "vectorize", "upscale-8x"]; } 
         else if (slug === "detect-objects" || slug === "remove-objects" || slug === "erase-text" || slug === "erase-wires") { keys = ["upscale-8x", "remove-bg", "light"]; } 
+        else if (slug === "vectorize") { keys = []; }
         else { keys = ["upscale-8x", "remove-bg", "magic-eraser"]; }
     }
 
@@ -644,7 +647,7 @@ form.addEventListener("submit", async (e) => {
   const model = MODELS.find(m => m.slug === currentSlug);
   const submitBtn = document.getElementById("btnMainSubmit"); submitBtn.disabled = true;
 
-  // 🔴 MOTOR NATIVO (HTML5 CANVAS) PARA RESPLANDOR 100% TRANSPARENTE
+  // 🔴 MOTOR NATIVO HTML5 PARA RESPLANDOR (Sin API, súper rápido)
   if (model.slug === "studio-vignette") {
       statusLine.className = "status-line show"; 
       statusText.innerHTML = "<i class='fa-solid fa-star fa-spin mr-2'></i> Aplicando resplandor transparente...";
@@ -664,6 +667,8 @@ form.addEventListener("submit", async (e) => {
       if (!imageToUse) {
           alert("Por favor, sube una imagen transparente primero.");
           submitBtn.disabled = false;
+          mainResultImg.classList.remove("opacity-50", "blur-sm");
+          statusLine.classList.remove("show");
           return;
       }
 
@@ -673,25 +678,21 @@ form.addEventListener("submit", async (e) => {
           const canvas = document.createElement("canvas");
           const ctx = canvas.getContext("2d");
           
-          // Agregamos margen para que el resplandor no se corte
           const pad = Math.floor(Math.max(img.width, img.height) * 0.1); 
           canvas.width = img.width + pad * 2;
           canvas.height = img.height + pad * 2;
           
-          // Configuramos el resplandor
           ctx.shadowColor = glowColor;
           ctx.shadowBlur = Math.floor(pad * 0.8);
           ctx.shadowOffsetX = 0;
           ctx.shadowOffsetY = 0;
           
-          // Dibujamos la imagen varias veces para intensificar el resplandor 
-          // (Manteniendo el fondo 100% transparente)
           ctx.drawImage(img, pad, pad);
           ctx.drawImage(img, pad, pad);
           ctx.drawImage(img, pad, pad);
           
           const dataUrl = canvas.toDataURL("image/png");
-          processFinalUrl(dataUrl, currentSlug);
+          processFinalUrl(dataUrl, currentSlug, "png");
           
           mainResultImg.classList.remove("opacity-50", "blur-sm");
           submitBtn.disabled = false;
@@ -735,13 +736,17 @@ form.addEventListener("submit", async (e) => {
         const res = await fetch(`/run/${model.slug}`, { method: "POST", body: formData });
         mainResultImg.classList.remove("opacity-50", "blur-sm");
         
-        // 🔴 PROTECCIÓN CONTRA EL ERROR "NULL"
         const contentType = res.headers.get("content-type") || "";
         
         if (!contentType.includes("application/json")) {
             const blob = await res.blob(); 
             const localBlobUrl = URL.createObjectURL(blob);
-            processFinalUrl(localBlobUrl, currentSlug);
+            
+            // 🔴 VERIFICAMOS SI ES SVG PARA CAMBIAR LA EXTENSIÓN DE DESCARGA
+            let ext = "png";
+            if (blob.type.includes("svg")) ext = "svg";
+            
+            processFinalUrl(localBlobUrl, currentSlug, ext);
             submitBtn.disabled = false;
         } else {
             const data = await res.json();
@@ -900,9 +905,13 @@ async function proceedWithQuickAction(targetSlug, extraParams) {
         const res = await fetch(`/run/${targetSlug}`, { method: "POST", body: formData });
         mainResultImg.classList.remove("opacity-50", "blur-sm");
         
-        if (!res.headers.get("content-type").includes("application/json")) {
+        const contentType = res.headers.get("content-type") || "";
+        
+        if (!contentType.includes("application/json")) {
             const blobFinal = await res.blob(); 
-            processFinalUrl(URL.createObjectURL(blobFinal), targetSlug);
+            let ext = "png";
+            if (blobFinal.type.includes("svg")) ext = "svg";
+            processFinalUrl(URL.createObjectURL(blobFinal), targetSlug, ext);
         } else {
             const data = await res.json();
             if(data.error) throw new Error(data.message);
@@ -912,7 +921,7 @@ async function proceedWithQuickAction(targetSlug, extraParams) {
     }
 }
 
-function processFinalUrl(url, slugToUse = currentSlug) {
+function processFinalUrl(url, slugToUse = currentSlug, ext = "png") {
     let displayUrl = url;
     let downloadUrl = url;
     
@@ -931,14 +940,23 @@ function processFinalUrl(url, slugToUse = currentSlug) {
     statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
     
     btnDownloadResult.href = downloadUrl;
-    btnDownloadResult.setAttribute("download", "JJ_Studio_Diseño.png");
+    btnDownloadResult.setAttribute("download", `JJ_Studio_Diseño.${ext}`);
     btnDownloadResult.style.display = "block";
     
-    document.getElementById("downloadBtnText").innerText = t("download_btn");
+    // 🔴 CAMBIA EL TEXTO DEL BOTÓN SI ES UN VECTOR SVG
+    if (ext === "svg") {
+        document.getElementById("downloadBtnText").innerText = "Descargar Vector (SVG)";
+    } else {
+        document.getElementById("downloadBtnText").innerText = t("download_btn");
+    }
     btnDownloadResult.onclick = null;
     
-    renderQuickActions(slugToUse); 
-    quickActionsBar.style.display = "block"; 
+    if (ext === "svg") {
+        quickActionsBar.style.display = "none"; // Un SVG no se puede escalar o quitar fondo como píxel
+    } else {
+        renderQuickActions(slugToUse); 
+        quickActionsBar.style.display = "block"; 
+    }
     
     document.getElementById('tray').style.display = 'block';
 
