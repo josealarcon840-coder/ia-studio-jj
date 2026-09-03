@@ -77,15 +77,9 @@ MODELS = [
 
     {"slug": "retouch-skin", "label": L("Retoque Facial", "Skin Retouch"), "icon": "fa-face-smile", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Limpia la piel automáticamente.", "Cleans skin automatically."), "endpoint": "/v1/images/retouch-skin", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     
-    # 🔴 OPCIONES DE VECTORIZADOR COMPLETADAS
+    # 🔴 VECTORIZER CORREGIDO (Solo envía la imagen para no provocar error 400)
     {"slug": "vectorize", "label": L("📐 Convertir a Vector (SVG)", "📐 Vectorize (SVG)"), "icon": "fa-bezier-curve", "category": L("6. Vectores y Formatos", "6. Vectors & Formats"), "desc": L("Convierte imágenes pixeladas a vectores infinitos.", "Convert pixelated image to infinite scalable SVG."), "endpoint": "vectorizer", "response_type": "image", "fields": [
-        {"name": "input_image", "type": "image", "label": L("Imagen a Vectorizar", "Image to Vectorize"), "required": True},
-        {"name": "mode", "type": "select", "label": L("Modo de Inteligencia", "AI Mode"), "default": "test", "options": [
-            {"value": "test", "label": L("Automático (Recomendado)", "Auto")}, 
-            {"value": "draw", "label": L("Modo Dibujo / Logo", "Drawing / Logo")}, 
-            {"value": "photo", "label": L("Modo Fotografía (Complejo)", "Photo")}
-        ]},
-        {"name": "colors", "type": "number", "label": L("Límite de Colores (2 - 256) *Opcional", "Color Limit (2 - 256) *Optional")}
+        {"name": "input_image", "type": "image", "label": L("Imagen a Vectorizar", "Image to Vectorize"), "required": True}
     ]}
 ]
 
@@ -187,28 +181,23 @@ def run_model(slug):
         for key, value in request.form.items():
             if value: data[key] = value
 
-        # 🔴 LÓGICA VECTORIZER.AI CON PARÁMETROS AVANZADOS
+        # 🔴 LÓGICA VECTORIZER: SOLO LA IMAGEN
         if slug == "vectorize":
             api_id = "vkvh4gblnirc4hn"
             api_secret = "65596jb1noid56iogfuq4aigtt0ccda7ku0clj0ti46d65skt8tj"
             img_tuple = files.get("input_image") or files.get("image")
             if not img_tuple: return jsonify({"error": True, "message": "Falta la imagen"}), 400
             
-            vec_data = {}
-            if "mode" in data and data["mode"] != "test": vec_data["mode"] = data["mode"]
-            if "colors" in data and data["colors"]: vec_data["colors"] = data["colors"]
-            
             resp = requests.post(
                 'https://vectorizer.ai/api/v1/vectorize',
                 files={'image': img_tuple},
-                data=vec_data,
                 auth=(api_id, api_secret),
                 timeout=120
             )
             if resp.status_code == 200:
                 return Response(resp.content, mimetype="image/svg+xml")
             else:
-                return jsonify({"error": True, "message": f"Error Vectorizer ({resp.status_code})"}), 400
+                return jsonify({"error": True, "message": f"Error Vectorizer ({resp.status_code}): {resp.text}"}), 400
 
 
         if slug in ["textile-styles", "recolor-ai"]: 
