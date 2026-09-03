@@ -112,7 +112,6 @@
   #viewerWrapper { transform-origin: center center; transition: transform 0.1s ease-out; position: relative; display: inline-block;}
   #mainResultImg { display: block; max-width: 90vw; max-height: 70vh; object-fit: contain; border-radius: 8px;}
   
-  /* NUEVO: ESTILOS PARA EL EDITOR SVG */
   #svgEditorPanel { margin-top: 15px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: none; animation: rise 0.4s ease; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
   .svg-palette-container { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; justify-content: center; }
   .color-swatch-wrap { position: relative; width: 45px; height: 45px; border-radius: 50%; overflow: hidden; border: 2px solid #555; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
@@ -121,7 +120,7 @@
   .swatch-btn { width: 100%; height: 100%; border: none; padding: 0; cursor: pointer; }
   .svg-color-picker { opacity: 0; position: absolute; inset: 0; width: 100%; height: 100%; cursor: pointer; }
 
-  .merge-tools { margin-top: 20px; text-align: center; }
+  .merge-tools { margin-top: 20px; text-align: center; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
   .btn-svg-tool { background: #222; color: #fff; border: 1px solid #444; padding: 10px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: 0.2s; text-transform: uppercase; }
   .btn-svg-tool:hover { background: #333; }
   .btn-svg-tool.active { background: var(--ok); color: #000; border-color: #000; box-shadow: 0 0 15px rgba(0,255,204,0.4); }
@@ -309,10 +308,20 @@
               </span>
 
               <div id="viewerWrapper">
-                  <div id="imgContainer" style="position:relative; display:inline-block; line-height:0; display:flex; justify-content:center; align-items:center;">
-                      <img id="mainResultImg" src="" alt="Resultado">
-                      <!-- CONTENEDOR PARA EL EDITOR SVG -->
-                      <div id="inlineSvgContainer" style="display:none; align-items:center; justify-content:center; width:100%; height:100%;"></div>
+                  <!-- EL CONTENEDOR ES AHORA INLINE-BLOCK PARA ABRAZAR LA IMAGEN -->
+                  <div id="imgContainer" style="position:relative; display:inline-block; line-height:0;">
+                      <img id="mainResultImg" src="" alt="Resultado" style="display:block; max-width: 90vw; max-height: 70vh; object-fit: contain; border-radius: 8px;">
+                      
+                      <!-- CONTENEDOR PARA EL EDITOR SVG / SPLIT VIEW -->
+                      <div id="inlineSvgContainer" style="display:none; align-items:center; justify-content:center;"></div>
+                      
+                      <!-- LINEA DESLIZADORA PARA ANTES/DESPUÉS -->
+                      <div id="sliderHandle" style="display:none; position:absolute; top:0; bottom:0; left:50%; width:2px; background:var(--ok); cursor:ew-resize; z-index:50; box-shadow: 0 0 10px #000;">
+                         <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:36px; height:36px; border-radius:50%; background:var(--ok); color:#000; display:flex; justify-content:center; align-items:center; box-shadow:0 0 10px rgba(0,0,0,0.5);">
+                             <i class="fa-solid fa-arrows-left-right"></i>
+                         </div>
+                      </div>
+
                       <video id="mainResultVideo" controls loop style="display: none; max-width: 90vw; max-height: 70vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.8);"></video>
                       <div id="boxesContainer" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
                   </div>
@@ -321,7 +330,6 @@
               <textarea id="jsonViewer" readonly></textarea>
           </div>
           
-          <!-- 🔴 NUEVO PANEL: EDITOR DE VECTORES SVG -->
           <div id="svgEditorPanel">
               <h4 style="margin: 0 0 10px; font-size: 1rem; color: var(--ok); text-transform: uppercase; font-weight: 800; text-align: center; letter-spacing: 1px;">
                   <i class="fa-solid fa-palette mr-2"></i> Paleta del Vector
@@ -334,9 +342,12 @@
               
               <div class="merge-tools">
                   <button id="btnMergeColors" class="btn-svg-tool" onclick="toggleMergeMode()">
-                      <i class="fa-solid fa-object-group mr-1"></i> Combinar / Unir Colores
+                      <i class="fa-solid fa-object-group mr-1"></i> Combinar Colores
                   </button>
-                  <div id="mergeStatus" style="font-size: 0.8rem; color: #ffeb3b; margin-top: 10px; font-weight: bold;"></div>
+                  <button id="btnSplitMode" class="btn-svg-tool" onclick="toggleSplitMode()">
+                      <i class="fa-solid fa-arrows-left-right mr-1"></i> Ver Antes/Después
+                  </button>
+                  <div id="mergeStatus" style="font-size: 0.8rem; color: #ffeb3b; margin-top: 10px; font-weight: bold; width:100%;"></div>
               </div>
 
               <div class="preset-palette-tools">
@@ -492,10 +503,17 @@ function reiniciarHerramienta(keepTool = false) {
     document.getElementById('btnZoomLabel').style.display = 'block';
     jsonViewer.style.display = "none";
     
-    // Ocultar editor SVG
+    // Apagar Split y SVG Editor
     document.getElementById("svgEditorPanel").style.display = "none";
     let inlineCont = document.getElementById("inlineSvgContainer");
-    if(inlineCont) inlineCont.style.display = "none";
+    if(inlineCont) {
+        inlineCont.style.display = "none";
+        inlineCont.style.position = "relative";
+        inlineCont.style.clipPath = "none";
+    }
+    document.getElementById('sliderHandle').style.display = "none";
+    isSplitMode = false;
+    document.getElementById('btnSplitMode').classList.remove('active');
     
     document.querySelectorAll('.dropzone').forEach(dz => {
         dz.classList.remove("has-file");
@@ -598,7 +616,7 @@ function renderForm(model) {
               tray.style.display = "block"; btnDownloadResult.style.display = "none"; btnRestart.style.display = "block"; quickActionsBar.style.display = "none";
               magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; document.getElementById('btnAntes').style.display = 'none';
               resetearZoom();
-              document.getElementById('imgContainer').style.display = 'flex';
+              document.getElementById('imgContainer').style.display = 'inline-block';
               document.getElementById('btnCentrar').style.display = 'block';
               document.getElementById('btnZoomLabel').style.display = 'block';
               jsonViewer.style.display = "none";
@@ -705,6 +723,80 @@ function renderQuickActions(slug) {
     });
 }
 
+// ------------------------------------------------
+// 🔴 MODO COMPARACIÓN (ANTES Y DESPUÉS)
+// ------------------------------------------------
+let isSplitMode = false;
+let isDraggingSlider = false;
+const sliderHandle = document.getElementById('sliderHandle');
+const imgContainer = document.getElementById('imgContainer');
+
+function toggleSplitMode() {
+    const inlineCont = document.getElementById("inlineSvgContainer");
+    isSplitMode = !isSplitMode;
+    const btn = document.getElementById('btnSplitMode');
+    
+    if(isSplitMode) {
+        btn.classList.add('active');
+        
+        // Poner la imagen original abajo
+        mainResultImg.src = urlOriginalMemoria;
+        mainResultImg.style.display = "block";
+        
+        // Montar el SVG arriba con posición absoluta
+        inlineCont.style.position = "absolute";
+        inlineCont.style.top = "0";
+        inlineCont.style.left = "0";
+        inlineCont.style.width = "100%";
+        inlineCont.style.height = "100%";
+        
+        sliderHandle.style.display = "block";
+        setSliderPosition(50);
+    } else {
+        btn.classList.remove('active');
+        
+        // Regresar a la vista normal de SVG
+        mainResultImg.style.display = "none";
+        inlineCont.style.position = "relative";
+        inlineCont.style.clipPath = "none";
+        
+        sliderHandle.style.display = "none";
+    }
+}
+
+function setSliderPosition(pct) {
+    const inlineCont = document.getElementById("inlineSvgContainer");
+    sliderHandle.style.left = `${pct}%`;
+    // Clip-path oculta la parte izquierda del SVG, dejando ver el Pixel original
+    inlineCont.style.clipPath = `polygon(${pct}% 0, 100% 0, 100% 100%, ${pct}% 100%)`; 
+}
+
+sliderHandle.addEventListener('mousedown', (e) => { isDraggingSlider = true; e.stopPropagation(); });
+sliderHandle.addEventListener('touchstart', (e) => { isDraggingSlider = true; e.stopPropagation(); });
+
+window.addEventListener('mousemove', (e) => {
+    if(!isDraggingSlider) return;
+    const rect = imgContainer.getBoundingClientRect();
+    let x = e.clientX - rect.left;
+    let pct = (x / rect.width) * 100;
+    pct = Math.max(0, Math.min(100, pct));
+    setSliderPosition(pct);
+});
+
+window.addEventListener('touchmove', (e) => {
+    if(!isDraggingSlider) return;
+    const rect = imgContainer.getBoundingClientRect();
+    let touch = e.touches[0];
+    let x = touch.clientX - rect.left;
+    let pct = (x / rect.width) * 100;
+    pct = Math.max(0, Math.min(100, pct));
+    setSliderPosition(pct);
+});
+
+window.addEventListener('mouseup', () => { isDraggingSlider = false; });
+window.addEventListener('touchend', () => { isDraggingSlider = false; });
+
+
 // 🔴 FUNCIONES MÁGICAS DEL EDITOR SVG (NATIVO HTML5)
 let svgElementsMap = {};
 let isMergeMode = false;
@@ -761,7 +853,6 @@ function renderSvgPalette() {
             const newColor = e.target.value.toUpperCase();
             svgElementsMap[color].forEach(el => el.setAttribute('fill', newColor));
             
-            // Reasignar la llave en el diccionario
             if(color !== newColor) {
                 if(!svgElementsMap[newColor]) svgElementsMap[newColor] = [];
                 svgElementsMap[newColor].push(...svgElementsMap[color]);
@@ -775,7 +866,6 @@ function renderSvgPalette() {
         btn.className = 'swatch-btn';
         btn.style.backgroundColor = color;
         
-        // Bloquear click en el input si estamos en modo combinar
         wrap.onclick = (e) => {
             if (isMergeMode) {
                 e.preventDefault();
@@ -799,7 +889,6 @@ function handleMergeClick(color) {
         renderSvgPalette();
     } else {
         if (color !== colorToMerge) {
-            // FUSIONAR: El color origen se vuelve igual al color destino
             svgElementsMap[colorToMerge].forEach(el => {
                 el.setAttribute('fill', color);
                 svgElementsMap[color].push(el);
@@ -919,6 +1008,12 @@ form.addEventListener("submit", async (e) => {
   magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; document.getElementById('btnAntes').style.display = 'none';
   mainResultImg.classList.add("opacity-50", "blur-sm");
   jsonViewer.style.display = "none";
+  
+  // Apagar Split visual antes de procesar de nuevo
+  document.getElementById("svgEditorPanel").style.display = "none";
+  document.getElementById("sliderHandle").style.display = "none";
+  isSplitMode = false;
+  document.getElementById('btnSplitMode')?.classList.remove('active');
 
   const formData = new FormData();
   model.fields.forEach(field => {
@@ -985,7 +1080,7 @@ form.addEventListener("submit", async (e) => {
                             btnDownloadResult.onclick = null;
                             
                             document.getElementById('tray').style.display = 'block';
-                            document.getElementById('imgContainer').style.display = 'flex';
+                            document.getElementById('imgContainer').style.display = 'inline-block';
                             document.getElementById('btnCentrar').style.display = 'block';
                             document.getElementById('btnZoomLabel').style.display = 'block';
                             submitBtn.disabled = false;
@@ -1014,7 +1109,7 @@ form.addEventListener("submit", async (e) => {
                     }
                 });
                 tray.style.display = "block"; renderQuickActions(currentSlug); quickActionsBar.style.display = "block";
-                document.getElementById('imgContainer').style.display = 'flex'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block';
+                document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block';
                 submitBtn.disabled = false;
             } else {
                 statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
@@ -1092,8 +1187,11 @@ async function proceedWithQuickAction(targetSlug, extraParams) {
     jsonViewer.style.display = "none";
     
     document.getElementById("svgEditorPanel").style.display = "none";
+    document.getElementById("sliderHandle").style.display = "none";
+    isSplitMode = false;
+    document.getElementById('btnSplitMode')?.classList.remove('active');
     
-    document.getElementById('imgContainer').style.display = 'flex';
+    document.getElementById('imgContainer').style.display = 'inline-block';
     document.getElementById('btnCentrar').style.display = 'block';
     document.getElementById('btnZoomLabel').style.display = 'block';
     
@@ -1102,7 +1200,6 @@ async function proceedWithQuickAction(targetSlug, extraParams) {
         const formData = new FormData();
         const imgField = targetModel.fields.find(f => f.type === "image").name;
         
-        // 🔴 PARA PRESETS: Usa la imagen subida originalmente, no el SVG
         if (useOriginal && currentImageData) {
             formData.append(imgField, currentImageData);
         } else {
@@ -1153,29 +1250,35 @@ async function processFinalUrl(url, slugToUse = currentSlug, ext = "png") {
     const mainResultVideo = document.getElementById("mainResultVideo");
     if(mainResultVideo) { mainResultVideo.style.display = "none"; mainResultVideo.src = ""; }
     
-    // 🔴 LÓGICA ESPECIAL PARA DIBUJAR SVG EN PANTALLA
+    // 🔴 LÓGICA ESPECIAL PARA DIBUJAR SVG Y COMPARADOR EN PANTALLA
+    let inlineCont = document.getElementById("inlineSvgContainer");
+    inlineCont.style.position = "relative";
+    inlineCont.style.clipPath = "none";
+    
     if (ext === "svg") {
         document.getElementById("mainResultImg").style.display = "none";
         try {
             const svgResponse = await fetch(displayUrl);
             const svgText = await svgResponse.text();
             
-            let inlineCont = document.getElementById("inlineSvgContainer");
             inlineCont.innerHTML = svgText;
             inlineCont.style.display = "flex";
             
             const svgEl = inlineCont.querySelector('svg');
             if(svgEl) {
+                // Quitar width fijos para que actúe como una imagen escalable
+                svgEl.removeAttribute('width');
+                svgEl.removeAttribute('height');
                 svgEl.style.maxWidth = "90vw";
                 svgEl.style.maxHeight = "70vh";
-                svgEl.style.width = "auto";
-                svgEl.style.height = "auto";
+                svgEl.style.width = "100%";
+                svgEl.style.height = "100%";
+                svgEl.style.objectFit = "contain";
             }
             
             analyzeSvgColors();
         } catch (e) { console.error("Error embedding SVG", e); }
     } else {
-        let inlineCont = document.getElementById("inlineSvgContainer");
         if(inlineCont) inlineCont.style.display = "none";
         document.getElementById("svgEditorPanel").style.display = "none";
         
@@ -1190,7 +1293,7 @@ async function processFinalUrl(url, slugToUse = currentSlug, ext = "png") {
     btnDownloadResult.style.display = "block";
     
     if (ext === "svg") {
-        document.getElementById("downloadBtnText").innerText = "Descargar Vector Original (SVG)";
+        document.getElementById("downloadBtnText").innerText = "Descargar Vector (SVG)";
         quickActionsBar.style.display = "none";
     } else {
         document.getElementById("downloadBtnText").innerText = t("download_btn");
@@ -1200,9 +1303,12 @@ async function processFinalUrl(url, slugToUse = currentSlug, ext = "png") {
     btnDownloadResult.onclick = null;
     
     document.getElementById('tray').style.display = 'block';
+    
+    // Si no es un SVG, habilitar el botón "Mantén Ver Antes"
+    if (ext !== "svg") document.getElementById('btnAntes').style.display = 'block';
+    else document.getElementById('btnAntes').style.display = 'none';
 
-    document.getElementById('btnAntes').style.display = 'block';
-    document.getElementById('imgContainer').style.display = 'flex';
+    document.getElementById('imgContainer').style.display = 'inline-block';
     document.getElementById('btnCentrar').style.display = 'block';
     document.getElementById('btnZoomLabel').style.display = 'block';
     jsonViewer.style.display = "none";
