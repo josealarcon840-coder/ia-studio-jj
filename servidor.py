@@ -30,9 +30,9 @@ MODELS = [
 
     {"slug": "remove-background", "label": L("Quitar Fondo (Fotos)", "Remove Background"), "icon": "fa-user-slash", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Recorte de personas o productos.", "Cutout for people/products."), "endpoint": "/v1/images/remove-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "remove-background-graphic", "label": L("Quitar Fondo (Arte)", "Remove BG (Graphics)"), "icon": "fa-shapes", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Ideal para anime, stickers y logos.", "Ideal for anime, stickers and logos."), "endpoint": "/v1/images/remove-background-graphic", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
-    {"slug": "remove-objects", "label": L("Borrar Objetos (Máscara)", "Remove Objects (Mask)"), "icon": "fa-eraser", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Sube tu máscara en blanco y negro.", "Upload a B/W mask to erase."), "endpoint": "/v1/images/remove-objects", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "input_mask", "type": "mask", "label": L("Máscara (B/N)", "Mask (B/W)"), "required": True}, {"name": "erase_mode", "type": "select", "label": L("Calidad", "Quality"), "options": [{"value": "ultra", "label": L("Ultra HD", "Ultra HD")}, {"value": "normal", "label": L("Normal", "Normal")}]}]},
-    {"slug": "erase-text", "label": L("Borrar Texto (Máscara)", "Erase Text (Mask)"), "icon": "fa-text-slash", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Borra textos usando tu máscara.", "Erase texts using your mask."), "endpoint": "/v1/images/remove-text", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "input_mask", "type": "mask", "label": L("Máscara", "Mask"), "required": True}, {"name": "erase_mode", "type": "select", "label": L("Calidad", "Quality"), "options": [{"value": "ultra", "label": L("Ultra HD", "Ultra HD")}, {"value": "normal", "label": L("Normal", "Normal")}]}]},
-    {"slug": "erase-wires", "label": L("Borrar Cables (Máscara)", "Erase Wires (Mask)"), "icon": "fa-bolt-slash", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Borra cables usando tu máscara.", "Erase wires using mask."), "endpoint": "/v1/images/remove-wires", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "input_mask", "type": "mask", "label": L("Máscara", "Mask"), "required": True}]},
+    {"slug": "remove-objects", "label": L("Borrar Objetos (Máscara)", "Remove Objects (Mask)"), "icon": "fa-eraser", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Usa el pincel para borrar lo que quieras.", "Use the brush to erase anything."), "endpoint": "/v1/images/remove-objects", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "input_mask", "type": "mask", "label": L("Máscara (B/N)", "Mask (B/W)"), "required": True}, {"name": "erase_mode", "type": "select", "label": L("Calidad", "Quality"), "options": [{"value": "ultra", "label": L("Ultra HD", "Ultra HD")}, {"value": "normal", "label": L("Normal", "Normal")}]}]},
+    {"slug": "erase-text", "label": L("Borrar Texto (Máscara)", "Erase Text (Mask)"), "icon": "fa-text-slash", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Pinta sobre el texto para borrarlo.", "Paint over text to erase it."), "endpoint": "/v1/images/remove-text", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "input_mask", "type": "mask", "label": L("Máscara", "Mask"), "required": True}, {"name": "erase_mode", "type": "select", "label": L("Calidad", "Quality"), "options": [{"value": "ultra", "label": L("Ultra HD", "Ultra HD")}, {"value": "normal", "label": L("Normal", "Normal")}]}]},
+    {"slug": "erase-wires", "label": L("Borrar Cables (Máscara)", "Erase Wires (Mask)"), "icon": "fa-bolt-slash", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Pinta sobre cables para borrarlos.", "Paint over wires to erase."), "endpoint": "/v1/images/remove-wires", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "input_mask", "type": "mask", "label": L("Máscara", "Mask"), "required": True}]},
     {"slug": "remove-reflection", "label": L("Quitar Reflejos", "Remove Reflections"), "icon": "fa-camera", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Suaviza reflejos en vidrios.", "Softens reflections on glass."), "endpoint": "/v1/images/remove-reflection", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "clean-mirror", "label": L("Limpiar Espejo", "Clean Mirror"), "icon": "fa-broom", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Quita destellos de espejos.", "Removes flash glare from mirrors."), "endpoint": "/v1/images/clean-mirror", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
@@ -45,14 +45,30 @@ MODELS = [
     {"slug": "colorize-pro", "label": L("Colorear B/N (Pro)", "Colorize B/W (Pro)"), "icon": "fa-paint-roller", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Colorización avanzada.", "Advanced colorization."), "endpoint": "/v1/images/colorize/pro", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "light-restore", "label": L("Corregir Iluminación", "Fix Lighting"), "icon": "fa-sun", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Arregla fotos oscuras.", "Fixes dark photos."), "endpoint": "/v1/images/light-restore", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    # 🔴 AÑADIDOS LOS SELECTORES DE PROPORCIÓN PARA EVITAR ERROR 500 Y DAR MÁS OPCIONES
+    # 🔴 AÑADIDOS LOS SELECTORES CON MEDIDAS EXACTAS
     {"slug": "generate-zimage", "label": L("Crear: Z-Image (Texto)", "Create: Z-Image (Text)"), "icon": "fa-rocket", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Crea imagen rápida.", "Create image fast."), "endpoint": "/v1/images/generates/zimage", "response_type": "image", "needs_image": False, "fields": [
         {"name": "prompt", "type": "textarea", "label": L("Descripción de la imagen", "Prompt"), "required": True},
-        {"name": "aspect_ratio", "type": "select", "label": L("Proporción de la Imagen", "Aspect Ratio"), "options": [{"value": "1:1", "label": "1:1 (Cuadrado)"}, {"value": "9:16", "label": "9:16 (Vertical/Story)"}, {"value": "16:9", "label": "16:9 (Horizontal)"}, {"value": "3:4", "label": "3:4 (Retrato)"}, {"value": "4:3", "label": "4:3 (Paisaje)"}]}
+        {"name": "aspect_ratio", "type": "select", "label": L("Proporción (Tamaño en píxeles)", "Aspect Ratio"), "options": [
+            {"value": "1:1", "label": "1:1 (Cuadrado - 1024x1024)"}, 
+            {"value": "9:16", "label": "9:16 (Vertical/Story - 576x1024)"}, 
+            {"value": "16:9", "label": "16:9 (Horizontal - 1024x576)"}, 
+            {"value": "3:4", "label": "3:4 (Retrato - 768x1024)"}, 
+            {"value": "4:3", "label": "4:3 (Paisaje - 1024x768)"},
+            {"value": "2:3", "label": "2:3 (Póster - 683x1024)"},
+            {"value": "3:2", "label": "3:2 (Foto - 1024x683)"}
+        ]}
     ]},
     {"slug": "generate-qwen", "label": L("Crear: Qwen (Texto)", "Create: Qwen (Text)"), "icon": "fa-brain", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Motor HD realista.", "HD realistic engine."), "endpoint": "/v1/images/generates/qwen", "response_type": "image", "needs_image": False, "fields": [
         {"name": "prompt", "type": "textarea", "label": L("Descripción de la imagen", "Prompt"), "required": True},
-        {"name": "aspect_ratio", "type": "select", "label": L("Proporción de la Imagen", "Aspect Ratio"), "options": [{"value": "1:1", "label": "1:1 (Cuadrado)"}, {"value": "9:16", "label": "9:16 (Vertical/Story)"}, {"value": "16:9", "label": "16:9 (Horizontal)"}, {"value": "3:4", "label": "3:4 (Retrato)"}, {"value": "4:3", "label": "4:3 (Paisaje)"}]}
+        {"name": "aspect_ratio", "type": "select", "label": L("Proporción (Tamaño en píxeles)", "Aspect Ratio"), "options": [
+            {"value": "1:1", "label": "1:1 (Cuadrado - 1024x1024)"}, 
+            {"value": "9:16", "label": "9:16 (Vertical/Story - 576x1024)"}, 
+            {"value": "16:9", "label": "16:9 (Horizontal - 1024x576)"}, 
+            {"value": "3:4", "label": "3:4 (Retrato - 768x1024)"}, 
+            {"value": "4:3", "label": "4:3 (Paisaje - 1024x768)"},
+            {"value": "2:3", "label": "2:3 (Póster - 683x1024)"},
+            {"value": "3:2", "label": "3:2 (Foto - 1024x683)"}
+        ]}
     ]},
     
     {"slug": "fairy-art", "label": L("Retrato a Arte", "Portrait to Art"), "icon": "fa-wand-magic-sparkles", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Convierte fotos a Anime/3D.", "Convert photos to Anime/3D."), "endpoint": "/v1/images/generates/art", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "style", "type": "select", "label": L("Estilo", "Style"), "required": True, "options_url": "https://storage.googleapis.com/assets.snapedit.app/fairyai/anime_styles_6mar25.json"}]},
@@ -64,6 +80,14 @@ MODELS = [
         {"name": "target", "type": "text", "label": L("¿Qué elemento? (Ej: las letras 'Super', la moto)", "Which element?"), "required": True},
         {"name": "color_from", "type": "text", "label": L("Color actual (Ej: naranja)", "Current color"), "required": True},
         {"name": "color_to", "type": "text", "label": L("Nuevo color (Ej: verde neón)", "New color"), "required": True}
+    ]},
+
+    # 🔴 NUEVO: HERRAMIENTA DE FUSIÓN DE HASTA 3 IMÁGENES
+    {"slug": "edit-multi", "label": L("Fusión IA (Múltiple)", "AI Fusion (Multi)"), "icon": "fa-object-group", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Edita hasta 3 imágenes juntas (Ej: Pon a la persona de la Imagen 2 en la 1).", "Edit using up to 3 images."), "endpoint": "/v1/images/edits/multi", "response_type": "image", "fields": [
+        {"name": "input_image_0", "type": "image", "label": L("Imagen Base 1", "Base Image 1"), "required": True},
+        {"name": "input_image_1", "type": "image", "label": L("Imagen Extra 2 (Opcional)", "Extra Image 2 (Optional)"), "required": False},
+        {"name": "input_image_2", "type": "image", "label": L("Imagen Extra 3 (Opcional)", "Extra Image 3 (Optional)"), "required": False},
+        {"name": "prompt", "type": "textarea", "label": L("Instrucción (Ej: Reemplaza a la chica por la de la imagen 2)", "Prompt"), "required": True}
     ]},
 
     {"slug": "studio-vignette", "label": L("🌟 Resplandor Mágico", "🌟 Magic Glow"), "icon": "fa-star", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Añade resplandor HD a diseños sin fondo.", "Adds a glow to a transparent design."), "endpoint": "/local/canvas", "response_type": "image", "fields": [
@@ -85,7 +109,7 @@ MODELS = [
 
     {"slug": "retouch-skin", "label": L("Retoque Facial", "Skin Retouch"), "icon": "fa-face-smile", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Limpia la piel automáticamente.", "Cleans skin automatically."), "endpoint": "/v1/images/retouch-skin", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     
-    {"slug": "vectorize", "label": L("📐 Convertir a Vector (SVG)", "📐 Vectorize (SVG)"), "icon": "fa-bezier-curve", "category": L("6. Vectores y Formatos", "6. Vectors & Formats"), "desc": L("Convierte imágenes pixeladas a vectores infinitos.", "Convert pixelated image to infinite scalable SVG."), "endpoint": "vectorizer", "response_type": "image", "fields": [
+    {"slug": "vectorize", "label": L("📐 Convertir a Vector (SVG)", "📐 Vectorize (SVG)"), "icon": "fa-bezier-curve", "category": L("6. Vectores y Formatos", "6. Vectors & Formats"), "desc": L("Convierte imágenes a vectores infinitos.", "Convert pixelated image to infinite scalable SVG."), "endpoint": "vectorizer", "response_type": "image", "fields": [
         {"name": "input_image", "type": "image", "label": L("Imagen a Vectorizar", "Image to Vectorize"), "required": True}
     ]}
 ]
@@ -179,11 +203,13 @@ def run_model(slug):
 
     try:
         files, data = {}, {}
+        
+        # 🔴 SOPORTE MEJORADO PARA MÚLTIPLES ARCHIVOS
         for key, file_obj in request.files.items():
             if file_obj and file_obj.filename:
                 buf, fname, mime = resize_if_needed(file_obj.read(), slug, file_obj.filename)
                 ext = "png" if "png" in mime else "jpg"
-                files[key] = (f"imagen.{ext}", buf, mime)
+                files[key] = (f"{key}.{ext}", buf, mime)
 
         for key, value in request.form.items():
             if value: data[key] = value
@@ -205,7 +231,7 @@ def run_model(slug):
             else:
                 return jsonify({"error": True, "message": f"Error Vectorizer ({resp.status_code}): {resp.text}"}), 400
 
-        if slug in ["textile-styles", "recolor-ai"]: 
+        if slug in ["textile-styles", "recolor-ai", "edit-multi"]: 
             data["mode"] = "editing"
             
         if slug == "recolor-ai" and "prompt" in data:
@@ -237,19 +263,20 @@ def run_model(slug):
                 files = None
                 data.pop("input_image", None)
 
-            # 🔴 SOLUCIÓN DEFINITIVA A ERROR 500: ENVIAMOS COMO JSON EXACTO SEGÚN LA DOCUMENTACIÓN
+            # 🔴 SOLUCIÓN DEFINITIVA PARA EL ERROR 500 DE GENERATE-QWEN
             if model.get("needs_image") is False:
                 payload = {
                     "prompt": data.get("prompt", ""),
                     "aspect_ratio": data.get("aspect_ratio", "1:1")
                 }
                 
-                # La documentación oficial indica enviar los datos directos (formato JSON)
+                # Intento 1: Tratar de enviarlo de forma natural (JSON)
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, json=payload, timeout=120)
                 
-                # Salvavidas: si su servidor colapsa de todos modos, intentamos con datos de formulario
-                if response.status_code == 500:
-                    response = requests.post(BASE + model["endpoint"], headers=HEADERS, data=payload, timeout=120)
+                # Intento 2: Si el servidor está rebelde y da Error 500, lo forzamos a multipart/form-data
+                if response.status_code >= 500:
+                    multipart_data = {k: (None, str(v)) for k, v in payload.items()}
+                    response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=multipart_data, timeout=120)
             
             else:
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
