@@ -27,6 +27,9 @@ MODELS = [
     {"slug": "detect-objects", "label": L("Borrador Mágico (Auto)", "Magic Eraser (Auto)"), "icon": "fa-magic", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Encuentra objetos para borrarlos con un clic.", "Finds objects to erase them with a click."), "endpoint": "/v1/images/detect-objects", "response_type": "json", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen Base", "Base Image"), "required": True}, {"name": "lang", "type": "select", "label": L("Idioma", "Language"), "options": [{"value": "es", "label": L("Español", "Spanish")}]}, {"name": "erase_mode", "type": "select", "label": L("Calidad", "Quality"), "options": [{"value": "ultra", "label": L("Ultra HD", "Ultra HD")}, {"value": "super", "label": L("Super", "Super")}, {"value": "normal", "label": L("Normal", "Normal")}]}]},
     {"slug": "detect-text", "label": L("Borrar Texto (Auto)", "Erase Text (Auto)"), "icon": "fa-font", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Detecta y borra los textos automáticamente.", "Detects and erases text automatically."), "endpoint": "/v1/images/detect-text", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "detect-wires", "label": L("Borrar Cables (Auto)", "Erase Wires (Auto)"), "icon": "fa-plug", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Detecta y borra cables/postes.", "Detects and erases wires."), "endpoint": "/v1/images/detect-wires", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
+    
+    # 🔴 NUEVO: HERRAMIENTA AUTOMÁTICA DE MARCAS DE AGUA
+    {"slug": "remove-logo", "label": L("Quitar Marcas de Agua (Auto)", "Remove Watermarks"), "icon": "fa-copyright", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Detecta y elimina logos y marcas de protección en un clic.", "Auto remove logos and watermarks."), "endpoint": "/v1/images/remove-logo", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
     {"slug": "remove-background", "label": L("Quitar Fondo (Fotos)", "Remove Background"), "icon": "fa-user-slash", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Recorte de personas o productos.", "Cutout for people/products."), "endpoint": "/v1/images/remove-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "remove-background-graphic", "label": L("Quitar Fondo (Arte)", "Remove BG (Graphics)"), "icon": "fa-shapes", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Ideal para anime, stickers y logos.", "Ideal for anime, stickers and logos."), "endpoint": "/v1/images/remove-background-graphic", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
@@ -45,7 +48,6 @@ MODELS = [
     {"slug": "colorize-pro", "label": L("Colorear B/N (Pro)", "Colorize B/W (Pro)"), "icon": "fa-paint-roller", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Colorización avanzada.", "Advanced colorization."), "endpoint": "/v1/images/colorize/pro", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "light-restore", "label": L("Corregir Iluminación", "Fix Lighting"), "icon": "fa-sun", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Arregla fotos oscuras.", "Fixes dark photos."), "endpoint": "/v1/images/light-restore", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    # 🔴 AÑADIDOS LOS SELECTORES CON MEDIDAS EXACTAS
     {"slug": "generate-zimage", "label": L("Crear: Z-Image (Texto)", "Create: Z-Image (Text)"), "icon": "fa-rocket", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Crea imagen rápida.", "Create image fast."), "endpoint": "/v1/images/generates/zimage", "response_type": "image", "needs_image": False, "fields": [
         {"name": "prompt", "type": "textarea", "label": L("Descripción de la imagen", "Prompt"), "required": True},
         {"name": "aspect_ratio", "type": "select", "label": L("Proporción (Tamaño en píxeles)", "Aspect Ratio"), "options": [
@@ -82,7 +84,6 @@ MODELS = [
         {"name": "color_to", "type": "text", "label": L("Nuevo color (Ej: verde neón)", "New color"), "required": True}
     ]},
 
-    # 🔴 NUEVO: HERRAMIENTA DE FUSIÓN DE HASTA 3 IMÁGENES
     {"slug": "edit-multi", "label": L("Fusión IA (Múltiple)", "AI Fusion (Multi)"), "icon": "fa-object-group", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Edita hasta 3 imágenes juntas (Ej: Pon a la persona de la Imagen 2 en la 1).", "Edit using up to 3 images."), "endpoint": "/v1/images/edits/multi", "response_type": "image", "fields": [
         {"name": "input_image_0", "type": "image", "label": L("Imagen Base 1", "Base Image 1"), "required": True},
         {"name": "input_image_1", "type": "image", "label": L("Imagen Extra 2 (Opcional)", "Extra Image 2 (Optional)"), "required": False},
@@ -121,20 +122,37 @@ def resize_if_needed(file_bytes, slug, original_filename="image.jpg"):
         max_dim = 1500 if "enhance" in slug else (512 if "pose" in slug else 3000)
         img = Image.open(io.BytesIO(file_bytes))
         img_format = (img.format or "JPEG").upper()
+        
+        # 🔴 SALVAVIDAS: GUARDAR EL PERFIL DE COLOR ORIGINAL
+        icc_profile = img.info.get('icc_profile')
+        
         width, height = img.size
         needs_resize = (max(width, height) > max_dim)
         needs_convert = (img_format == "JPEG" and img.mode in ("RGBA", "P"))
-        if not needs_resize and not needs_convert: return file_bytes, original_filename, f"image/{img_format.lower()}"
+        
+        if not needs_resize and not needs_convert: 
+            return file_bytes, original_filename, f"image/{img_format.lower()}"
+            
         if needs_resize:
             scale = max_dim / max(width, height)
             img = img.resize((int(width * scale), int(height * scale)), Image.LANCZOS)
-        if needs_convert: img = img.convert("RGB")
+            
+        if needs_convert: 
+            img = img.convert("RGB")
+            
         buffer = io.BytesIO()
-        if img_format == "JPEG": img.save(buffer, format=img_format, quality=100, subsampling=0)
-        else: img.save(buffer, format=img_format)
+        
+        # 🔴 INYECTAR EL PERFIL DE COLOR AL GUARDAR PARA EVITAR CAMBIOS DE TONO
+        if img_format == "JPEG": 
+            img.save(buffer, format=img_format, quality=100, subsampling=0, icc_profile=icc_profile)
+        else: 
+            img.save(buffer, format=img_format, icc_profile=icc_profile)
+            
         return buffer.getvalue(), original_filename, f"image/{img_format.lower()}"
-    except Exception: return file_bytes, original_filename, "image/jpeg"
-    finally: gc.collect()
+    except Exception: 
+        return file_bytes, original_filename, "image/jpeg"
+    finally: 
+        gc.collect()
 
 @app.route("/")
 def index(): return render_template("index.html")
@@ -204,7 +222,6 @@ def run_model(slug):
     try:
         files, data = {}, {}
         
-        # 🔴 SOPORTE MEJORADO PARA MÚLTIPLES ARCHIVOS
         for key, file_obj in request.files.items():
             if file_obj and file_obj.filename:
                 buf, fname, mime = resize_if_needed(file_obj.read(), slug, file_obj.filename)
@@ -263,17 +280,13 @@ def run_model(slug):
                 files = None
                 data.pop("input_image", None)
 
-            # 🔴 SOLUCIÓN DEFINITIVA PARA EL ERROR 500 DE GENERATE-QWEN
             if model.get("needs_image") is False:
                 payload = {
                     "prompt": data.get("prompt", ""),
                     "aspect_ratio": data.get("aspect_ratio", "1:1")
                 }
                 
-                # Intento 1: Tratar de enviarlo de forma natural (JSON)
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, json=payload, timeout=120)
-                
-                # Intento 2: Si el servidor está rebelde y da Error 500, lo forzamos a multipart/form-data
                 if response.status_code >= 500:
                     multipart_data = {k: (None, str(v)) for k, v in payload.items()}
                     response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=multipart_data, timeout=120)
