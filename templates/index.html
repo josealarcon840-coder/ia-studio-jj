@@ -311,7 +311,7 @@
                   <div id="imgContainer" style="position:relative; display:inline-block; line-height:0;">
                       <img id="mainResultImg" src="" alt="Resultado" style="display:block; max-width: 90vw; max-height: 70vh; object-fit: contain; border-radius: 8px;">
                       
-                      <!-- 🔴 NUEVO: PINCEL MÁGICO PARA LA MÁSCARA -->
+                      <!-- 🔴 PINCEL MÁGICO PARA LA MÁSCARA -->
                       <canvas id="maskCanvas" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; z-index:10; opacity:0.6; cursor:crosshair; touch-action:none; border-radius: 8px;"></canvas>
 
                       <div id="inlineSvgContainer" style="display:none; align-items:center; justify-content:center;"></div>
@@ -388,8 +388,15 @@ const UI = {
 };
 
 let currentLang = localStorage.getItem("jj_lang") || "es";
+
+// 🔴 AQUÍ ESTÁ LA CORRECCIÓN DE LA TRADUCCIÓN PARA LAS PROPORCIONES
 function t(key, ...args) { const val = UI[currentLang][key]; return typeof val === "function" ? val(...args) : val; }
-function tl(obj) { if (!obj) return ""; return obj[currentLang] || obj.es || ""; }
+function tl(obj) { 
+    if (!obj) return ""; 
+    if (typeof obj === "string") return obj; // Solución para que lea textos normales como "1:1"
+    return obj[currentLang] || obj.es || ""; 
+}
+
 function applyStaticText() {
   document.querySelectorAll("[data-i18n]").forEach(el => { el.innerHTML = t(el.getAttribute("data-i18n")); });
   document.documentElement.lang = currentLang;
@@ -445,7 +452,7 @@ document.getElementById("logoutBtn").addEventListener("click", () => {
 let MODELS = []; let currentSlug = null; let currentImageData = null;
 let urlOriginalMemoria = ""; let urlResultMemoria = "";
 
-// 🔴 VARIABLES DEL PINCEL MÁGICO (MÁSCARA)
+// VARIABLES DEL PINCEL MÁGICO (MÁSCARA)
 let isMaskTool = false;
 let maskFieldName = "";
 let ctxMask = null;
@@ -491,7 +498,6 @@ function reiniciarHerramienta(keepTool = false) {
     tray.style.display = "none"; 
     mainResultImg.src = ""; 
     
-    // Resetear lienzo de máscara
     isMaskTool = false;
     maskFieldName = "";
     maskCanvas.style.display = "none";
@@ -549,7 +555,6 @@ function renderForm(model) {
       row.appendChild(input); row.appendChild(label); wrap.appendChild(row); form.appendChild(wrap); return;
     }
 
-    // 🔴 REEMPLAZO DE INPUT MASK POR PINCEL INTELIGENTE
     if (field.type === "mask") {
         isMaskTool = true;
         maskFieldName = field.name;
@@ -574,7 +579,7 @@ function renderForm(model) {
                 }
             });
         }, 100);
-        return; // Detenemos aquí, no creamos input file.
+        return; 
     }
 
     const label = document.createElement("label"); label.htmlFor = "field_" + field.name; label.textContent = tl(field.label).split('|')[0].trim();
@@ -645,11 +650,10 @@ function renderForm(model) {
   submitBtn.innerHTML = `<i class="fa-solid fa-bolt mr-2"></i> ${t("run_btn")}`; form.appendChild(submitBtn);
 }
 
-// 🔴 MOTOR DE DIBUJO DE MÁSCARA (INPAINTING INTERACTIVO)
+// MOTOR DE DIBUJO DE MÁSCARA (INPAINTING INTERACTIVO)
 let isDrawing = false;
 ctxMask = maskCanvas.getContext("2d");
 
-// Sincronizar Canvas con la imagen al cargarla
 mainResultImg.addEventListener("load", () => {
     if (isMaskTool) {
         maskCanvas.width = mainResultImg.naturalWidth;
@@ -688,7 +692,7 @@ function startDrawing(e) {
     ctxMask.lineWidth = (brushSize ? parseInt(brushSize.value) : 30) * scaleX;
     ctxMask.lineCap = "round";
     ctxMask.lineJoin = "round";
-    ctxMask.strokeStyle = "#ff0000"; // Pintura roja
+    ctxMask.strokeStyle = "#ff0000"; 
     
     ctxMask.lineTo(x, y);
     ctxMask.stroke();
@@ -785,9 +789,6 @@ function renderQuickActions(slug) {
     });
 }
 
-// ------------------------------------------------
-// 🔴 MODO COMPARACIÓN (ANTES Y DESPUÉS)
-// ------------------------------------------------
 let isSplitMode = false;
 let isDraggingSlider = false;
 const sliderHandle = document.getElementById('sliderHandle');
@@ -801,11 +802,9 @@ function toggleSplitMode() {
     if(isSplitMode) {
         btn.classList.add('active');
         
-        // Poner la imagen original abajo
         mainResultImg.src = urlOriginalMemoria;
         mainResultImg.style.display = "block";
         
-        // Montar el SVG arriba con posición absoluta
         inlineCont.style.position = "absolute";
         inlineCont.style.top = "0";
         inlineCont.style.left = "0";
@@ -817,7 +816,6 @@ function toggleSplitMode() {
     } else {
         btn.classList.remove('active');
         
-        // Regresar a la vista normal de SVG
         mainResultImg.style.display = "none";
         inlineCont.style.position = "relative";
         inlineCont.style.clipPath = "none";
@@ -858,7 +856,6 @@ window.addEventListener('mouseup', () => { isDraggingSlider = false; });
 window.addEventListener('touchend', () => { isDraggingSlider = false; });
 
 
-// 🔴 FUNCIONES MÁGICAS DEL EDITOR SVG (NATIVO HTML5)
 let svgElementsMap = {};
 let isMergeMode = false;
 let colorToMerge = null;
@@ -996,7 +993,6 @@ function updateSvgDownloadLink() {
     const btn = document.getElementById("btnDownloadResult");
     btn.href = url;
 }
-// ------------------------------------------------
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -1070,7 +1066,6 @@ form.addEventListener("submit", async (e) => {
   mainResultImg.classList.add("opacity-50", "blur-sm");
   jsonViewer.style.display = "none";
   
-  // Apagar Split visual antes de procesar de nuevo
   document.getElementById("svgEditorPanel").style.display = "none";
   document.getElementById("sliderHandle").style.display = "none";
   isSplitMode = false;
@@ -1078,10 +1073,8 @@ form.addEventListener("submit", async (e) => {
 
   const formData = new FormData();
   
-  // 🔴 CONSTRUCCIÓN DE FORMULARIO ASÍNCRONA PARA SOPORTAR MÁSCARAS
   for (const field of model.fields) {
       if (field.type === "mask" && isMaskTool) {
-          // Extraer lo dibujado en la pizarra y convertirlo en un archivo blanco y negro para el servidor
           const tempCanvas = document.createElement("canvas");
           tempCanvas.width = maskCanvas.width;
           tempCanvas.height = maskCanvas.height;
@@ -1333,7 +1326,6 @@ async function processFinalUrl(url, slugToUse = currentSlug, ext = "png") {
     const mainResultVideo = document.getElementById("mainResultVideo");
     if(mainResultVideo) { mainResultVideo.style.display = "none"; mainResultVideo.src = ""; }
     
-    // 🔴 LÓGICA ESPECIAL PARA DIBUJAR SVG Y COMPARADOR EN PANTALLA
     let inlineCont = document.getElementById("inlineSvgContainer");
     inlineCont.style.position = "relative";
     inlineCont.style.clipPath = "none";
@@ -1409,7 +1401,6 @@ contVisor.addEventListener('wheel', (e) => {
     escalaImg = Math.max(0.5, Math.min(escalaImg, 8)); if(escalaImg === 1) { panX = 0; panY = 0; } actualizarTransform();
 });
 contVisor.addEventListener('mousedown', (e) => { 
-    // Si el usuario toca el canvas del pincel, evitamos hacer pan para que pueda dibujar.
     if (e.target.id === 'maskCanvas') return;
     if (e.button !== 0 || (!mainResultImg.src && !document.getElementById("mainResultVideo").src && document.getElementById("inlineSvgContainer").innerHTML === "") || jsonViewer.style.display === "block") return; 
     estaArrastrando = true; startX = e.clientX - panX; startY = e.clientY - panY; 
