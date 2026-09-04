@@ -45,8 +45,16 @@ MODELS = [
     {"slug": "colorize-pro", "label": L("Colorear B/N (Pro)", "Colorize B/W (Pro)"), "icon": "fa-paint-roller", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Colorización avanzada.", "Advanced colorization."), "endpoint": "/v1/images/colorize/pro", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "light-restore", "label": L("Corregir Iluminación", "Fix Lighting"), "icon": "fa-sun", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Arregla fotos oscuras.", "Fixes dark photos."), "endpoint": "/v1/images/light-restore", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    {"slug": "generate-zimage", "label": L("Crear: Z-Image (Texto)", "Create: Z-Image (Text)"), "icon": "fa-rocket", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Crea imagen rápida. (Solo 1:1)", "Create image fast."), "endpoint": "/v1/images/generates/zimage", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción de la imagen", "Prompt"), "required": True}]},
-    {"slug": "generate-qwen", "label": L("Crear: Qwen (Texto)", "Create: Qwen (Text)"), "icon": "fa-brain", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Motor HD realista. (Solo 1:1)", "HD realistic engine."), "endpoint": "/v1/images/generates/qwen", "response_type": "image", "needs_image": False, "fields": [{"name": "prompt", "type": "textarea", "label": L("Descripción de la imagen", "Prompt"), "required": True}]},
+    # 🔴 AÑADIDOS LOS SELECTORES DE PROPORCIÓN PARA EVITAR ERROR 500 Y DAR MÁS OPCIONES
+    {"slug": "generate-zimage", "label": L("Crear: Z-Image (Texto)", "Create: Z-Image (Text)"), "icon": "fa-rocket", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Crea imagen rápida.", "Create image fast."), "endpoint": "/v1/images/generates/zimage", "response_type": "image", "needs_image": False, "fields": [
+        {"name": "prompt", "type": "textarea", "label": L("Descripción de la imagen", "Prompt"), "required": True},
+        {"name": "aspect_ratio", "type": "select", "label": L("Proporción de la Imagen", "Aspect Ratio"), "options": [{"value": "1:1", "label": "1:1 (Cuadrado)"}, {"value": "9:16", "label": "9:16 (Vertical/Story)"}, {"value": "16:9", "label": "16:9 (Horizontal)"}, {"value": "3:4", "label": "3:4 (Retrato)"}, {"value": "4:3", "label": "4:3 (Paisaje)"}]}
+    ]},
+    {"slug": "generate-qwen", "label": L("Crear: Qwen (Texto)", "Create: Qwen (Text)"), "icon": "fa-brain", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Motor HD realista.", "HD realistic engine."), "endpoint": "/v1/images/generates/qwen", "response_type": "image", "needs_image": False, "fields": [
+        {"name": "prompt", "type": "textarea", "label": L("Descripción de la imagen", "Prompt"), "required": True},
+        {"name": "aspect_ratio", "type": "select", "label": L("Proporción de la Imagen", "Aspect Ratio"), "options": [{"value": "1:1", "label": "1:1 (Cuadrado)"}, {"value": "9:16", "label": "9:16 (Vertical/Story)"}, {"value": "16:9", "label": "16:9 (Horizontal)"}, {"value": "3:4", "label": "3:4 (Retrato)"}, {"value": "4:3", "label": "4:3 (Paisaje)"}]}
+    ]},
+    
     {"slug": "fairy-art", "label": L("Retrato a Arte", "Portrait to Art"), "icon": "fa-wand-magic-sparkles", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Convierte fotos a Anime/3D.", "Convert photos to Anime/3D."), "endpoint": "/v1/images/generates/art", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "style", "type": "select", "label": L("Estilo", "Style"), "required": True, "options_url": "https://storage.googleapis.com/assets.snapedit.app/fairyai/anime_styles_6mar25.json"}]},
     {"slug": "generate-background", "label": L("Generar Fondo Nuevo", "Generate Background"), "icon": "fa-image", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Fondo para productos. ¡Sube un PNG SIN FONDO!", "Background for products."), "endpoint": "/v1/images/generates-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen (Transparente)", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Descripción del fondo", "Background prompt"), "required": True}]},
     {"slug": "sticker", "label": L("Crear Sticker", "Create Sticker"), "icon": "fa-note-sticky", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Haz un sticker de tu foto.", "Make a sticker from photo."), "endpoint": "/v1/images/generates/sticker", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Estilo (Ej: Zombie)", "Style (e.g. Zombie)"), "required": True}]},
@@ -77,7 +85,6 @@ MODELS = [
 
     {"slug": "retouch-skin", "label": L("Retoque Facial", "Skin Retouch"), "icon": "fa-face-smile", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Limpia la piel automáticamente.", "Cleans skin automatically."), "endpoint": "/v1/images/retouch-skin", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     
-    # 🔴 VECTORIZER CORREGIDO (Solo envía la imagen para no provocar error 400)
     {"slug": "vectorize", "label": L("📐 Convertir a Vector (SVG)", "📐 Vectorize (SVG)"), "icon": "fa-bezier-curve", "category": L("6. Vectores y Formatos", "6. Vectors & Formats"), "desc": L("Convierte imágenes pixeladas a vectores infinitos.", "Convert pixelated image to infinite scalable SVG."), "endpoint": "vectorizer", "response_type": "image", "fields": [
         {"name": "input_image", "type": "image", "label": L("Imagen a Vectorizar", "Image to Vectorize"), "required": True}
     ]}
@@ -181,7 +188,6 @@ def run_model(slug):
         for key, value in request.form.items():
             if value: data[key] = value
 
-        # 🔴 LÓGICA VECTORIZER: SOLO LA IMAGEN
         if slug == "vectorize":
             api_id = "vkvh4gblnirc4hn"
             api_secret = "65596jb1noid56iogfuq4aigtt0ccda7ku0clj0ti46d65skt8tj"
@@ -198,7 +204,6 @@ def run_model(slug):
                 return Response(resp.content, mimetype="image/svg+xml")
             else:
                 return jsonify({"error": True, "message": f"Error Vectorizer ({resp.status_code}): {resp.text}"}), 400
-
 
         if slug in ["textile-styles", "recolor-ai"]: 
             data["mode"] = "editing"
@@ -226,14 +231,26 @@ def run_model(slug):
                     response = requests.post(BASE + ep_remove, headers=HEADERS, files=f2, data={"erase_mode": "ultra"}, timeout=300)
                 else: return jsonify({"error": True, "message": "No se detectó texto o cables."}), 400
             else: response = r1
+
         else:
             if slug == "execute-magic-erase":
                 files = None
                 data.pop("input_image", None)
 
+            # 🔴 SOLUCIÓN DEFINITIVA A ERROR 500: ENVIAMOS COMO JSON EXACTO SEGÚN LA DOCUMENTACIÓN
             if model.get("needs_image") is False:
-                payload = {"prompt": data.get("prompt", "")}
+                payload = {
+                    "prompt": data.get("prompt", ""),
+                    "aspect_ratio": data.get("aspect_ratio", "1:1")
+                }
+                
+                # La documentación oficial indica enviar los datos directos (formato JSON)
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, json=payload, timeout=120)
+                
+                # Salvavidas: si su servidor colapsa de todos modos, intentamos con datos de formulario
+                if response.status_code == 500:
+                    response = requests.post(BASE + model["endpoint"], headers=HEADERS, data=payload, timeout=120)
+            
             else:
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
         
