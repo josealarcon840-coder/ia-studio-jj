@@ -565,21 +565,35 @@ function renderForm(model) {
         const input = document.createElement("input"); input.type = "range"; input.id = "field_" + field.name; input.name = field.name; input.min = field.min || 1; input.max = field.max || 100; input.value = field.default || 50; input.style = "width: 100%; cursor: pointer; accent-color: var(--red-bright); padding: 0;"; input.addEventListener("input", (e) => { valSpan.textContent = e.target.value; }); wrap.appendChild(input); form.appendChild(wrap); return;
     }
 
-    if (field.type === "visual_select") {
-        const hiddenInp = document.createElement("input"); hiddenInp.type = "hidden"; hiddenInp.id = "field_" + field.name; hiddenInp.name = field.name; if(field.required) hiddenInp.required = true; wrap.appendChild(hiddenInp);
-        const grid = document.createElement("div"); grid.style = "display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; margin-top: 10px; max-height: 350px; overflow-y: auto; padding-right: 5px;"; wrap.appendChild(grid);
-        const renderItems = (items) => {
-            if(items.length > 0) hiddenInp.value = items[0].id || items[0].style_id || items[0].value || items[0];
-            items.forEach((item, idx) => {
-                const id = item.id || item.style_id || item.value || item; const name = item.name || item.label || id; const thumb = item.thumbnail || item.preview_url || item.image || "";
-                const itemDiv = document.createElement("div"); itemDiv.style = `cursor:pointer; border: 2px solid transparent; border-radius: 8px; overflow: hidden; text-align: center; font-size: 0.7rem; color: #ccc; transition: 0.2s; background: #111; display:flex; flex-direction:column; box-shadow: 0 4px 10px rgba(0,0,0,0.5);`;
-                if (thumb) { itemDiv.innerHTML = `<img src="${thumb}" style="width:100%; aspect-ratio:1; object-fit:cover; display:block;">`; } else { itemDiv.innerHTML = `<div style="width:100%; aspect-ratio:1; background:linear-gradient(45deg, #1f0a0a, #2a1010); display:flex; align-items:center; justify-content:center; padding:10px;"><i class="fa-solid fa-wand-magic-sparkles text-2xl text-red-500"></i></div>`; }
-                itemDiv.innerHTML += `<div style="padding: 6px 2px; font-weight: bold;">${name.substring(0,14)}</div>`; if(idx === 0) itemDiv.style.borderColor = "var(--red-bright)";
-                itemDiv.onclick = () => { hiddenInp.value = id; Array.from(grid.children).forEach(c => c.style.borderColor = "transparent"); itemDiv.style.borderColor = "var(--red-bright)"; }; grid.appendChild(itemDiv);
-            });
-        };
-        if (field.options_url) { fetch("/style-list?url=" + encodeURIComponent(field.options_url)).then(r => r.json()).then(data => { renderItems(Array.isArray(data) ? data : (data.styles || data.data || [])); }); } else if (field.options) { renderItems(field.options); }
-        form.appendChild(wrap); return;
+    // 🔴 LA LISTA DE TEXTO HÍBRIDA (REMPLAZANDO LA CUADRÍCULA VISUAL)
+    if (field.type === "select" || field.type === "select_hybrid") {
+      const input = document.createElement("select"); 
+      const placeholder = document.createElement("option"); placeholder.value = ""; placeholder.textContent = field.options_url ? t("loading_options") : t("select_placeholder"); input.appendChild(placeholder);
+      
+      if (field.options) { 
+        if (field.type === "select_hybrid") {
+            const optg1 = document.createElement("optgroup"); optg1.label = "🌟 ESTILOS EXACTOS (Mantienen tu forma)";
+            field.options.forEach(opt => { const o = document.createElement("option"); o.value = opt.value; o.textContent = tl(opt.label).split('|')[0].trim(); optg1.appendChild(o); });
+            input.appendChild(optg1);
+        } else {
+            field.options.forEach(opt => { const o = document.createElement("option"); o.value = opt.value; o.textContent = tl(opt.label).split('|')[0].trim(); input.appendChild(o); }); 
+        }
+      } 
+      
+      if (field.options_url) { 
+        fetch("/style-list?url=" + encodeURIComponent(field.options_url)).then(r => r.json()).then(data => { 
+            const items = Array.isArray(data) ? data : (data.styles || data.data || []); 
+            if (field.type === "select_hybrid") {
+                const optg2 = document.createElement("optgroup"); optg2.label = "✨ ESTILOS CREATIVOS (Cambian ropa/fondo)";
+                items.forEach(item => { const id = typeof item === "string" ? item : (item.id || item.style_id || item.value); const name = typeof item === "string" ? item : (item.name || item.label || id); const o = document.createElement("option"); o.value = id; o.textContent = name + (item.premium ? " 💎 PRO" : ""); optg2.appendChild(o); });
+                input.appendChild(optg2); placeholder.textContent = t("select_placeholder");
+            } else {
+                input.innerHTML = ""; input.appendChild(placeholder); 
+                items.forEach(item => { const id = typeof item === "string" ? item : (item.id || item.style_id || item.value); const name = typeof item === "string" ? item : (item.name || item.label || id); const o = document.createElement("option"); o.value = id; o.textContent = name + (item.premium ? " 💎 PRO" : ""); input.appendChild(o); }); 
+            }
+        }).catch(() => { if(!field.options) input.innerHTML = `<option value="">${t("load_error")}</option>`; }); 
+      }
+      input.id = "field_" + field.name; input.name = field.name; if (field.required) input.required = true; wrap.appendChild(input); form.appendChild(wrap); return;
     }
 
     if (field.type === "image") {
@@ -604,11 +618,7 @@ function renderForm(model) {
 
     let input;
     if (field.type === "textarea") { input = document.createElement("textarea"); } 
-    else if (field.type === "select") {
-      input = document.createElement("select"); const placeholder = document.createElement("option"); placeholder.value = ""; placeholder.textContent = field.options_url ? t("loading_options") : t("select_placeholder"); input.appendChild(placeholder);
-      if (field.options) { field.options.forEach(opt => { const o = document.createElement("option"); o.value = opt.value; o.textContent = tl(opt.label).split('|')[0].trim(); input.appendChild(o); }); } 
-      else if (field.options_url) { fetch("/style-list?url=" + encodeURIComponent(field.options_url)).then(r => r.json()).then(data => { const items = Array.isArray(data) ? data : (data.styles || data.data || []); input.innerHTML = ""; items.forEach(item => { const id = typeof item === "string" ? item : (item.id || item.style_id || item.value); const name = typeof item === "string" ? item : (item.name || item.label || id); const o = document.createElement("option"); o.value = id; o.textContent = name + (item.premium ? " 💎 PRO" : ""); input.appendChild(o); }); }).catch(() => { input.innerHTML = `<option value="">${t("load_error")}</option>`; }); }
-    } else if (field.type === "number") { input = document.createElement("input"); input.type = "number"; if (field.default !== undefined) input.value = field.default; } 
+    else if (field.type === "number") { input = document.createElement("input"); input.type = "number"; if (field.default !== undefined) input.value = field.default; } 
     else if (field.type === "color") { input = document.createElement("input"); input.type = "color"; if (field.default !== undefined) input.value = field.default; }
     else { input = document.createElement("input"); input.type = "text"; }
 
@@ -827,6 +837,7 @@ form.addEventListener("submit", async (e) => {
 
   setTimeout(async () => {
       try {
+        const targetEndpoint = model.slug === 'fairy-art' && formData.get('hybrid_style')?.startswith('PROMPT:') ? '/v1/images/edits' : model.endpoint;
         const res = await fetch(`/run/${model.slug}`, { method: "POST", body: formData });
         mainResultImg.classList.remove("opacity-50", "blur-sm"); maskCanvas.style.display = "none"; if(ctxMask) ctxMask.clearRect(0,0, maskCanvas.width, maskCanvas.height);
         
