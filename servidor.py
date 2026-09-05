@@ -67,15 +67,17 @@ MODELS = [
         ]}
     ]},
     
-    {"slug": "fairy-art", "label": L("Retrato a Arte", "Portrait to Art"), "icon": "fa-wand-magic-sparkles", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Convierte fotos a Anime/Boceto respetando la forma y ropa original.", "Convert photos to Art keeping original shape."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
+    # 🔴 HERRAMIENTA RENOVADA: SE RETORNA A LISTA DE TEXTO CON LAS DOS CARPETAS (OPTGROUPS)
+    {"slug": "fairy-art", "label": L("Retrato a Arte", "Portrait to Art"), "icon": "fa-wand-magic-sparkles", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Convierte fotos a Anime/Boceto o estilos creativos.", "Convert photos to Art."), "endpoint": "/v1/images/generates/art", "response_type": "image", "fields": [
         {"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, 
-        {"name": "prompt", "type": "visual_select", "label": L("Elige un Estilo (Mantiene la forma real)", "Style"), "required": True, "options": [
-            {"value": "CRITICAL INSTRUCTION: Keep the exact same original shape, face, clothes and layout. Transform the photo into a highly detailed artistic black and white pencil sketch drawing.", "label": "Boceto a Lápiz", "thumbnail": "https://images.unsplash.com/photo-1580974582391-a6269c5e5058?w=200&h=200&fit=crop"},
-            {"value": "CRITICAL INSTRUCTION: Keep the exact same original shape, face, clothes and layout. Transform the photo into a Studio Ghibli 2D anime style, vibrant flat colors, anime masterpiece.", "label": "Estilo Ghibli", "thumbnail": "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=200&h=200&fit=crop"},
-            {"value": "CRITICAL INSTRUCTION: Keep the exact same original shape, face, clothes and layout. Transform the photo into a 3D Pixar Disney style animated character, smooth 3D render.", "label": "Animado 3D", "thumbnail": "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=200&h=200&fit=crop"},
-            {"value": "CRITICAL INSTRUCTION: Keep the exact same original shape, face, clothes and layout. Apply a 1990s vintage retro anime aesthetic, VHS effect, pastel muted colors.", "label": "Retro Vintage", "thumbnail": "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=200&h=200&fit=crop"},
-            {"value": "CRITICAL INSTRUCTION: Keep the exact same original shape, face, clothes and layout. Transform the photo into a classic fine art oil painting, visible brush strokes.", "label": "Pintura al Óleo", "thumbnail": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=200&h=200&fit=crop"},
-            {"value": "CRITICAL INSTRUCTION: Keep the exact same original shape, face, clothes and layout. Transform the photo into a futuristic Cyberpunk style, glowing neon lights, dark sci-fi aesthetic.", "label": "Cyberpunk Neón", "thumbnail": "https://images.unsplash.com/photo-1535295972055-1c762f4483e5?w=200&h=200&fit=crop"}
+        {"name": "hybrid_style", "type": "select_hybrid", "label": L("Elige un Estilo", "Style"), "required": True, "options_url": "https://storage.googleapis.com/assets.snapedit.app/fairyai/anime_styles_6mar25.json", "options": [
+            {"value": "PROMPT: Keep the exact same original shape, face, clothes and layout. Transform the photo into a highly detailed artistic black and white pencil sketch drawing.", "label": "✏️ Boceto a Lápiz"},
+            {"value": "PROMPT: Keep the exact same original shape, face, clothes and layout. Transform the photo into a Studio Ghibli 2D anime style, vibrant flat colors.", "label": "🍃 Estilo Ghibli"},
+            {"value": "PROMPT: Keep the exact same original shape, face, clothes and layout. Transform the photo into a 3D Pixar Disney style animated character.", "label": "🧸 Animado 3D"},
+            {"value": "PROMPT: Keep the exact same original shape, face, clothes and layout. Transform the photo into a funny 2D cartoon caricature.", "label": "🤪 Caricatura"},
+            {"value": "PROMPT: Keep the exact same original shape, face, clothes and layout. Transform the photo into a classic 2D Cartoon network style.", "label": "📺 Cartoons"},
+            {"value": "PROMPT: Keep the exact same original shape, face, clothes and layout. Transform the photo into a cute kawaii anime Chibi style character.", "label": "👶 Chibi Anime"},
+            {"value": "PROMPT: Keep the exact same original shape, face, clothes and layout. Transform the photo into a beautiful comic book illustration drawing.", "label": "🎨 Dibujo / Ilustración"}
         ]}
     ]},
 
@@ -102,7 +104,6 @@ MODELS = [
 
     {"slug": "edit-image", "label": L("Edición Mágica (Texto)", "Magic Edit (Text)"), "icon": "fa-wand-sparkles", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Edita usando órdenes.", "Edit using text prompts."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Instrucción", "Prompt"), "required": True}, {"name": "mode", "type": "select", "label": L("Modo", "Mode"), "required": True, "options": [{"value": "editing", "label": L("General", "General")}, {"value": "inpaint", "label": L("Inpaint", "Inpaint")}]}]},
     
-    # 🔴 HERRAMIENTA RENOVADA: SE DIVIDIÓ EL PARCHE Y SE ACTUALIZÓ PARA ESTILO AJUSTADO (MARIO)
     {"slug": "textile-styles", "label": L("Texturas Mágicas 3D", "3D Magic Textures"), "icon": "fa-cubes", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Aplica lana, bordado, parche o inflado.", "Applies yarn, thread, patch or puffy styles."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
         {"name": "input_image", "type": "image", "label": L("Sube tu Diseño Original", "Upload Design"), "required": True}, 
         {"name": "prompt", "type": "select", "label": L("Elige la Textura", "Select Texture"), "required": True, "options": [
@@ -210,6 +211,7 @@ def run_model(slug):
     if not model: return jsonify({"error": True, "message": "Herramienta desconocida"}), 404
 
     try:
+        target_endpoint = model.get("endpoint")
         files, data = {}, {}
         for key, file_obj in request.files.items():
             if file_obj and file_obj.filename:
@@ -229,7 +231,7 @@ def run_model(slug):
             if resp.status_code == 200: return Response(resp.content, mimetype="image/svg+xml")
             else: return jsonify({"error": True, "message": f"Error Vectorizer ({resp.status_code}): {resp.text}"}), 400
 
-        if slug in ["textile-styles", "edit-multi", "fairy-art"]: data["mode"] = "editing"
+        if slug in ["textile-styles", "edit-multi"]: data["mode"] = "editing"
             
         if slug == "generate-background" and ("png" not in mime.lower()):
              return jsonify({"error": True, "message": "¡Debes subir un PNG transparente (sin fondo)! Ve primero a 'Quitar Fondo'."}), 400
@@ -237,8 +239,19 @@ def run_model(slug):
         if slug == "sticker":
              data["prompt"] = "Die-cut sticker style, thick crisp white border around the subject, isolated on a solid highly contrasting neon green background"
 
+        # 🔴 ENRUTADOR HÍBRIDO PARA 'RETRATO A ARTE' (Combina textos fieles con los de JSON)
+        if slug == "fairy-art":
+             style_val = data.pop("hybrid_style", "")
+             if style_val.startswith("PROMPT:"):
+                 target_endpoint = "/v1/images/edits"
+                 data["mode"] = "editing"
+                 data["prompt"] = "CRITICAL INSTRUCTION: " + style_val.replace("PROMPT:", "").strip()
+             else:
+                 target_endpoint = "/v1/images/generates/art"
+                 data["style"] = style_val
+
         if slug in ["detect-text", "detect-wires"]:
-            r1 = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files, timeout=120)
+            r1 = requests.post(BASE + target_endpoint, headers=HEADERS, files=files, timeout=120)
             if r1.status_code == 200:
                 d_json = r1.json()
                 if d_json.get("detected") and d_json.get("mask"):
@@ -254,12 +267,12 @@ def run_model(slug):
         else:
             if model.get("needs_image") is False:
                 payload = {"prompt": data.get("prompt", ""), "aspect_ratio": data.get("aspect_ratio", "1:1")}
-                response = requests.post(BASE + model["endpoint"], headers=HEADERS, json=payload, timeout=120)
+                response = requests.post(BASE + target_endpoint, headers=HEADERS, json=payload, timeout=120)
                 if response.status_code >= 500:
                     multipart_data = {k: (None, str(v)) for k, v in payload.items()}
-                    response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=multipart_data, timeout=120)
+                    response = requests.post(BASE + target_endpoint, headers=HEADERS, files=multipart_data, timeout=120)
             else:
-                response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
+                response = requests.post(BASE + target_endpoint, headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
         
         content_type = response.headers.get("Content-Type", "")
         if "application/json" in content_type:
