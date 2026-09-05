@@ -643,7 +643,7 @@ function renderForm(model) {
         wrap.appendChild(input); form.appendChild(wrap); return;
     }
 
-    // 🔴 CUADRÍCULA VISUAL (MUESTRARIO SIN TEXTOS ABURRIDOS)
+    // 🔴 CUADRÍCULA VISUAL
     if (field.type === "visual_select") {
         const hiddenInp = document.createElement("input");
         hiddenInp.type = "hidden"; hiddenInp.id = "field_" + field.name; hiddenInp.name = field.name;
@@ -666,7 +666,6 @@ function renderForm(model) {
                 const itemDiv = document.createElement("div");
                 itemDiv.style = `cursor:pointer; border: 2px solid transparent; border-radius: 8px; overflow: hidden; text-align: center; font-size: 0.7rem; color: #ccc; transition: 0.2s; background: #111; display:flex; flex-direction:column; box-shadow: 0 4px 10px rgba(0,0,0,0.5);`;
                 
-                // Si la API no trae foto, dibuja una "tarjeta" colorida muy bonita para que no se vea vacío
                 if (thumb) {
                     itemDiv.innerHTML = `<img src="${thumb}" style="width:100%; aspect-ratio:1; object-fit:cover; display:block;">`;
                 } else {
@@ -1098,7 +1097,6 @@ function updateSvgDownloadLink() {
 form.addEventListener("submit", async (e) => {
   e.preventDefault(); const model = MODELS.find(m => m.slug === currentSlug); const submitBtn = document.getElementById("btnMainSubmit"); submitBtn.disabled = true;
 
-  // Si es Master Color Local
   if (model.slug === "master-color") {
       const dataUrl = editCanvas.toDataURL("image/png");
       processFinalUrl(dataUrl, currentSlug, "png");
@@ -1106,7 +1104,6 @@ form.addEventListener("submit", async (e) => {
       return;
   }
 
-  // Si es Resplandor Local
   if (model.slug === "studio-vignette") {
       statusLine.className = "status-line show"; statusText.innerHTML = "<i class='fa-solid fa-star fa-spin mr-2'></i> Aplicando resplandor transparente...";
       mainResultImg.classList.add("opacity-50", "blur-sm");
@@ -1283,13 +1280,8 @@ async function processFinalUrl(url, slugToUse = currentSlug, ext = "png") {
         if(inlineCont) inlineCont.style.display = "none";
         document.getElementById("svgEditorPanel").style.display = "none";
         
-        // Si estábamos en Master Color, mantenemos su canvas activo en lugar de la imagen normal.
-        if (currentSlug === 'master-color') {
-            mainResultImg.style.display = 'none';
-        } else {
-            mainResultImg.style.display = "block";
-            mainResultImg.src = displayUrl; 
-        }
+        if (currentSlug === 'master-color') { mainResultImg.style.display = 'none'; } 
+        else { mainResultImg.style.display = "block"; mainResultImg.src = displayUrl; }
     }
     
     statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + (currentSlug === 'master-color' ? "Cambios Guardados." : t("done"));
@@ -1302,6 +1294,13 @@ async function processFinalUrl(url, slugToUse = currentSlug, ext = "png") {
     if (ext !== "svg" && currentSlug !== 'master-color') document.getElementById('btnAntes').style.display = 'block'; else document.getElementById('btnAntes').style.display = 'none';
     document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block'; jsonViewer.style.display = "none";
     resetearZoom();
+
+    // 🔴 COMBO AUTOMÁTICO: RECORTAR STICKER
+    if (slugToUse === 'sticker') {
+        statusLine.className = "status-line show"; 
+        statusText.innerHTML = "<i class='fa-solid fa-wand-magic-sparkles mr-2'></i> Auto-recortando pegatina...";
+        setTimeout(() => { ejecutarAccionRapida('remove-background-graphic', { useOriginal: false }); }, 1200);
+    }
 }
 
 let escalaImg = 1, estaArrastrando = false, panX = 0, panY = 0, startX, startY;
