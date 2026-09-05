@@ -206,6 +206,31 @@
     </div>
 </div>
 
+<!-- 🔴 NUEVO MODAL DE RESPLANDOR (PARA ACCIÓN EN LA MISMA PANTALLA) -->
+<div class="custom-modal-overlay" id="glowModal">
+    <div class="custom-modal">
+        <h3><i class="fa-solid fa-star mr-2 text-yellow-400"></i> Resplandor Mágico</h3>
+        <p style="font-size: 0.9rem; color: var(--text-dim); margin-bottom: 20px; text-align: left; line-height: 1.4;">
+            Ajusta el color y grosor del resplandor:
+        </p>
+        
+        <div style="background:#050505; padding:15px; border-radius:8px; margin-bottom:15px; border: 1px solid #444; display:flex; align-items:center; justify-content:space-between;">
+            <label style="font-size:0.85rem; font-weight:bold; color:#ccc;">Color del Resplandor:</label>
+            <input type="color" id="modalGlowColor" value="#ff0000" style="width:45px; height:45px; padding:0; border:none; background:none; cursor:pointer;">
+        </div>
+
+        <div style="background:#050505; padding:15px; border-radius:8px; margin-bottom:20px; border: 1px solid #444; text-align:left;">
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:bold; margin-bottom:10px; color:#ccc;"><span>Grosor:</span><span id="modalGlowVal">30</span></div>
+            <input type="range" id="modalGlowSize" min="1" max="100" value="30" style="width:100%; accent-color:var(--red-bright);" oninput="document.getElementById('modalGlowVal').innerText=this.value">
+        </div>
+
+        <div class="custom-modal-btns">
+            <button class="btn-cancel" onclick="document.getElementById('glowModal').style.display='none'">Cancelar</button>
+            <button class="btn-confirm" id="btnConfirmGlow"><i class="fa-solid fa-wand-sparkles mr-2"></i> Aplicar</button>
+        </div>
+    </div>
+</div>
+
 <div id="gate">
   <div class="gate-lang">
     <div class="lang-switch" id="gateLangSwitch">
@@ -285,7 +310,6 @@
              </button>
           </div>
           
-          <!-- 🔴 PANEL MASTER COLOR (GOTERO Y SELECCIÓN TIPO PHOTOSHOP) -->
           <div id="masterColorPanel" style="display:none; background: #000; border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-top: 15px;">
               <h4 style="margin: 0 0 10px; font-size: 1rem; color: var(--ok); text-transform: uppercase; font-weight: 800; text-align: center;"><i class="fa-solid fa-fill-drip mr-2"></i> Master Color</h4>
               <p style="font-size:0.75rem; color:#888; text-align:center; margin-bottom:15px;">1. Copia un color con el gotero.<br>2. Selecciona una zona o reemplázalo en todo.</p>
@@ -479,12 +503,10 @@ document.getElementById("logoutBtn").addEventListener("click", () => {
 let MODELS = []; let currentSlug = null; let currentImageData = null;
 let urlOriginalMemoria = ""; let urlResultMemoria = "";
 
-// 🔴 VARIABLES LIENZOS MANUALES
 let isMaskTool = false; let maskFieldName = ""; let ctxMask = null;
 const maskCanvas = document.getElementById("maskCanvas");
 let isDrawing = false;
 
-// 🔴 VARIABLES MASTER COLOR (GOTERO Y SELECCIÓN)
 let isMcEyedropper = false; let isMcSelecting = false; let isMcDraggingSelection = false;
 let mcSelection = null; let mcStartX = 0; let mcStartY = 0;
 let mcTargetRGB = [255,255,255];
@@ -792,6 +814,34 @@ function applyMasterColorGlobal() {
 }
 
 
+// 🔴 MODAL PARA RESPLANDOR (APLICA EN LA MISMA PANTALLA)
+document.getElementById('btnConfirmGlow').addEventListener('click', () => {
+    document.getElementById('glowModal').style.display = 'none';
+    
+    if(!urlResultMemoria) return;
+    statusLine.className = "status-line show"; 
+    statusText.innerHTML = "<i class='fa-solid fa-star fa-spin mr-2'></i> Aplicando resplandor...";
+    mainResultImg.classList.add("opacity-50", "blur-sm"); 
+    quickActionsBar.style.display = "none";
+    
+    const glowColor = document.getElementById('modalGlowColor').value;
+    const glowLevel = parseInt(document.getElementById('modalGlowSize').value);
+    
+    const img = new Image(); img.crossOrigin = "Anonymous";
+    img.onload = () => {
+        const canvas = document.createElement("canvas"); const ctx = canvas.getContext("2d");
+        const factor = glowLevel / 500; const pad = Math.floor(Math.max(img.width, img.height) * factor) + 10; 
+        canvas.width = img.width + pad * 2; canvas.height = img.height + pad * 2;
+        ctx.shadowColor = glowColor; ctx.shadowBlur = Math.floor(pad * 0.8); ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+        ctx.drawImage(img, pad, pad); ctx.drawImage(img, pad, pad); ctx.drawImage(img, pad, pad);
+        
+        processFinalUrl(canvas.toDataURL("image/png"), currentSlug, "png");
+        mainResultImg.classList.remove("opacity-50", "blur-sm");
+    };
+    img.onerror = () => { alert("Error al aplicar resplandor."); mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block"; };
+    img.src = urlResultMemoria;
+});
+
 // 🔴 ACCIONES RÁPIDAS
 function renderQuickActions(slug) {
     const qaContainer = document.querySelector('.qa-buttons'); qaContainer.innerHTML = ''; const isEs = currentLang === 'es';
@@ -821,10 +871,7 @@ function renderQuickActions(slug) {
         if (slug.includes("restore") || slug === "light-restore") { keys = ["colorize", "upscale-faces", "magic-eraser", "light"]; } 
         else if (slug.includes("colorize")) { keys = ["restore", "upscale-faces", "magic-eraser"]; } 
         else if (slug.includes("remove-background") || slug === "master-color") { keys = ["vectorize", "upscale-8x", "gen-bg", "studio-glow", "textile-crochet"]; } 
-        
-        // 🔴 EN STICKER, EL USUARIO VE CLARAMENTE EL BOTON DE QUITAR FONDO NORMAL Y DE ARTE 
         else if (slug.includes("generate") || slug.includes("fairy") || slug.includes("sticker")) { keys = ["remove-bg", "extract-logo", "upscale-8x"]; } 
-        
         else if (slug === "detect-objects" || slug === "remove-objects" || slug === "erase-text" || slug === "erase-wires") { keys = ["upscale-8x", "remove-bg", "light"]; } 
         else if (slug === "vectorize") { keys = []; }
         else { keys = ["upscale-8x", "remove-bg", "magic-eraser"]; }
@@ -832,7 +879,14 @@ function renderQuickActions(slug) {
 
     keys.forEach(k => {
         const act = actionsDict[k]; const btn = document.createElement('button'); btn.className = "btn-qa"; btn.innerHTML = `<i class="fa-solid ${act.icon} mb-1 block text-lg"></i> ${act.label}`;
-        if(act.slug === "studio-vignette") { btn.onclick = () => { openTool("studio-vignette"); }; } else { btn.onclick = () => ejecutarAccionRapida(act.slug, act.params); }
+        
+        // 🔴 CUANDO ES RESPLANDOR, ABRE EL MODAL EN LUGAR DE REDIRIGIR A LA HERRAMIENTA
+        if(act.slug === "studio-vignette") { 
+            btn.onclick = () => { document.getElementById('glowModal').style.display='flex'; }; 
+        } else { 
+            btn.onclick = () => ejecutarAccionRapida(act.slug, act.params); 
+        }
+        
         qaContainer.appendChild(btn);
     });
 }
