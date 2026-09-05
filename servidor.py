@@ -69,9 +69,9 @@ MODELS = [
     
     {"slug": "fairy-art", "label": L("Retrato a Arte", "Portrait to Art"), "icon": "fa-wand-magic-sparkles", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Convierte fotos a Anime/3D con muestrario visual.", "Convert photos to Anime/3D."), "endpoint": "/v1/images/generates/art", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "style", "type": "visual_select", "label": L("Elige un Estilo Visual", "Style"), "required": True, "options_url": "https://storage.googleapis.com/assets.snapedit.app/fairyai/anime_styles_6mar25.json"}]},
     {"slug": "generate-background", "label": L("Generar Fondo Nuevo", "Generate Background"), "icon": "fa-image", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Fondo para productos. ¡Sube un PNG SIN FONDO!", "Background for products."), "endpoint": "/v1/images/generates-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen (Transparente)", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Descripción del fondo", "Background prompt"), "required": True}]},
+    
     {"slug": "sticker", "label": L("Crear Sticker", "Create Sticker"), "icon": "fa-note-sticky", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Haz un sticker de tu foto con borde blanco al instante.", "Make a sticker from photo."), "endpoint": "/v1/images/generates/sticker", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    # 🔴 NUEVO MASTER COLOR NATIVO
     {"slug": "master-color", "label": L("🎨 Master Color", "🎨 Master Color"), "icon": "fa-fill-drip", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Sustituye colores manualmente con gotero inteligente.", "Change colors manually with smart eyedropper."), "endpoint": "/local/canvas", "response_type": "image", "fields": [
         {"name": "input_image", "type": "image", "label": L("Sube tu Diseño", "Upload Design"), "required": True}
     ]},
@@ -220,10 +220,36 @@ def run_model(slug):
         if slug == "generate-background" and ("png" not in mime.lower()):
              return jsonify({"error": True, "message": "¡Debes subir un PNG transparente (sin fondo)! Ve primero a 'Quitar Fondo'."}), 400
              
+        # 🔴 LÓGICA ESPECIAL PARA EL STICKER CON COMBO (GENERACIÓN + FONDO TRANSPARENTE)
         if slug == "sticker":
-             data["prompt"] = "Die-cut sticker style with thick clean white border around the character, transparent or isolated background"
+             data["prompt"] = "Die-cut sticker style with thick clean white border, solid contrasting background, vector art"
+             r1 = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data, timeout=120)
+             
+             if r1.status_code == 200:
+                 ct = r1.headers.get("Content-Type", "")
+                 img_bytes = None
+                 if "application/json" in ct:
+                     d_json = r1.json()
+                     url_img = d_json.get("data", [{}])[0].get("url") if isinstance(d_json.get("data"), list) else d_json.get("data", {}).get("url", d_json.get("url", d_json.get("image_url")))
+                     if url_img:
+                         if url_img.startswith("data:image"):
+                             header, encoded = url_img.split(",", 1)
+                             img_bytes = base64.b64decode(encoded)
+                         else:
+                             r_img = requests.get(url_img, headers={'User-Agent': 'Mozilla/5.0'}, timeout=60)
+                             if r_img.status_code == 200: img_bytes = r_img.content
+                 else:
+                     img_bytes = r1.content
 
-        if slug in ["detect-text", "detect-wires"]:
+                 if img_bytes:
+                     f2 = {"input_image": ("sticker.png", img_bytes, "image/png")}
+                     response = requests.post(BASE + "/v1/images/remove-background-graphic", headers=HEADERS, files=f2, timeout=120)
+                 else:
+                     response = r1
+             else:
+                 response = r1
+
+        elif slug in ["detect-text", "detect-wires"]:
             r1 = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files, timeout=120)
             if r1.status_code == 200:
                 d_json = r1.json()
