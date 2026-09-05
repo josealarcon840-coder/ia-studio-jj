@@ -285,10 +285,10 @@
              </button>
           </div>
           
-          <!-- 🔴 NUEVO: PANEL MASTER COLOR NATIVO -->
+          <!-- 🔴 NUEVO: PANEL MASTER COLOR (GOTERO Y SELECCIÓN) -->
           <div id="masterColorPanel" style="display:none; background: #000; border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-top: 15px;">
               <h4 style="margin: 0 0 10px; font-size: 1rem; color: var(--ok); text-transform: uppercase; font-weight: 800; text-align: center;"><i class="fa-solid fa-fill-drip mr-2"></i> Master Color</h4>
-              <p style="font-size:0.75rem; color:#888; text-align:center; margin-bottom:15px;">Usa el gotero para copiar un color y luego reemplázalo pintando a mano alzada o en toda la imagen.</p>
+              <p style="font-size:0.75rem; color:#888; text-align:center; margin-bottom:15px;">1. Copia un color con el gotero.<br>2. Selecciona una zona o reemplázalo en todo.</p>
 
               <div style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:10px; border-radius:6px; margin-bottom:10px;">
                   <button type="button" id="btnEyedropper" class="btn-qa" style="min-width: unset; padding: 10px; margin:0;"><i class="fa-solid fa-eye-dropper"></i> Gotero</button>
@@ -298,17 +298,16 @@
               </div>
 
               <div style="background:#111; padding:10px; border-radius:6px; margin-bottom:10px;">
-                  <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; margin-bottom:5px; color:#ccc;"><span>Tolerancia de Rango:</span><span id="mcTolVal">40</span></div>
+                  <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; margin-bottom:5px; color:#ccc;"><span>Tolerancia de Color:</span><span id="mcTolVal">40</span></div>
                   <input type="range" id="mcTolerance" min="1" max="150" value="40" style="width:100%; accent-color:var(--red-bright);" oninput="document.getElementById('mcTolVal').innerText=this.value">
               </div>
 
-              <div style="background:#111; padding:10px; border-radius:6px; margin-bottom:10px;">
-                  <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; margin-bottom:5px; color:#ccc;"><span>Tamaño Pincel:</span><span id="mcBrushVal">50</span></div>
-                  <input type="range" id="mcBrushSize" min="5" max="250" value="50" style="width:100%; accent-color:var(--red-bright);" oninput="document.getElementById('mcBrushVal').innerText=this.value">
+              <button type="button" id="btnMcSelect" class="btn-qa" style="width:100%; margin-bottom:10px; background:#444;"><i class="fa-solid fa-vector-square mr-2"></i> Seleccionar Zona</button>
+              
+              <div style="display:flex; gap:10px;">
+                  <button type="button" onclick="applyMasterColorZone()" class="btn-primary" style="margin-top:0; flex:1; padding: 10px; font-size: 0.75rem;"><i class="fa-solid fa-square-check block mb-1 text-lg"></i> En Zona</button>
+                  <button type="button" onclick="applyMasterColorGlobal()" class="btn-primary" style="margin-top:0; flex:1; padding: 10px; font-size: 0.75rem;"><i class="fa-solid fa-globe block mb-1 text-lg"></i> En Todo</button>
               </div>
-
-              <button type="button" id="btnColorBrush" class="btn-qa" style="width:100%; margin-bottom:10px; background:#444;"><i class="fa-solid fa-paintbrush mr-2"></i> Activar Pincel</button>
-              <button type="button" onclick="applyMasterColorGlobal()" class="btn-primary" style="margin-top:0;"><i class="fa-solid fa-globe mr-2"></i> Reemplazar en Todo</button>
           </div>
 
           <div class="status-line" id="status"><span class="pulse-dot"></span><span id="statusText"></span></div>
@@ -337,13 +336,11 @@
                   <div id="imgContainer" style="position:relative; display:inline-block; line-height:0;">
                       <img id="mainResultImg" src="" alt="Resultado" style="display:block; max-width: 90vw; max-height: 70vh; border-radius: 8px;">
                       
-                      <!-- 🔴 LIENZOS MANUALES: MASCARA Y MASTER COLOR -->
-                      <canvas id="maskCanvas" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; z-index:10; opacity:0.6; cursor:crosshair; touch-action:none; border-radius: 8px;"></canvas>
-                      
-                      <!-- Pincel Master Color Nativo -->
+                      <!-- Pincel Master Color Nativo (Oculto hasta que se llame) -->
                       <canvas id="editCanvas" style="display:none; max-width: 90vw; max-height: 70vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.8); margin: 0 auto;"></canvas>
-                      <!-- Cursor circular animado -->
-                      <div id="mcBrushCursor" style="position:fixed; border:1.5px solid #fff; border-radius:50%; pointer-events:none; display:none; z-index:99999; transform:translate(-50%, -50%); mix-blend-mode:difference; box-shadow:0 0 0 1px rgba(0,0,0,0.5) inset;"></div>
+
+                      <!-- 🔴 LIENZOS PARA DIBUJAR (MÁSCARA Y SELECCIÓN MASTER COLOR) -->
+                      <canvas id="maskCanvas" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; z-index:10; opacity:0.6; cursor:crosshair; touch-action:none; border-radius: 8px;"></canvas>
 
                       <div id="inlineSvgContainer" style="display:none; align-items:center; justify-content:center;"></div>
                       
@@ -485,12 +482,13 @@ let urlOriginalMemoria = ""; let urlResultMemoria = "";
 // 🔴 VARIABLES LIENZOS MANUALES
 let isMaskTool = false; let maskFieldName = ""; let ctxMask = null;
 const maskCanvas = document.getElementById("maskCanvas");
+let isDrawing = false;
 
-// VARIABLES MASTER COLOR NATIVO
-let isMcEyedropper = false; let isMcBrush = false; let isMcDrawing = false;
+// 🔴 VARIABLES MASTER COLOR (GOTERO Y SELECCIÓN)
+let isMcEyedropper = false; let isMcSelecting = false; let isMcDraggingSelection = false;
+let mcSelection = null; let mcStartX = 0; let mcStartY = 0;
 let mcTargetRGB = [255,255,255];
 const editCanvas = document.getElementById('editCanvas');
-const mcBrushCursor = document.getElementById('mcBrushCursor');
 
 const homeView = document.getElementById("homeView"); const toolView = document.getElementById("toolView"); const catContainer = document.getElementById("catContainer"); const form = document.getElementById("form"); const statusLine = document.getElementById("status"); const statusText = document.getElementById("statusText"); const tray = document.getElementById("tray"); const mainResultImg = document.getElementById("mainResultImg"); const toolTitle = document.getElementById("toolTitle"); const toolDesc = document.getElementById("toolDesc"); const btnDownloadResult = document.getElementById("btnDownloadResult"); const btnRestart = document.getElementById("btnRestart");
 const jsonViewer = document.getElementById("jsonViewer");
@@ -532,9 +530,12 @@ function openTool(slug) {
           editCanvas.style.display = 'block';
           const img = new Image();
           img.onload = () => {
-              editCanvas.width = img.naturalWidth;
-              editCanvas.height = img.naturalHeight;
+              editCanvas.width = img.naturalWidth; editCanvas.height = img.naturalHeight;
               editCanvas.getContext('2d', {willReadFrequently: true}).drawImage(img, 0, 0);
+              
+              maskCanvas.width = img.naturalWidth; maskCanvas.height = img.naturalHeight;
+              ctxMask = maskCanvas.getContext("2d"); ctxMask.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+              maskCanvas.style.display = "block"; // Activamos máscara arriba para atrapar la selección
           };
           img.src = urlResultMemoria || URL.createObjectURL(currentImageData);
       }, 100);
@@ -542,50 +543,31 @@ function openTool(slug) {
 }
 
 function reiniciarHerramienta(keepTool = false) {
-    form.reset();
-    tray.style.display = "none"; 
-    mainResultImg.src = ""; 
+    form.reset(); tray.style.display = "none"; mainResultImg.src = ""; 
     
     isMaskTool = false; maskFieldName = ""; maskCanvas.style.display = "none";
     if (ctxMask && maskCanvas.width) ctxMask.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
     
-    isMcEyedropper = false; isMcBrush = false; editCanvas.style.display = 'none'; mcBrushCursor.style.display = 'none';
+    isMcEyedropper = false; isMcSelecting = false; mcSelection = null; editCanvas.style.display = 'none';
 
     const mainResultVideo = document.getElementById("mainResultVideo");
     if(mainResultVideo) { mainResultVideo.style.display = "none"; mainResultVideo.src = ""; }
     mainResultImg.style.display = "block";
 
-    currentImageData = null;
-    urlOriginalMemoria = ""; urlResultMemoria = "";
-    statusLine.classList.remove("show", "error", "ok");
-    btnDownloadResult.style.display = "none"; btnRestart.style.display = "none";
+    currentImageData = null; urlOriginalMemoria = ""; urlResultMemoria = "";
+    statusLine.classList.remove("show", "error", "ok"); btnDownloadResult.style.display = "none"; btnRestart.style.display = "none";
     magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; quickActionsBar.style.display = "none";
     document.getElementById("masterColorPanel").style.display = "none";
     
     document.getElementById("downloadBtnText").innerText = t("download_btn");
-
-    document.getElementById('btnAntes').style.display = 'none';
-    document.getElementById('imgContainer').style.display = 'inline-block';
-    document.getElementById('btnCentrar').style.display = 'block';
-    document.getElementById('btnZoomLabel').style.display = 'block';
-    jsonViewer.style.display = "none";
-    
-    document.getElementById("svgEditorPanel").style.display = "none";
+    document.getElementById('btnAntes').style.display = 'none'; document.getElementById('imgContainer').style.display = 'inline-block';
+    document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block';
+    jsonViewer.style.display = "none"; document.getElementById("svgEditorPanel").style.display = "none";
     let inlineCont = document.getElementById("inlineSvgContainer");
-    if(inlineCont) {
-        inlineCont.style.display = "none";
-        inlineCont.style.position = "relative";
-        inlineCont.style.clipPath = "none";
-    }
-    document.getElementById('sliderHandle').style.display = "none";
-    isSplitMode = false;
-    document.getElementById('btnSplitMode').classList.remove('active');
+    if(inlineCont) { inlineCont.style.display = "none"; inlineCont.style.position = "relative"; inlineCont.style.clipPath = "none"; }
+    document.getElementById('sliderHandle').style.display = "none"; isSplitMode = false; document.getElementById('btnSplitMode').classList.remove('active');
     
-    document.querySelectorAll('.dropzone').forEach(dz => {
-        dz.classList.remove("has-file");
-        dz.querySelector('i').className = "fa-solid fa-cloud-arrow-up";
-        dz.querySelector('.dz-text').textContent = t("dropzone_text");
-    });
+    document.querySelectorAll('.dropzone').forEach(dz => { dz.classList.remove("has-file"); dz.querySelector('i').className = "fa-solid fa-cloud-arrow-up"; dz.querySelector('.dz-text').textContent = t("dropzone_text"); });
     if (currentSlug && keepTool) renderForm(MODELS.find(m => m.slug === currentSlug));
     resetearZoom();
 }
@@ -594,7 +576,6 @@ document.getElementById("backBtn").addEventListener("click", () => { toolView.st
 
 function renderForm(model) {
   form.innerHTML = "";
-  
   if (model.slug === 'master-color') { document.getElementById('masterColorPanel').style.display = 'block'; } 
   else { document.getElementById('masterColorPanel').style.display = 'none'; }
 
@@ -609,8 +590,7 @@ function renderForm(model) {
     }
 
     if (field.type === "mask") {
-        isMaskTool = true;
-        maskFieldName = field.name;
+        isMaskTool = true; maskFieldName = field.name;
         wrap.innerHTML = `
             <label><i class="fa-solid fa-paintbrush mr-2"></i> Pincel Mágico</label>
             <div style="display: flex; gap: 10px; align-items: center; background: #111; padding: 15px; border-radius: 8px; border: 1px solid #333;">
@@ -632,111 +612,51 @@ function renderForm(model) {
     wrap.appendChild(label);
 
     if (field.type === "range") {
-        const valSpan = document.createElement("span");
-        valSpan.style = "float: right; color: var(--ok); font-weight: bold;";
-        valSpan.textContent = field.default || 50;
-        label.appendChild(valSpan);
-        const input = document.createElement("input");
-        input.type = "range"; input.id = "field_" + field.name; input.name = field.name; input.min = field.min || 1; input.max = field.max || 100; input.value = field.default || 50;
-        input.style = "width: 100%; cursor: pointer; accent-color: var(--red-bright); padding: 0;";
-        input.addEventListener("input", (e) => { valSpan.textContent = e.target.value; });
-        wrap.appendChild(input); form.appendChild(wrap); return;
+        const valSpan = document.createElement("span"); valSpan.style = "float: right; color: var(--ok); font-weight: bold;"; valSpan.textContent = field.default || 50; label.appendChild(valSpan);
+        const input = document.createElement("input"); input.type = "range"; input.id = "field_" + field.name; input.name = field.name; input.min = field.min || 1; input.max = field.max || 100; input.value = field.default || 50;
+        input.style = "width: 100%; cursor: pointer; accent-color: var(--red-bright); padding: 0;"; input.addEventListener("input", (e) => { valSpan.textContent = e.target.value; }); wrap.appendChild(input); form.appendChild(wrap); return;
     }
 
-    // 🔴 CUADRÍCULA VISUAL
     if (field.type === "visual_select") {
-        const hiddenInp = document.createElement("input");
-        hiddenInp.type = "hidden"; hiddenInp.id = "field_" + field.name; hiddenInp.name = field.name;
-        if(field.required) hiddenInp.required = true;
-        wrap.appendChild(hiddenInp);
-        
-        const grid = document.createElement("div");
-        grid.style = "display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; margin-top: 10px; max-height: 350px; overflow-y: auto; padding-right: 5px;";
-        wrap.appendChild(grid);
-        
+        const hiddenInp = document.createElement("input"); hiddenInp.type = "hidden"; hiddenInp.id = "field_" + field.name; hiddenInp.name = field.name; if(field.required) hiddenInp.required = true; wrap.appendChild(hiddenInp);
+        const grid = document.createElement("div"); grid.style = "display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; margin-top: 10px; max-height: 350px; overflow-y: auto; padding-right: 5px;"; wrap.appendChild(grid);
         fetch("/style-list?url=" + encodeURIComponent(field.options_url)).then(r => r.json()).then(data => {
             const items = Array.isArray(data) ? data : (data.styles || data.data || []);
             if(items.length > 0) hiddenInp.value = items[0].id || items[0].style_id || items[0].value || items[0];
-            
             items.forEach((item, idx) => {
-                const id = item.id || item.style_id || item.value || item;
-                const name = item.name || item.label || id;
-                const thumb = item.thumbnail || item.preview_url || item.image || "";
-                
-                const itemDiv = document.createElement("div");
-                itemDiv.style = `cursor:pointer; border: 2px solid transparent; border-radius: 8px; overflow: hidden; text-align: center; font-size: 0.7rem; color: #ccc; transition: 0.2s; background: #111; display:flex; flex-direction:column; box-shadow: 0 4px 10px rgba(0,0,0,0.5);`;
-                
-                if (thumb) {
-                    itemDiv.innerHTML = `<img src="${thumb}" style="width:100%; aspect-ratio:1; object-fit:cover; display:block;">`;
-                } else {
-                    itemDiv.innerHTML = `<div style="width:100%; aspect-ratio:1; background:linear-gradient(45deg, #1f0a0a, #2a1010); display:flex; align-items:center; justify-content:center; padding:10px;"><i class="fa-solid fa-wand-magic-sparkles text-2xl text-red-500"></i></div>`;
-                }
-                
-                itemDiv.innerHTML += `<div style="padding: 6px 2px; font-weight: bold;">${name.substring(0,14)}</div>`;
-                
-                if(idx === 0) itemDiv.style.borderColor = "var(--red-bright)";
-                
-                itemDiv.onclick = () => {
-                    hiddenInp.value = id;
-                    Array.from(grid.children).forEach(c => c.style.borderColor = "transparent");
-                    itemDiv.style.borderColor = "var(--red-bright)";
-                };
-                grid.appendChild(itemDiv);
+                const id = item.id || item.style_id || item.value || item; const name = item.name || item.label || id; const thumb = item.thumbnail || item.preview_url || item.image || "";
+                const itemDiv = document.createElement("div"); itemDiv.style = `cursor:pointer; border: 2px solid transparent; border-radius: 8px; overflow: hidden; text-align: center; font-size: 0.7rem; color: #ccc; transition: 0.2s; background: #111; display:flex; flex-direction:column; box-shadow: 0 4px 10px rgba(0,0,0,0.5);`;
+                if (thumb) { itemDiv.innerHTML = `<img src="${thumb}" style="width:100%; aspect-ratio:1; object-fit:cover; display:block;">`; } else { itemDiv.innerHTML = `<div style="width:100%; aspect-ratio:1; background:linear-gradient(45deg, #1f0a0a, #2a1010); display:flex; align-items:center; justify-content:center; padding:10px;"><i class="fa-solid fa-wand-magic-sparkles text-2xl text-red-500"></i></div>`; }
+                itemDiv.innerHTML += `<div style="padding: 6px 2px; font-weight: bold;">${name.substring(0,14)}</div>`; if(idx === 0) itemDiv.style.borderColor = "var(--red-bright)";
+                itemDiv.onclick = () => { hiddenInp.value = id; Array.from(grid.children).forEach(c => c.style.borderColor = "transparent"); itemDiv.style.borderColor = "var(--red-bright)"; }; grid.appendChild(itemDiv);
             });
         });
         form.appendChild(wrap); return;
     }
 
     if (field.type === "image") {
-      const dz = document.createElement("div"); dz.className = "dropzone";
-      const dzIcon = document.createElement("i"); dzIcon.className = "fa-solid fa-cloud-arrow-up";
-      const dzText = document.createElement("div"); dzText.className = "dz-text"; dzText.textContent = t("dropzone_text");
-      
-      const input = document.createElement("input"); input.type = "file"; 
-      input.accept = model.response_type === "video" ? "video/mp4, image/*" : "image/*"; 
-      input.id = "field_" + field.name; input.name = field.name;
-      
-      if (field.required) input.required = true;
+      const dz = document.createElement("div"); dz.className = "dropzone"; const dzIcon = document.createElement("i"); dzIcon.className = "fa-solid fa-cloud-arrow-up"; const dzText = document.createElement("div"); dzText.className = "dz-text"; dzText.textContent = t("dropzone_text");
+      const input = document.createElement("input"); input.type = "file"; input.accept = model.response_type === "video" ? "video/mp4, image/*" : "image/*"; input.id = "field_" + field.name; input.name = field.name; if (field.required) input.required = true;
       input.addEventListener("change", () => {
         if (input.files[0]) {
           dz.classList.add("has-file"); dzIcon.className = "fa-solid fa-file-circle-check"; dzText.textContent = input.files[0].name;
           if(field.name === "input_image" || field.name === "model_image" || field.name === "input_image_0") {
-              currentImageData = input.files[0]; 
-              urlOriginalMemoria = URL.createObjectURL(input.files[0]);
-              urlResultMemoria = urlOriginalMemoria; 
-              
+              currentImageData = input.files[0]; urlOriginalMemoria = URL.createObjectURL(input.files[0]); urlResultMemoria = urlOriginalMemoria; 
               tray.style.display = "block"; btnDownloadResult.style.display = "none"; btnRestart.style.display = "block"; quickActionsBar.style.display = "none";
-              magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; document.getElementById('btnAntes').style.display = 'none';
-              resetearZoom();
-              document.getElementById('imgContainer').style.display = 'inline-block';
-              document.getElementById('btnCentrar').style.display = 'block';
-              document.getElementById('btnZoomLabel').style.display = 'block';
-              jsonViewer.style.display = "none";
-              const mainResultVideo = document.getElementById("mainResultVideo");
-              if(mainResultVideo) { mainResultVideo.style.display = "none"; mainResultVideo.src = ""; }
-              document.getElementById("svgEditorPanel").style.display = "none";
-              let inlineCont = document.getElementById("inlineSvgContainer");
-              if(inlineCont) inlineCont.style.display = "none";
+              magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; document.getElementById('btnAntes').style.display = 'none'; resetearZoom();
+              document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block'; jsonViewer.style.display = "none";
+              const mainResultVideo = document.getElementById("mainResultVideo"); if(mainResultVideo) { mainResultVideo.style.display = "none"; mainResultVideo.src = ""; }
+              document.getElementById("svgEditorPanel").style.display = "none"; let inlineCont = document.getElementById("inlineSvgContainer"); if(inlineCont) inlineCont.style.display = "none";
               
               if (currentSlug === 'master-color') {
-                  mainResultImg.style.display = 'none';
-                  editCanvas.style.display = 'block';
-                  const img = new Image();
-                  img.onload = () => {
-                      editCanvas.width = img.naturalWidth;
-                      editCanvas.height = img.naturalHeight;
-                      editCanvas.getContext('2d', {willReadFrequently: true}).drawImage(img, 0, 0);
-                  };
-                  img.src = urlOriginalMemoria;
-              } else {
-                  mainResultImg.src = urlOriginalMemoria;
-                  mainResultImg.style.display = "block";
-                  editCanvas.style.display = 'none';
-              }
+                  mainResultImg.style.display = 'none'; editCanvas.style.display = 'block';
+                  const img = new Image(); img.onload = () => { 
+                      editCanvas.width = img.naturalWidth; editCanvas.height = img.naturalHeight; editCanvas.getContext('2d', {willReadFrequently: true}).drawImage(img, 0, 0); 
+                      maskCanvas.width = img.naturalWidth; maskCanvas.height = img.naturalHeight; ctxMask = maskCanvas.getContext("2d"); ctxMask.clearRect(0, 0, maskCanvas.width, maskCanvas.height); maskCanvas.style.display = "block";
+                  }; img.src = urlOriginalMemoria;
+              } else { mainResultImg.src = urlOriginalMemoria; mainResultImg.style.display = "block"; editCanvas.style.display = 'none'; }
           }
-        } else {
-          dz.classList.remove("has-file"); dzIcon.className = "fa-solid fa-cloud-arrow-up"; dzText.textContent = t("dropzone_text");
-        }
+        } else { dz.classList.remove("has-file"); dzIcon.className = "fa-solid fa-cloud-arrow-up"; dzText.textContent = t("dropzone_text"); }
       });
       dz.appendChild(dzIcon); dz.appendChild(dzText); dz.appendChild(input); wrap.appendChild(dz); form.appendChild(wrap); return;
     }
@@ -746,18 +666,12 @@ function renderForm(model) {
     else if (field.type === "select") {
       input = document.createElement("select"); const placeholder = document.createElement("option"); placeholder.value = ""; placeholder.textContent = field.options_url ? t("loading_options") : t("select_placeholder"); input.appendChild(placeholder);
       if (field.options) { field.options.forEach(opt => { const o = document.createElement("option"); o.value = opt.value; o.textContent = tl(opt.label).split('|')[0].trim(); input.appendChild(o); }); } 
-      else if (field.options_url) {
-        fetch("/style-list?url=" + encodeURIComponent(field.options_url)).then(r => r.json()).then(data => {
-            const items = Array.isArray(data) ? data : (data.styles || data.data || []); input.innerHTML = "";
-            items.forEach(item => { const id = typeof item === "string" ? item : (item.id || item.style_id || item.value); const name = typeof item === "string" ? item : (item.name || item.label || id); const o = document.createElement("option"); o.value = id; o.textContent = name + (item.premium ? " 💎 PRO" : ""); input.appendChild(o); });
-          }).catch(() => { input.innerHTML = `<option value="">${t("load_error")}</option>`; });
-      }
+      else if (field.options_url) { fetch("/style-list?url=" + encodeURIComponent(field.options_url)).then(r => r.json()).then(data => { const items = Array.isArray(data) ? data : (data.styles || data.data || []); input.innerHTML = ""; items.forEach(item => { const id = typeof item === "string" ? item : (item.id || item.style_id || item.value); const name = typeof item === "string" ? item : (item.name || item.label || id); const o = document.createElement("option"); o.value = id; o.textContent = name + (item.premium ? " 💎 PRO" : ""); input.appendChild(o); }); }).catch(() => { input.innerHTML = `<option value="">${t("load_error")}</option>`; }); }
     } else if (field.type === "number") { input = document.createElement("input"); input.type = "number"; if (field.default !== undefined) input.value = field.default; } 
     else if (field.type === "color") { input = document.createElement("input"); input.type = "color"; if (field.default !== undefined) input.value = field.default; }
     else { input = document.createElement("input"); input.type = "text"; }
 
-    input.id = "field_" + field.name; input.name = field.name; if (field.required) input.required = true;
-    wrap.appendChild(input); form.appendChild(wrap);
+    input.id = "field_" + field.name; input.name = field.name; if (field.required) input.required = true; wrap.appendChild(input); form.appendChild(wrap);
   });
 
   const submitBtn = document.createElement("button"); submitBtn.type = "submit"; submitBtn.className = "btn-primary"; submitBtn.id = "btnMainSubmit";
@@ -765,127 +679,107 @@ function renderForm(model) {
   form.appendChild(submitBtn);
 }
 
-
-// 🔴 UTILIDAD DE COORDENADAS PARA LIENZOS MANUALES
 function getCanvasMouseCoords(e, canvasElem) {
-    const rect = canvasElem.getBoundingClientRect();
-    const scaleX = canvasElem.width / rect.width;
-    const scaleY = canvasElem.height / rect.height;
-    let clientX = e.clientX, clientY = e.clientY;
-    if(e.touches && e.touches.length > 0) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
+    const rect = canvasElem.getBoundingClientRect(); const scaleX = canvasElem.width / rect.width; const scaleY = canvasElem.height / rect.height;
+    let clientX = e.clientX, clientY = e.clientY; if(e.touches && e.touches.length > 0) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
     return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
 }
 
-// 🔴 MOTOR DE DIBUJO DE MÁSCARA (INPAINTING INTERACTIVO)
-let isDrawing = false;
+
+// 🔴 GESTIÓN DE RATÓN EN LIENZOS (MÁSCARA Y MASTER COLOR SELECCIÓN)
 ctxMask = maskCanvas.getContext("2d");
 
 mainResultImg.addEventListener("load", () => {
     if (isMaskTool) {
-        maskCanvas.width = mainResultImg.naturalWidth;
-        maskCanvas.height = mainResultImg.naturalHeight;
-        ctxMask.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
-        maskCanvas.style.display = "block";
+        maskCanvas.width = mainResultImg.naturalWidth; maskCanvas.height = mainResultImg.naturalHeight;
+        ctxMask.clearRect(0, 0, maskCanvas.width, maskCanvas.height); maskCanvas.style.display = "block";
     }
 });
 
-function startDrawingMask(e) {
-    if (!isMaskTool) return;
-    isDrawing = true;
-    const { x, y } = getCanvasMouseCoords(e, maskCanvas);
-    ctxMask.beginPath(); ctxMask.moveTo(x, y);
-    const brushSize = document.getElementById("brushSize");
-    const rect = maskCanvas.getBoundingClientRect();
-    const scaleX = maskCanvas.width / rect.width;
-    ctxMask.lineWidth = (brushSize ? parseInt(brushSize.value) : 30) * scaleX;
-    ctxMask.lineCap = "round"; ctxMask.lineJoin = "round"; ctxMask.strokeStyle = "#ff0000"; 
-    ctxMask.lineTo(x, y); ctxMask.stroke();
-    e.preventDefault(); e.stopPropagation();
-}
-
-function drawMask(e) {
-    if (!isDrawing || !isMaskTool) return;
-    const { x, y } = getCanvasMouseCoords(e, maskCanvas);
-    ctxMask.lineTo(x, y); ctxMask.stroke();
-    e.preventDefault(); e.stopPropagation();
-}
-
-function stopDrawingMask(e) { if (!isDrawing) return; isDrawing = false; ctxMask.closePath(); e.preventDefault(); e.stopPropagation(); }
-
-maskCanvas.addEventListener("mousedown", startDrawingMask); maskCanvas.addEventListener("mousemove", drawMask);
-window.addEventListener("mouseup", stopDrawingMask);
-maskCanvas.addEventListener("touchstart", startDrawingMask, {passive: false}); maskCanvas.addEventListener("touchmove", drawMask, {passive: false}); window.addEventListener("touchend", stopDrawingMask);
-
-
-// 🔴 LÓGICA DE MASTER COLOR NATIVO
-document.getElementById('btnEyedropper').addEventListener('click', () => {
-    isMcEyedropper = true; isMcBrush = false;
-    document.getElementById('btnColorBrush').style.background = '#444';
-    document.getElementById('btnColorBrush').innerHTML = '<i class="fa-solid fa-paintbrush mr-2"></i> Activar Pincel';
-    editCanvas.style.cursor = 'crosshair';
-    document.getElementById('btnEyedropper').style.borderColor = 'var(--ok)';
-});
-
-document.getElementById('btnColorBrush').addEventListener('click', () => {
-    isMcBrush = !isMcBrush; isMcEyedropper = false;
-    document.getElementById('btnEyedropper').style.borderColor = '#444';
-    const btn = document.getElementById('btnColorBrush');
-    if (isMcBrush) {
-        btn.style.background = 'var(--red-bright)'; btn.innerHTML = '<i class="fa-solid fa-paintbrush mr-2"></i> Pincel Activo';
-        editCanvas.style.cursor = 'none';
-    } else {
-        btn.style.background = '#444'; btn.innerHTML = '<i class="fa-solid fa-paintbrush mr-2"></i> Activar Pincel';
-        editCanvas.style.cursor = 'crosshair'; mcBrushCursor.style.display = 'none';
-    }
-});
-
-function applyMasterColorStroke(e) {
-    const pos = getCanvasMouseCoords(e, editCanvas);
-    const scaleToReal = editCanvas.width / editCanvas.getBoundingClientRect().width;
-    const size = parseInt(document.getElementById('mcBrushSize').value) * scaleToReal;
-    const tol = parseInt(document.getElementById('mcTolerance').value);
-    const tolSq = tol * tol; const sizeSq = size * size;
-
-    const hex = document.getElementById('mcNewColor').value;
-    const rNew = parseInt(hex.slice(1,3),16), gNew = parseInt(hex.slice(3,5),16), bNew = parseInt(hex.slice(5,7),16);
-    const tR = mcTargetRGB[0], tG = mcTargetRGB[1], tB = mcTargetRGB[2];
-
-    const startX = Math.floor(pos.x - size); const startY = Math.floor(pos.y - size);
-    const boxW = size * 2; const boxH = size * 2;
-
-    const drawX = Math.max(0, startX); const drawY = Math.max(0, startY);
-    const drawW = Math.min(editCanvas.width - drawX, startX + boxW - drawX);
-    const drawH = Math.min(editCanvas.height - drawY, startY + boxH - drawY);
-
-    if(drawW <= 0 || drawH <= 0) return;
-
-    const ctx = editCanvas.getContext('2d');
-    const imgData = ctx.getImageData(drawX, drawY, drawW, drawH);
-    const data = imgData.data;
-
-    for (let y = 0; y < drawH; y++) {
-        for (let x = 0; x < drawW; x++) {
-            const canvasX = drawX + x; const canvasY = drawY + y;
-            const dx = canvasX - pos.x; const dy = canvasY - pos.y;
-            if (dx * dx + dy * dy <= sizeSq) {
-                const i = (y * drawW + x) * 4;
-                if (data[i+3] > 0) {
-                    const distSq = (data[i]-tR)*(data[i]-tR) + (data[i+1]-tG)*(data[i+1]-tG) + (data[i+2]-tB)*(data[i+2]-tB);
-                    if (distSq <= tolSq) { data[i] = rNew; data[i+1] = gNew; data[i+2] = bNew; }
-                }
-            }
+function startCanvasMouse(e) {
+    if (isMaskTool) {
+        isDrawing = true; const { x, y } = getCanvasMouseCoords(e, maskCanvas);
+        ctxMask.beginPath(); ctxMask.moveTo(x, y); const brushSize = document.getElementById("brushSize");
+        const scaleX = maskCanvas.width / maskCanvas.getBoundingClientRect().width;
+        ctxMask.lineWidth = (brushSize ? parseInt(brushSize.value) : 30) * scaleX;
+        ctxMask.lineCap = "round"; ctxMask.lineJoin = "round"; ctxMask.strokeStyle = "#ff0000"; 
+        ctxMask.lineTo(x, y); ctxMask.stroke(); e.preventDefault(); e.stopPropagation();
+    } else if (currentSlug === 'master-color') {
+        if (isMcEyedropper) {
+            const pos = getCanvasMouseCoords(e, editCanvas);
+            const pD = editCanvas.getContext('2d').getImageData(Math.floor(pos.x), Math.floor(pos.y), 1, 1).data;
+            mcTargetRGB = [pD[0], pD[1], pD[2]];
+            const hex = "#" + ((1 << 24) + (pD[0] << 16) + (pD[1] << 8) + pD[2]).toString(16).slice(1);
+            document.getElementById('mcOldColor').style.backgroundColor = hex;
+            isMcEyedropper = false; maskCanvas.style.cursor = 'default'; document.getElementById('btnEyedropper').style.borderColor = '#444';
+        } else if (isMcSelecting) {
+            isMcDraggingSelection = true; const pos = getCanvasMouseCoords(e, maskCanvas);
+            mcStartX = pos.x; mcStartY = pos.y; mcSelection = {x: pos.x, y: pos.y, w: 0, h: 0};
+            ctxMask.clearRect(0,0, maskCanvas.width, maskCanvas.height);
         }
     }
-    ctx.putImageData(imgData, drawX, drawY);
+}
+
+function moveCanvasMouse(e) {
+    if (isMaskTool && isDrawing) {
+        const { x, y } = getCanvasMouseCoords(e, maskCanvas); ctxMask.lineTo(x, y); ctxMask.stroke(); e.preventDefault(); e.stopPropagation();
+    } else if (currentSlug === 'master-color' && isMcDraggingSelection) {
+        const pos = getCanvasMouseCoords(e, maskCanvas); const w = pos.x - mcStartX; const h = pos.y - mcStartY;
+        mcSelection = { x: Math.min(mcStartX, pos.x), y: Math.min(mcStartY, pos.y), w: Math.abs(w), h: Math.abs(h) };
+        ctxMask.clearRect(0,0, maskCanvas.width, maskCanvas.height);
+        ctxMask.strokeStyle = '#00ffcc'; ctxMask.lineWidth = 2 * (maskCanvas.width / maskCanvas.getBoundingClientRect().width);
+        ctxMask.setLineDash([10, 10]); ctxMask.strokeRect(mcSelection.x, mcSelection.y, mcSelection.w, mcSelection.h);
+        ctxMask.fillStyle = 'rgba(0, 255, 204, 0.1)'; ctxMask.fillRect(mcSelection.x, mcSelection.y, mcSelection.w, mcSelection.h);
+    }
+}
+
+function endCanvasMouse(e) {
+    if (isMaskTool && isDrawing) { isDrawing = false; ctxMask.closePath(); e.preventDefault(); e.stopPropagation(); }
+    else if (currentSlug === 'master-color' && isMcDraggingSelection) { isMcDraggingSelection = false; ctxMask.setLineDash([]); }
+}
+
+maskCanvas.addEventListener("mousedown", startCanvasMouse); maskCanvas.addEventListener("mousemove", moveCanvasMouse);
+window.addEventListener("mouseup", endCanvasMouse);
+maskCanvas.addEventListener("touchstart", startCanvasMouse, {passive: false}); maskCanvas.addEventListener("touchmove", moveCanvasMouse, {passive: false}); window.addEventListener("touchend", endCanvasMouse);
+
+
+// 🔴 BOTONES DE MASTER COLOR (GOTERO Y SELECCIÓN)
+document.getElementById('btnEyedropper').addEventListener('click', () => {
+    isMcEyedropper = true; isMcSelecting = false; maskCanvas.style.cursor = 'crosshair';
+    document.getElementById('btnEyedropper').style.borderColor = 'var(--ok)'; document.getElementById('btnMcSelect').style.borderColor = '#444'; document.getElementById('btnMcSelect').style.background = '#444';
+});
+
+document.getElementById('btnMcSelect').addEventListener('click', () => {
+    isMcSelecting = !isMcSelecting; isMcEyedropper = false; document.getElementById('btnEyedropper').style.borderColor = '#444';
+    const btn = document.getElementById('btnMcSelect');
+    if (isMcSelecting) { btn.style.background = 'var(--red-bright)'; maskCanvas.style.cursor = 'crosshair'; } 
+    else { btn.style.background = '#444'; maskCanvas.style.cursor = 'default'; }
+});
+
+function applyMasterColorZone() {
+    if(!mcSelection || mcSelection.w === 0 || mcSelection.h === 0) { alert("Por favor, activa 'Seleccionar Zona' y dibuja un recuadro en la imagen."); return; }
+    const x = Math.max(0, Math.floor(mcSelection.x)); const y = Math.max(0, Math.floor(mcSelection.y));
+    const w = Math.min(editCanvas.width - x, Math.floor(mcSelection.w)); const h = Math.min(editCanvas.height - y, Math.floor(mcSelection.h));
+    if (w <= 0 || h <= 0) return;
+
+    const ctx = editCanvas.getContext('2d'); const id = ctx.getImageData(x, y, w, h); const d = id.data;
+    const hex = document.getElementById('mcNewColor').value; const tol = parseInt(document.getElementById('mcTolerance').value); const tolSq = tol * tol;
+    const rN = parseInt(hex.slice(1,3),16), gN = parseInt(hex.slice(3,5),16), bN = parseInt(hex.slice(5,7),16);
+    const tR = mcTargetRGB[0], tG = mcTargetRGB[1], tB = mcTargetRGB[2];
+
+    for(let i=0; i<d.length; i+=4) {
+        if(d[i+3] < 10) continue;
+        const distSq = (d[i]-tR)*(d[i]-tR) + (d[i+1]-tG)*(d[i+1]-tG) + (d[i+2]-tB)*(d[i+2]-tB);
+        if(distSq <= tolSq) { d[i]=rN; d[i+1]=gN; d[i+2]=bN; }
+    }
+    ctx.putImageData(id, x, y);
+    ctxMask.clearRect(0,0, maskCanvas.width, maskCanvas.height); mcSelection = null;
+    document.getElementById('btnMcSelect').style.background = '#444'; isMcSelecting = false; maskCanvas.style.cursor = 'default';
 }
 
 function applyMasterColorGlobal() {
-    const ctx = editCanvas.getContext('2d');
-    const id = ctx.getImageData(0, 0, editCanvas.width, editCanvas.height);
-    const d = id.data;
-    const hex = document.getElementById('mcNewColor').value;
-    const tol = parseInt(document.getElementById('mcTolerance').value);
-    const tolSq = tol * tol;
+    const ctx = editCanvas.getContext('2d'); const id = ctx.getImageData(0, 0, editCanvas.width, editCanvas.height); const d = id.data;
+    const hex = document.getElementById('mcNewColor').value; const tol = parseInt(document.getElementById('mcTolerance').value); const tolSq = tol * tol;
     const rN = parseInt(hex.slice(1,3),16), gN = parseInt(hex.slice(3,5),16), bN = parseInt(hex.slice(5,7),16);
     const tR = mcTargetRGB[0], tG = mcTargetRGB[1], tB = mcTargetRGB[2];
 
@@ -897,44 +791,10 @@ function applyMasterColorGlobal() {
     ctx.putImageData(id, 0, 0);
 }
 
-editCanvas.addEventListener('mousedown', (e) => {
-    if (isMcEyedropper) {
-        const pos = getCanvasMouseCoords(e, editCanvas);
-        const pD = editCanvas.getContext('2d').getImageData(Math.floor(pos.x), Math.floor(pos.y), 1, 1).data;
-        mcTargetRGB = [pD[0], pD[1], pD[2]];
-        const hex = "#" + ((1 << 24) + (pD[0] << 16) + (pD[1] << 8) + pD[2]).toString(16).slice(1);
-        document.getElementById('mcOldColor').style.backgroundColor = hex;
-        isMcEyedropper = false; editCanvas.style.cursor = 'default'; document.getElementById('btnEyedropper').style.borderColor = '#444';
-        return;
-    }
-    if (isMcBrush) { isMcDrawing = true; applyMasterColorStroke(e); }
-});
-
-editCanvas.addEventListener('mousemove', (e) => {
-    if (isMcDrawing && isMcBrush) applyMasterColorStroke(e);
-    if (isMcBrush || isMcEyedropper) {
-        mcBrushCursor.style.display = 'block';
-        if (isMcBrush) {
-            const size = parseInt(document.getElementById('mcBrushSize').value) * 2;
-            mcBrushCursor.style.width = size + 'px'; mcBrushCursor.style.height = size + 'px';
-        } else {
-            mcBrushCursor.style.width = '20px'; mcBrushCursor.style.height = '20px';
-        }
-        mcBrushCursor.style.left = e.clientX + 'px'; mcBrushCursor.style.top = e.clientY + 'px';
-    } else { mcBrushCursor.style.display = 'none'; }
-});
-editCanvas.addEventListener('mouseleave', () => { mcBrushCursor.style.display = 'none'; });
-window.addEventListener('mouseup', () => { isMcDrawing = false; });
-editCanvas.addEventListener('touchstart', (e)=>{ if(isMcBrush){isMcDrawing=true; applyMasterColorStroke(e); e.preventDefault();} }, {passive:false});
-editCanvas.addEventListener('touchmove', (e)=>{ if(isMcDrawing && isMcBrush){applyMasterColorStroke(e); e.preventDefault();} }, {passive:false});
-
 
 // 🔴 ACCIONES RÁPIDAS
 function renderQuickActions(slug) {
-    const qaContainer = document.querySelector('.qa-buttons');
-    qaContainer.innerHTML = '';
-    const isEs = currentLang === 'es';
-    
+    const qaContainer = document.querySelector('.qa-buttons'); qaContainer.innerHTML = ''; const isEs = currentLang === 'es';
     const actionsDict = {
         "remove-bg": { slug: "remove-background", label: isEs ? "Quitar Fondo" : "Remove BG", icon: "fa-user-slash text-red-500", params: {} },
         "extract-logo": { slug: "remove-background-graphic", label: isEs ? "Extraer Logo" : "Extract Logo", icon: "fa-shapes text-orange-500", params: {} },
@@ -946,82 +806,51 @@ function renderQuickActions(slug) {
         "light": { slug: "light-restore", label: isEs ? "Corregir Luz" : "Fix Light", icon: "fa-sun text-yellow-400", params: {} },
         "gen-bg": { slug: "generate-background", label: isEs ? "Fondo con IA" : "AI Background", icon: "fa-image text-emerald-500", params: {prompt: "Fondo de estudio fotográfico profesional, iluminación perfecta, alta calidad"} },
         "vectorize": { slug: "vectorize", label: isEs ? "Convertir a Vector" : "Vectorize", icon: "fa-bezier-curve text-teal-500", params: {} },
-        
         "textile-crochet": { slug: "textile-styles", label: isEs ? "Estilo Crochet" : "Crochet Style", icon: "fa-cubes text-pink-500", params: {prompt: "Apply a highly detailed 3D amigurumi crochet texture. Create thick, visible, realistic knitted yarn loops. CRITICAL: Keep EXACT original colors and shapes. Do NOT invent colors. If the image has a complex background, texture it. If transparent, strictly preserve transparency. If the background is a solid flat color, keep it flat and untextured."} },
         "textile-embroidery": { slug: "textile-styles", label: isEs ? "Estilo Bordado" : "Embroidery Style", icon: "fa-cubes text-blue-400", params: {prompt: "Apply a highly detailed realistic 3D embroidery texture. Create thick, glossy, visible 3D thread stitches. CRITICAL INSTRUCTION: You MUST keep EXACT original colors. Do NOT invent colors. If transparent, strictly preserve transparency. If background is a solid flat color, keep it flat."} },
         "textile-patch": { slug: "textile-styles", label: isEs ? "Parche Textil" : "Patch Style", icon: "fa-tag text-purple-400", params: {prompt: "Convert this exact design into a physical 3D embroidered patch. CRITICAL: Add a thick, dense embroidered border outline around the outer edges. Fill the inside with realistic shiny embroidery threads matching the EXACT original colors. Strictly PRESERVE the transparent background. DO NOT add any solid background behind the patch."} },
         "studio-glow": { slug: "studio-vignette", label: isEs ? "🌟 Resplandor" : "🌟 Outer Glow", icon: "fa-star text-yellow-400", params: {bg_color: "#ff0000"} }
     };
-
     let keys = [];
 
     if (slug.includes("enhance") && !slug.includes("video")) {
-        qaTitle.innerHTML = `<i class="fa-solid fa-check-circle text-ok mr-2"></i> Imagen Maximizada`;
-        qaContainer.innerHTML = `<p style="color:var(--text-dim); font-size:0.85rem; margin:0;">La imagen está en su calidad máxima absoluta. ¡Lista para descargar o imprimir!</p>`;
-        return; 
+        qaTitle.innerHTML = `<i class="fa-solid fa-check-circle text-ok mr-2"></i> Imagen Maximizada`; qaContainer.innerHTML = `<p style="color:var(--text-dim); font-size:0.85rem; margin:0;">La imagen está en su calidad máxima absoluta. ¡Lista para descargar o imprimir!</p>`; return; 
     } else if (!slug.includes("video")) {
         qaTitle.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Sugerencias de la IA`;
         if (slug.includes("restore") || slug === "light-restore") { keys = ["colorize", "upscale-faces", "magic-eraser", "light"]; } 
         else if (slug.includes("colorize")) { keys = ["restore", "upscale-faces", "magic-eraser"]; } 
         else if (slug.includes("remove-background") || slug === "master-color") { keys = ["vectorize", "upscale-8x", "gen-bg", "studio-glow", "textile-crochet"]; } 
-        else if (slug.includes("generate") || slug.includes("fairy") || slug.includes("sticker")) { keys = ["remove-bg", "vectorize", "upscale-8x"]; } 
+        else if (slug.includes("generate") || slug.includes("fairy") || slug.includes("sticker")) { keys = ["extract-logo", "upscale-8x"]; } 
         else if (slug === "detect-objects" || slug === "remove-objects" || slug === "erase-text" || slug === "erase-wires") { keys = ["upscale-8x", "remove-bg", "light"]; } 
         else if (slug === "vectorize") { keys = []; }
         else { keys = ["upscale-8x", "remove-bg", "magic-eraser"]; }
     }
 
     keys.forEach(k => {
-        const act = actionsDict[k];
-        const btn = document.createElement('button');
-        btn.className = "btn-qa";
-        btn.innerHTML = `<i class="fa-solid ${act.icon} mb-1 block text-lg"></i> ${act.label}`;
-        
-        if(act.slug === "studio-vignette") { btn.onclick = () => { openTool("studio-vignette"); }; } 
-        else { btn.onclick = () => ejecutarAccionRapida(act.slug, act.params); }
-        
+        const act = actionsDict[k]; const btn = document.createElement('button'); btn.className = "btn-qa"; btn.innerHTML = `<i class="fa-solid ${act.icon} mb-1 block text-lg"></i> ${act.label}`;
+        if(act.slug === "studio-vignette") { btn.onclick = () => { openTool("studio-vignette"); }; } else { btn.onclick = () => ejecutarAccionRapida(act.slug, act.params); }
         qaContainer.appendChild(btn);
     });
 }
 
 // 🔴 SPLIT MODE
-let isSplitMode = false; let isDraggingSlider = false;
-const sliderHandle = document.getElementById('sliderHandle'); const imgContainer = document.getElementById('imgContainer');
-
+let isSplitMode = false; let isDraggingSlider = false; const sliderHandle = document.getElementById('sliderHandle'); const imgContainer = document.getElementById('imgContainer');
 function toggleSplitMode() {
-    const inlineCont = document.getElementById("inlineSvgContainer");
-    isSplitMode = !isSplitMode; const btn = document.getElementById('btnSplitMode');
-    
+    const inlineCont = document.getElementById("inlineSvgContainer"); isSplitMode = !isSplitMode; const btn = document.getElementById('btnSplitMode');
     if(isSplitMode) {
-        btn.classList.add('active'); mainResultImg.src = urlOriginalMemoria; mainResultImg.style.display = "block";
-        inlineCont.style.position = "absolute"; inlineCont.style.top = "0"; inlineCont.style.left = "0"; inlineCont.style.width = "100%"; inlineCont.style.height = "100%";
-        sliderHandle.style.display = "block"; setSliderPosition(50);
-    } else {
-        btn.classList.remove('active'); mainResultImg.style.display = "none";
-        inlineCont.style.position = "relative"; inlineCont.style.clipPath = "none"; sliderHandle.style.display = "none";
-    }
+        btn.classList.add('active'); mainResultImg.src = urlOriginalMemoria; mainResultImg.style.display = "block"; inlineCont.style.position = "absolute"; inlineCont.style.top = "0"; inlineCont.style.left = "0"; inlineCont.style.width = "100%"; inlineCont.style.height = "100%"; sliderHandle.style.display = "block"; setSliderPosition(50);
+    } else { btn.classList.remove('active'); mainResultImg.style.display = "none"; inlineCont.style.position = "relative"; inlineCont.style.clipPath = "none"; sliderHandle.style.display = "none"; }
 }
 function setSliderPosition(pct) { const inlineCont = document.getElementById("inlineSvgContainer"); sliderHandle.style.left = `${pct}%`; inlineCont.style.clipPath = `polygon(${pct}% 0, 100% 0, 100% 100%, ${pct}% 100%)`; }
-
 sliderHandle.addEventListener('mousedown', (e) => { isDraggingSlider = true; e.stopPropagation(); }); sliderHandle.addEventListener('touchstart', (e) => { isDraggingSlider = true; e.stopPropagation(); });
 window.addEventListener('mousemove', (e) => { if(!isDraggingSlider) return; const rect = imgContainer.getBoundingClientRect(); let x = e.clientX - rect.left; let pct = (x / rect.width) * 100; pct = Math.max(0, Math.min(100, pct)); setSliderPosition(pct); });
 window.addEventListener('touchmove', (e) => { if(!isDraggingSlider) return; const rect = imgContainer.getBoundingClientRect(); let touch = e.touches[0]; let x = touch.clientX - rect.left; let pct = (x / rect.width) * 100; pct = Math.max(0, Math.min(100, pct)); setSliderPosition(pct); });
 window.addEventListener('mouseup', () => { isDraggingSlider = false; }); window.addEventListener('touchend', () => { isDraggingSlider = false; });
 
-
 // 🔴 EDITOR SVG
 let svgElementsMap = {}; let isMergeMode = false; let colorToMerge = null;
-
-function reVectorize(colorsCount) {
-    const params = { useOriginal: true };
-    if (colorsCount > 0) params.colors = colorsCount;
-    ejecutarAccionRapida('vectorize', params);
-}
-function normalizeToHex6(color) {
-    if(!color) return "#000000";
-    if(color.length === 4) return '#' + color[1]+color[1] + color[2]+color[2] + color[3]+color[3];
-    if(color.length > 7) return color.slice(0, 7);
-    return color;
-}
+function reVectorize(colorsCount) { const params = { useOriginal: true }; if (colorsCount > 0) params.colors = colorsCount; ejecutarAccionRapida('vectorize', params); }
+function normalizeToHex6(color) { if(!color) return "#000000"; if(color.length === 4) return '#' + color[1]+color[1] + color[2]+color[2] + color[3]+color[3]; if(color.length > 7) return color.slice(0, 7); return color; }
 function analyzeSvgColors() {
     const svgEl = document.querySelector('#inlineSvgContainer svg'); if(!svgEl) return;
     svgElementsMap = {}; const elements = svgEl.querySelectorAll('[fill]');
@@ -1035,168 +864,89 @@ function analyzeSvgColors() {
     });
     document.getElementById("svgEditorPanel").style.display = "block"; renderSvgPalette(); updateSvgDownloadLink();
 }
-
 function renderSvgPalette() {
     const container = document.getElementById('svgColorPalette'); container.innerHTML = '';
     Object.keys(svgElementsMap).forEach(color => {
-        const wrap = document.createElement('div'); wrap.className = 'color-swatch-wrap';
-        if (isMergeMode && colorToMerge === color) wrap.classList.add('merging-source');
-        
+        const wrap = document.createElement('div'); wrap.className = 'color-swatch-wrap'; if (isMergeMode && colorToMerge === color) wrap.classList.add('merging-source');
         const picker = document.createElement('input'); picker.type = 'color'; picker.value = color; picker.className = 'svg-color-picker';
         const btn = document.createElement('button'); btn.className = 'swatch-btn'; btn.style.backgroundColor = color;
-        
-        picker.addEventListener('input', (e) => {
-            const newColor = e.target.value.toUpperCase();
-            svgElementsMap[color].forEach(el => el.setAttribute('fill', newColor));
-            btn.style.backgroundColor = newColor; 
-        });
-        
-        picker.addEventListener('change', (e) => {
-            const newColor = e.target.value.toUpperCase();
-            if(color !== newColor) {
-                if(!svgElementsMap[newColor]) svgElementsMap[newColor] = [];
-                svgElementsMap[newColor].push(...svgElementsMap[color]);
-                delete svgElementsMap[color];
-            }
-            updateSvgDownloadLink();
-        });
-        
-        wrap.onclick = (e) => { if (isMergeMode) { e.preventDefault(); handleMergeClick(color); } };
-        wrap.appendChild(btn); if(!isMergeMode) wrap.appendChild(picker); container.appendChild(wrap);
+        picker.addEventListener('input', (e) => { const newColor = e.target.value.toUpperCase(); svgElementsMap[color].forEach(el => el.setAttribute('fill', newColor)); btn.style.backgroundColor = newColor; });
+        picker.addEventListener('change', (e) => { const newColor = e.target.value.toUpperCase(); if(color !== newColor) { if(!svgElementsMap[newColor]) svgElementsMap[newColor] = []; svgElementsMap[newColor].push(...svgElementsMap[color]); delete svgElementsMap[color]; } updateSvgDownloadLink(); });
+        wrap.onclick = (e) => { if (isMergeMode) { e.preventDefault(); handleMergeClick(color); } }; wrap.appendChild(btn); if(!isMergeMode) wrap.appendChild(picker); container.appendChild(wrap);
     });
 }
-function handleMergeClick(color) {
-    if (!colorToMerge) {
-        colorToMerge = color; document.getElementById('mergeStatus').innerText = "Ahora toca el color por el que quieres cambiarlo..."; renderSvgPalette();
-    } else {
-        if (color !== colorToMerge) {
-            svgElementsMap[colorToMerge].forEach(el => { el.setAttribute('fill', color); svgElementsMap[color].push(el); });
-            delete svgElementsMap[colorToMerge]; updateSvgDownloadLink();
-        }
-        cancelMerge();
-    }
-}
-function toggleMergeMode() {
-    isMergeMode = !isMergeMode; colorToMerge = null; const btn = document.getElementById('btnMergeColors');
-    if (isMergeMode) { btn.classList.add('active'); document.getElementById('mergeStatus').innerText = "Toca el PRIMER color que quieres desaparecer..."; } 
-    else { cancelMerge(); } renderSvgPalette();
-}
-function cancelMerge() {
-    isMergeMode = false; colorToMerge = null; document.getElementById('btnMergeColors').classList.remove('active'); document.getElementById('mergeStatus').innerText = ""; renderSvgPalette(); 
-}
+function handleMergeClick(color) { if (!colorToMerge) { colorToMerge = color; document.getElementById('mergeStatus').innerText = "Ahora toca el color por el que quieres cambiarlo..."; renderSvgPalette(); } else { if (color !== colorToMerge) { svgElementsMap[colorToMerge].forEach(el => { el.setAttribute('fill', color); svgElementsMap[color].push(el); }); delete svgElementsMap[colorToMerge]; updateSvgDownloadLink(); } cancelMerge(); } }
+function toggleMergeMode() { isMergeMode = !isMergeMode; colorToMerge = null; const btn = document.getElementById('btnMergeColors'); if (isMergeMode) { btn.classList.add('active'); document.getElementById('mergeStatus').innerText = "Toca el PRIMER color que quieres desaparecer..."; } else { cancelMerge(); } renderSvgPalette(); }
+function cancelMerge() { isMergeMode = false; colorToMerge = null; document.getElementById('btnMergeColors').classList.remove('active'); document.getElementById('mergeStatus').innerText = ""; renderSvgPalette(); }
 function updateSvgDownloadLink() {
-    const svgEl = document.querySelector('#inlineSvgContainer svg'); if(!svgEl) return;
-    let svgData = new XMLSerializer().serializeToString(svgEl);
-    if (!svgData.includes('xmlns=')) { svgData = svgData.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"'); }
-    const blob = new Blob([svgData], {type: "image/svg+xml;charset=utf-8"});
-    const btn = document.getElementById("btnDownloadResult"); btn.href = URL.createObjectURL(blob);
+    const svgEl = document.querySelector('#inlineSvgContainer svg'); if(!svgEl) return; let svgData = new XMLSerializer().serializeToString(svgEl); if (!svgData.includes('xmlns=')) { svgData = svgData.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"'); }
+    const blob = new Blob([svgData], {type: "image/svg+xml;charset=utf-8"}); const btn = document.getElementById("btnDownloadResult"); btn.href = URL.createObjectURL(blob);
 }
-
 
 // 🔴 ENVÍO DE FORMULARIO DE IA
 form.addEventListener("submit", async (e) => {
   e.preventDefault(); const model = MODELS.find(m => m.slug === currentSlug); const submitBtn = document.getElementById("btnMainSubmit"); submitBtn.disabled = true;
 
-  if (model.slug === "master-color") {
-      const dataUrl = editCanvas.toDataURL("image/png");
-      processFinalUrl(dataUrl, currentSlug, "png");
-      submitBtn.disabled = false;
-      return;
-  }
-
+  if (model.slug === "master-color") { const dataUrl = editCanvas.toDataURL("image/png"); processFinalUrl(dataUrl, currentSlug, "png"); submitBtn.disabled = false; return; }
   if (model.slug === "studio-vignette") {
-      statusLine.className = "status-line show"; statusText.innerHTML = "<i class='fa-solid fa-star fa-spin mr-2'></i> Aplicando resplandor transparente...";
-      mainResultImg.classList.add("opacity-50", "blur-sm");
-      const colorEl = document.getElementById("field_bg_color"); const glowColor = colorEl ? colorEl.value : "#ff0000";
-      const sizeEl = document.getElementById("field_glow_size"); const glowLevel = sizeEl ? parseInt(sizeEl.value) : 30;
-      
-      let imageToUse = urlResultMemoria;
-      if (!imageToUse) { const fileInput = document.getElementById("field_input_image"); if (fileInput && fileInput.files[0]) { imageToUse = URL.createObjectURL(fileInput.files[0]); } }
+      statusLine.className = "status-line show"; statusText.innerHTML = "<i class='fa-solid fa-star fa-spin mr-2'></i> Aplicando resplandor transparente..."; mainResultImg.classList.add("opacity-50", "blur-sm");
+      const colorEl = document.getElementById("field_bg_color"); const glowColor = colorEl ? colorEl.value : "#ff0000"; const sizeEl = document.getElementById("field_glow_size"); const glowLevel = sizeEl ? parseInt(sizeEl.value) : 30;
+      let imageToUse = urlResultMemoria; if (!imageToUse) { const fileInput = document.getElementById("field_input_image"); if (fileInput && fileInput.files[0]) { imageToUse = URL.createObjectURL(fileInput.files[0]); } }
       if (!imageToUse) { alert("Por favor, sube una imagen transparente primero."); submitBtn.disabled = false; mainResultImg.classList.remove("opacity-50", "blur-sm"); statusLine.classList.remove("show"); return; }
 
       const img = new Image(); img.crossOrigin = "Anonymous";
       img.onload = () => {
-          const canvas = document.createElement("canvas"); const ctx = canvas.getContext("2d");
-          const factor = glowLevel / 500; const pad = Math.floor(Math.max(img.width, img.height) * factor) + 10; 
-          canvas.width = img.width + pad * 2; canvas.height = img.height + pad * 2;
-          ctx.shadowColor = glowColor; ctx.shadowBlur = Math.floor(pad * 0.8); ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
-          ctx.drawImage(img, pad, pad); ctx.drawImage(img, pad, pad); ctx.drawImage(img, pad, pad);
-          processFinalUrl(canvas.toDataURL("image/png"), currentSlug, "png");
-          mainResultImg.classList.remove("opacity-50", "blur-sm"); submitBtn.disabled = false;
-      };
-      img.onerror = () => { alert("Hubo un error cargando la imagen para el resplandor."); submitBtn.disabled = false; mainResultImg.classList.remove("opacity-50", "blur-sm"); };
-      img.src = imageToUse; return; 
+          const canvas = document.createElement("canvas"); const ctx = canvas.getContext("2d"); const factor = glowLevel / 500; const pad = Math.floor(Math.max(img.width, img.height) * factor) + 10; 
+          canvas.width = img.width + pad * 2; canvas.height = img.height + pad * 2; ctx.shadowColor = glowColor; ctx.shadowBlur = Math.floor(pad * 0.8); ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+          ctx.drawImage(img, pad, pad); ctx.drawImage(img, pad, pad); ctx.drawImage(img, pad, pad); processFinalUrl(canvas.toDataURL("image/png"), currentSlug, "png"); mainResultImg.classList.remove("opacity-50", "blur-sm"); submitBtn.disabled = false;
+      }; img.onerror = () => { alert("Hubo un error cargando la imagen para el resplandor."); submitBtn.disabled = false; mainResultImg.classList.remove("opacity-50", "blur-sm"); }; img.src = imageToUse; return; 
   }
 
-  statusLine.className = "status-line show"; 
-  if(model.response_type === "video") { statusText.textContent = "Preparando renderizado..."; } else { statusText.textContent = t("processing"); }
-  
-  btnDownloadResult.style.display = "none"; btnRestart.style.display = "block"; quickActionsBar.style.display = "none";
-  magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; document.getElementById('btnAntes').style.display = 'none';
-  mainResultImg.classList.add("opacity-50", "blur-sm"); jsonViewer.style.display = "none";
-  document.getElementById("svgEditorPanel").style.display = "none"; document.getElementById("sliderHandle").style.display = "none"; isSplitMode = false; document.getElementById('btnSplitMode')?.classList.remove('active');
+  statusLine.className = "status-line show"; if(model.response_type === "video") { statusText.textContent = "Preparando renderizado..."; } else { statusText.textContent = t("processing"); }
+  btnDownloadResult.style.display = "none"; btnRestart.style.display = "block"; quickActionsBar.style.display = "none"; magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; document.getElementById('btnAntes').style.display = 'none'; mainResultImg.classList.add("opacity-50", "blur-sm"); jsonViewer.style.display = "none"; document.getElementById("svgEditorPanel").style.display = "none"; document.getElementById("sliderHandle").style.display = "none"; isSplitMode = false; document.getElementById('btnSplitMode')?.classList.remove('active');
 
-  const formData = new FormData();
-  let hasImage = false;
-  
+  const formData = new FormData(); let hasImage = false;
   for (const field of model.fields) {
       if (field.type === "mask" && isMaskTool) {
           const tempCanvas = document.createElement("canvas"); tempCanvas.width = maskCanvas.width; tempCanvas.height = maskCanvas.height; const tCtx = tempCanvas.getContext("2d");
           tCtx.fillStyle = "black"; tCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height); tCtx.drawImage(maskCanvas, 0, 0); tCtx.globalCompositeOperation = "source-in"; tCtx.fillStyle = "white"; tCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-          const blobMask = await new Promise(res => tempCanvas.toBlob(res, "image/png"));
-          formData.append(field.name, new File([blobMask], "mask.png", {type: "image/png"}));
+          const blobMask = await new Promise(res => tempCanvas.toBlob(res, "image/png")); formData.append(field.name, new File([blobMask], "mask.png", {type: "image/png"}));
       } else if (field.type === "image") {
           const el = document.getElementById("field_" + field.name);
           if (el && el.files[0]) { formData.append(field.name, el.files[0]); hasImage = true; } 
-          else if (urlResultMemoria && field.name === "input_image") {
-              const imgRes = await fetch(urlResultMemoria); const imgBlob = await imgRes.blob();
-              formData.append(field.name, new File([imgBlob], "imagen_sugerida.png", {type: imgBlob.type || "image/png"})); hasImage = true;
-          } else if (currentImageData && field.name === "input_image") { formData.append(field.name, currentImageData); hasImage = true; }
-      } else {
-          const el = document.getElementById("field_" + field.name);
-          if (el && el.value !== "") { formData.append(field.name, el.value); }
-      }
+          else if (urlResultMemoria && field.name === "input_image") { const imgRes = await fetch(urlResultMemoria); const imgBlob = await imgRes.blob(); formData.append(field.name, new File([imgBlob], "imagen_sugerida.png", {type: imgBlob.type || "image/png"})); hasImage = true; } 
+          else if (currentImageData && field.name === "input_image") { formData.append(field.name, currentImageData); hasImage = true; }
+      } else { const el = document.getElementById("field_" + field.name); if (el && el.value !== "") { formData.append(field.name, el.value); } }
   }
 
-  // Seguro final para el Error 400 Missing Image
   if (!hasImage && (currentImageData || urlResultMemoria) && model.needs_image !== False) {
-      if (urlResultMemoria) {
-          const imgRes = await fetch(urlResultMemoria); const imgBlob = await imgRes.blob();
-          formData.append("input_image", new File([imgBlob], "imagen_sugerida.png", {type: imgBlob.type || "image/png"}));
-      } else { formData.append("input_image", currentImageData); }
+      if (urlResultMemoria) { const imgRes = await fetch(urlResultMemoria); const imgBlob = await imgRes.blob(); formData.append("input_image", new File([imgBlob], "imagen_sugerida.png", {type: imgBlob.type || "image/png"})); } 
+      else { formData.append("input_image", currentImageData); }
   }
 
   setTimeout(async () => {
       try {
         const res = await fetch(`/run/${model.slug}`, { method: "POST", body: formData });
-        mainResultImg.classList.remove("opacity-50", "blur-sm"); maskCanvas.style.display = "none";
-        if(ctxMask) ctxMask.clearRect(0,0, maskCanvas.width, maskCanvas.height);
+        mainResultImg.classList.remove("opacity-50", "blur-sm"); maskCanvas.style.display = "none"; if(ctxMask) ctxMask.clearRect(0,0, maskCanvas.width, maskCanvas.height);
         
         const contentType = res.headers.get("content-type") || "";
         if (!contentType.includes("application/json")) {
-            const blob = await res.blob(); const localBlobUrl = URL.createObjectURL(blob);
-            let ext = "png"; if (blob.type.includes("svg")) ext = "svg";
-            processFinalUrl(localBlobUrl, currentSlug, ext); submitBtn.disabled = false;
+            const blob = await res.blob(); const localBlobUrl = URL.createObjectURL(blob); let ext = "png"; if (blob.type.includes("svg")) ext = "svg"; processFinalUrl(localBlobUrl, currentSlug, ext); submitBtn.disabled = false;
         } else {
             const data = await res.json();
-            if (data.error) {
-                statusLine.className = "status-line show error"; statusText.textContent = t("error_prefix") + (data.message || data.detalle || t("generic_error"));
-                submitBtn.disabled = false;
-            } else if (data.is_video_task) {
+            if (data.error) { statusLine.className = "status-line show error"; statusText.textContent = t("error_prefix") + (data.message || data.detalle || t("generic_error")); submitBtn.disabled = false; } 
+            else if (data.is_video_task) {
                 statusText.innerHTML = "Procesando Video en la Nube (0%). Por favor espera...";
                 const polling = setInterval(async () => {
                     try {
                         let rTask = await fetch(`/check-task?task_id=${data.task_id}&endpoint=${data.endpoint}`); let taskData = await rTask.json();
                         if (taskData.status === "COMPLETED") {
                             clearInterval(polling); statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
-                            let vUrl = taskData.download_url || taskData.video_url || taskData.url;
-                            mainResultImg.style.display = "none"; const mainResultVideo = document.getElementById("mainResultVideo");
-                            mainResultVideo.style.display = "block"; mainResultVideo.src = vUrl;
+                            let vUrl = taskData.download_url || taskData.video_url || taskData.url; mainResultImg.style.display = "none"; const mainResultVideo = document.getElementById("mainResultVideo"); mainResultVideo.style.display = "block"; mainResultVideo.src = vUrl;
                             btnDownloadResult.href = vUrl; btnDownloadResult.setAttribute("download", "JJ_Video_Magico.mp4"); btnDownloadResult.style.display = "block"; document.getElementById("downloadBtnText").innerText = "Descargar Video (MP4)"; btnDownloadResult.onclick = null;
                             document.getElementById('tray').style.display = 'block'; document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block'; submitBtn.disabled = false;
-                        } else if (taskData.status === "FAILED") {
-                            clearInterval(polling); statusLine.className = "status-line show error"; statusText.innerHTML = "Error al renderizar el video."; submitBtn.disabled = false;
-                        } else { statusText.innerHTML = "Generando Video (" + (taskData.progress || 0) + "%)... No cierres la ventana."; }
+                        } else if (taskData.status === "FAILED") { clearInterval(polling); statusLine.className = "status-line show error"; statusText.innerHTML = "Error al renderizar el video."; submitBtn.disabled = false; } 
+                        else { statusText.innerHTML = "Generando Video (" + (taskData.progress || 0) + "%)... No cierres la ventana."; }
                     } catch(e) { }
                 }, 4000); return;
             } else if (model.slug === "detect-objects" && data.detected_objects) {
@@ -1211,8 +961,7 @@ form.addEventListener("submit", async (e) => {
                 });
                 tray.style.display = "block"; renderQuickActions(currentSlug); quickActionsBar.style.display = "block"; document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block'; submitBtn.disabled = false;
             } else {
-                statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
-                jsonViewer.value = JSON.stringify(data, null, 2); jsonViewer.style.display = "block"; document.getElementById('imgContainer').style.display = 'none'; submitBtn.disabled = false;
+                statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done"); jsonViewer.value = JSON.stringify(data, null, 2); jsonViewer.style.display = "block"; document.getElementById('imgContainer').style.display = 'none'; submitBtn.disabled = false;
             }
         }
       } catch (err) { statusLine.className = "status-line show error"; statusText.textContent = t("conn_error") + err.message; mainResultImg.classList.remove("opacity-50", "blur-sm"); submitBtn.disabled = false; }
@@ -1223,40 +972,30 @@ let pendingQuickAction = null; let pendingExtraParams = null;
 function closePromptModal() { document.getElementById('promptModal').style.display = 'none'; pendingQuickAction = null; }
 function showPromptModal(targetSlug, extraParams) { document.getElementById('modalPromptText').value = extraParams.prompt || ""; document.getElementById('promptModal').style.display = 'flex'; pendingQuickAction = targetSlug; pendingExtraParams = extraParams; }
 document.getElementById('btnConfirmPrompt').addEventListener('click', () => {
-    const val = document.getElementById('modalPromptText').value.trim();
-    if(!val) { alert(currentLang === 'es' ? "Debes escribir una descripción." : "Prompt cannot be empty."); return; }
+    const val = document.getElementById('modalPromptText').value.trim(); if(!val) { alert(currentLang === 'es' ? "Debes escribir una descripción." : "Prompt cannot be empty."); return; }
     pendingExtraParams.prompt = val; const slug = pendingQuickAction; const params = pendingExtraParams; closePromptModal(); proceedWithQuickAction(slug, params);
 });
 
 async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
     if(!urlResultMemoria && !currentImageData) return alert("Primero debes cargar o generar una imagen.");
-    if (targetSlug.includes("enhance")) {
-        const msg = currentLang === 'es' ? "⚠️ REGLA DE ORO DE DISEÑO:\n\nSi escalas la imagen a tamaño gigante ahora, ya no podrás quitarle el fondo o borrar objetos después por el límite de memoria de la IA.\n\nSiempre debes QUITAR EL FONDO PRIMERO y ESCALAR AL FINAL.\n\n¿Deseas proceder a escalar la imagen de todos modos?" : "⚠️ DESIGN GOLDEN RULE:\n\nAlways REMOVE BACKGROUND FIRST and UPSCALE LAST.\n\nProceed anyway?";
-        if (!confirm(msg)) return;
-    }
+    if (targetSlug.includes("enhance")) { const msg = currentLang === 'es' ? "⚠️ REGLA DE ORO DE DISEÑO:\n\nSi escalas la imagen a tamaño gigante ahora, ya no podrás quitarle el fondo o borrar objetos después por el límite de memoria de la IA.\n\nSiempre debes QUITAR EL FONDO PRIMERO y ESCALAR AL FINAL.\n\n¿Deseas proceder a escalar la imagen de todos modos?" : "⚠️ DESIGN GOLDEN RULE:\n\nAlways REMOVE BACKGROUND FIRST and UPSCALE LAST.\n\nProceed anyway?"; if (!confirm(msg)) return; }
     if (targetSlug === "generate-background") { showPromptModal(targetSlug, extraParams); return; }
     proceedWithQuickAction(targetSlug, extraParams);
 }
 
 async function proceedWithQuickAction(targetSlug, extraParams) {
-    urlOriginalMemoria = urlResultMemoria; let useOriginal = false;
-    if(extraParams.useOriginal) { useOriginal = true; delete extraParams.useOriginal; }
+    urlOriginalMemoria = urlResultMemoria; let useOriginal = false; if(extraParams.useOriginal) { useOriginal = true; delete extraParams.useOriginal; }
     statusLine.className = "status-line show"; statusText.textContent = t("processing"); mainResultImg.classList.add("opacity-50", "blur-sm"); magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; quickActionsBar.style.display = "none"; jsonViewer.style.display = "none"; document.getElementById("svgEditorPanel").style.display = "none"; document.getElementById("sliderHandle").style.display = "none"; isSplitMode = false; document.getElementById('btnSplitMode')?.classList.remove('active'); document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block';
-    
     try {
         const targetModel = MODELS.find(m => m.slug === targetSlug); const formData = new FormData(); const imgField = targetModel.fields.find(f => f.type === "image").name;
         if (useOriginal && currentImageData) { formData.append(imgField, currentImageData); } 
         else { const imgRes = await fetch(urlResultMemoria); const imgBlob = await imgRes.blob(); formData.append(imgField, new File([imgBlob], "imagen_sugerida.png", {type: imgBlob.type || "image/png"})); }
-        
         for(const [k, v] of Object.entries(extraParams)) formData.append(k, v);
         targetModel.fields.forEach(f => { if(f.name !== imgField && !extraParams[f.name]) { if(f.default) formData.append(f.name, f.default); else if(f.type === "select" && f.options) formData.append(f.name, f.options[0].value); } });
-        const res = await fetch(`/run/${targetSlug}`, { method: "POST", body: formData });
-        mainResultImg.classList.remove("opacity-50", "blur-sm");
-        
+        const res = await fetch(`/run/${targetSlug}`, { method: "POST", body: formData }); mainResultImg.classList.remove("opacity-50", "blur-sm");
         const contentType = res.headers.get("content-type") || "";
-        if (!contentType.includes("application/json")) {
-            const blobFinal = await res.blob(); let ext = "png"; if (blobFinal.type.includes("svg")) ext = "svg"; processFinalUrl(URL.createObjectURL(blobFinal), targetSlug, ext);
-        } else { const data = await res.json(); if(data.error) throw new Error(data.message); }
+        if (!contentType.includes("application/json")) { const blobFinal = await res.blob(); let ext = "png"; if (blobFinal.type.includes("svg")) ext = "svg"; processFinalUrl(URL.createObjectURL(blobFinal), targetSlug, ext); } 
+        else { const data = await res.json(); if(data.error) throw new Error(data.message); }
     } catch(err) { alert("Error al procesar: " + err.message); mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block"; }
 }
 
@@ -1277,11 +1016,8 @@ async function processFinalUrl(url, slugToUse = currentSlug, ext = "png") {
             analyzeSvgColors();
         } catch (e) { console.error("Error embedding SVG", e); }
     } else {
-        if(inlineCont) inlineCont.style.display = "none";
-        document.getElementById("svgEditorPanel").style.display = "none";
-        
-        if (currentSlug === 'master-color') { mainResultImg.style.display = 'none'; } 
-        else { mainResultImg.style.display = "block"; mainResultImg.src = displayUrl; }
+        if(inlineCont) inlineCont.style.display = "none"; document.getElementById("svgEditorPanel").style.display = "none";
+        if (currentSlug === 'master-color') { mainResultImg.style.display = 'none'; } else { mainResultImg.style.display = "block"; mainResultImg.src = displayUrl; }
     }
     
     statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + (currentSlug === 'master-color' ? "Cambios Guardados." : t("done"));
@@ -1289,18 +1025,11 @@ async function processFinalUrl(url, slugToUse = currentSlug, ext = "png") {
     
     if (ext === "svg") { document.getElementById("downloadBtnText").innerText = "Descargar Vector (SVG)"; quickActionsBar.style.display = "none"; } 
     else { document.getElementById("downloadBtnText").innerText = t("download_btn"); renderQuickActions(slugToUse); quickActionsBar.style.display = "block"; }
-    btnDownloadResult.onclick = null; document.getElementById('tray').style.display = 'block';
     
+    btnDownloadResult.onclick = null; document.getElementById('tray').style.display = 'block';
     if (ext !== "svg" && currentSlug !== 'master-color') document.getElementById('btnAntes').style.display = 'block'; else document.getElementById('btnAntes').style.display = 'none';
     document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block'; jsonViewer.style.display = "none";
     resetearZoom();
-
-    // 🔴 COMBO AUTOMÁTICO: RECORTAR STICKER
-    if (slugToUse === 'sticker') {
-        statusLine.className = "status-line show"; 
-        statusText.innerHTML = "<i class='fa-solid fa-wand-magic-sparkles mr-2'></i> Auto-recortando pegatina...";
-        setTimeout(() => { ejecutarAccionRapida('remove-background-graphic', { useOriginal: false }); }, 1200);
-    }
 }
 
 let escalaImg = 1, estaArrastrando = false, panX = 0, panY = 0, startX, startY;
@@ -1323,15 +1052,9 @@ window.addEventListener('mousemove', (e) => { if (!estaArrastrando) return; panX
 window.addEventListener('mouseup', () => { estaArrastrando = false; });
 
 function mostrar(original) { 
-    if(!urlOriginalMemoria) return; 
-    const inlineCont = document.getElementById("inlineSvgContainer");
-    if(original) {
-        inlineCont.style.display = "none"; mainResultImg.style.display = "block"; mainResultImg.src = urlOriginalMemoria;
-    } else {
-        if(urlResultMemoria.endsWith('.svg') || inlineCont.innerHTML !== "") {
-            mainResultImg.style.display = "none"; inlineCont.style.display = "flex";
-        } else { mainResultImg.src = urlResultMemoria; }
-    }
+    if(!urlOriginalMemoria) return; const inlineCont = document.getElementById("inlineSvgContainer");
+    if(original) { inlineCont.style.display = "none"; mainResultImg.style.display = "block"; mainResultImg.src = urlOriginalMemoria; } 
+    else { if(urlResultMemoria.endsWith('.svg') || inlineCont.innerHTML !== "") { mainResultImg.style.display = "none"; inlineCont.style.display = "flex"; } else { mainResultImg.src = urlResultMemoria; } }
     document.getElementById('boxesContainer').style.opacity = original ? '0' : '1'; 
 }
 
@@ -1344,27 +1067,21 @@ function toggleAiObject(index, tagEl) {
 
 btnExecuteErase.addEventListener("click", async () => {
     btnExecuteErase.disabled = true; btnExecuteErase.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Procesando...`;
-    mainResultImg.classList.add("opacity-50", "blur-sm"); quickActionsBar.style.display = "none";
-    const formData = new FormData(); 
-    
+    mainResultImg.classList.add("opacity-50", "blur-sm"); quickActionsBar.style.display = "none"; const formData = new FormData(); 
     let imageToUse = urlResultMemoria ? urlResultMemoria : currentImageData;
     if (typeof imageToUse === "string") {
-        if (imageToUse.startsWith("blob:")) {
-            const blobReq = await fetch(imageToUse); const blobData = await blobReq.blob();
-            formData.append("input_image", new File([blobData], "magic.png", {type: "image/png"}));
-        } else { formData.append("input_image", imageToUse); }
+        if (imageToUse.startsWith("blob:")) { const blobReq = await fetch(imageToUse); const blobData = await blobReq.blob(); formData.append("input_image", new File([blobData], "magic.png", {type: "image/png"})); } 
+        else { formData.append("input_image", imageToUse); }
     } else { formData.append("input_image", imageToUse); }
     
     formData.append("original_session_id", aiSessionId); formData.append("erase_mode", "ultra");
     const objectsToErase = []; aiSelected.forEach(i => objectsToErase.push(aiObjects[i])); formData.append("mask_objects", JSON.stringify(objectsToErase));
     
     try {
-        const res = await fetch(`/run/execute-magic-erase`, { method: "POST", body: formData });
-        mainResultImg.classList.remove("opacity-50", "blur-sm");
+        const res = await fetch(`/run/execute-magic-erase`, { method: "POST", body: formData }); mainResultImg.classList.remove("opacity-50", "blur-sm");
         const contentType = res.headers.get("content-type") || "";
-        if (!contentType.includes("application/json")) {
-            const blob = await res.blob(); processFinalUrl(URL.createObjectURL(blob), currentSlug);
-        } else { const json = await res.json(); if(json.error) throw new Error(json.message || json.detalle || "Parámetros incorrectos"); }
+        if (!contentType.includes("application/json")) { const blob = await res.blob(); processFinalUrl(URL.createObjectURL(blob), currentSlug); } 
+        else { const json = await res.json(); if(json.error) throw new Error(json.message || json.detalle || "Parámetros incorrectos"); }
         magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = "";
     } catch(err) { alert("Error al borrar: " + err.message); mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block"; } 
     finally { btnExecuteErase.disabled = false; btnExecuteErase.innerHTML = `<i class="fa-solid fa-eraser mr-2"></i> ` + t("magic_btn_apply"); }
