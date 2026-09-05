@@ -565,7 +565,6 @@ function renderForm(model) {
         const input = document.createElement("input"); input.type = "range"; input.id = "field_" + field.name; input.name = field.name; input.min = field.min || 1; input.max = field.max || 100; input.value = field.default || 50; input.style = "width: 100%; cursor: pointer; accent-color: var(--red-bright); padding: 0;"; input.addEventListener("input", (e) => { valSpan.textContent = e.target.value; }); wrap.appendChild(input); form.appendChild(wrap); return;
     }
 
-    // 🔴 LA LISTA DE TEXTO HÍBRIDA (REMPLAZANDO LA CUADRÍCULA VISUAL)
     if (field.type === "select" || field.type === "select_hybrid") {
       const input = document.createElement("select"); 
       const placeholder = document.createElement("option"); placeholder.value = ""; placeholder.textContent = field.options_url ? t("loading_options") : t("select_placeholder"); input.appendChild(placeholder);
@@ -635,7 +634,6 @@ function getCanvasMouseCoords(e, canvasElem) {
     return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
 }
 
-// 🔴 GESTIÓN DE RATÓN EN LIENZOS (MÁSCARA Y MASTER COLOR SELECCIÓN)
 ctxMask = maskCanvas.getContext("2d");
 
 mainResultImg.addEventListener("load", () => {
@@ -688,7 +686,6 @@ function applyMasterColorGlobal() {
     for(let i=0; i<d.length; i+=4) { if(d[i+3] < 10) continue; const distSq = (d[i]-tR)*(d[i]-tR) + (d[i+1]-tG)*(d[i+1]-tG) + (d[i+2]-tB)*(d[i+2]-tB); if(distSq <= tolSq) { d[i]=rN; d[i+1]=gN; d[i+2]=bN; } } ctx.putImageData(id, 0, 0);
 }
 
-// 🔴 MODAL PARA RESPLANDOR (APLICA EN LA MISMA PANTALLA)
 document.getElementById('btnConfirmGlow').addEventListener('click', () => {
     document.getElementById('glowModal').style.display = 'none';
     if(!urlResultMemoria) return;
@@ -706,7 +703,6 @@ document.getElementById('btnConfirmGlow').addEventListener('click', () => {
     img.src = urlResultMemoria;
 });
 
-// 🔴 ACCIONES RÁPIDAS
 function renderQuickActions(slug) {
     const qaContainer = document.querySelector('.qa-buttons'); qaContainer.innerHTML = ''; const isEs = currentLang === 'es';
     const actionsDict = {
@@ -745,7 +741,6 @@ function renderQuickActions(slug) {
     });
 }
 
-// 🔴 SPLIT MODE
 let isSplitMode = false; let isDraggingSlider = false; const sliderHandle = document.getElementById('sliderHandle'); const imgContainer = document.getElementById('imgContainer');
 function toggleSplitMode() {
     const inlineCont = document.getElementById("inlineSvgContainer"); isSplitMode = !isSplitMode; const btn = document.getElementById('btnSplitMode');
@@ -759,7 +754,6 @@ window.addEventListener('mousemove', (e) => { if(!isDraggingSlider) return; cons
 window.addEventListener('touchmove', (e) => { if(!isDraggingSlider) return; const rect = imgContainer.getBoundingClientRect(); let touch = e.touches[0]; let x = touch.clientX - rect.left; let pct = (x / rect.width) * 100; pct = Math.max(0, Math.min(100, pct)); setSliderPosition(pct); });
 window.addEventListener('mouseup', () => { isDraggingSlider = false; }); window.addEventListener('touchend', () => { isDraggingSlider = false; });
 
-// 🔴 EDITOR SVG
 let svgElementsMap = {}; let isMergeMode = false; let colorToMerge = null;
 function reVectorize(colorsCount) { const params = { useOriginal: true }; if (colorsCount > 0) params.colors = colorsCount; ejecutarAccionRapida('vectorize', params); }
 function normalizeToHex6(color) { if(!color) return "#000000"; if(color.length === 4) return '#' + color[1]+color[1] + color[2]+color[2] + color[3]+color[3]; if(color.length > 7) return color.slice(0, 7); return color; }
@@ -837,7 +831,7 @@ form.addEventListener("submit", async (e) => {
 
   setTimeout(async () => {
       try {
-        const targetEndpoint = model.slug === 'fairy-art' && formData.get('hybrid_style')?.startswith('PROMPT:') ? '/v1/images/edits' : model.endpoint;
+        const targetEndpoint = model.slug === 'fairy-art' && formData.get('hybrid_style')?.startsWith('PROMPT:') ? '/v1/images/edits' : model.endpoint;
         const res = await fetch(`/run/${model.slug}`, { method: "POST", body: formData });
         mainResultImg.classList.remove("opacity-50", "blur-sm"); maskCanvas.style.display = "none"; if(ctxMask) ctxMask.clearRect(0,0, maskCanvas.width, maskCanvas.height);
         
