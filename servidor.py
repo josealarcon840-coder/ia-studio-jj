@@ -220,36 +220,12 @@ def run_model(slug):
         if slug == "generate-background" and ("png" not in mime.lower()):
              return jsonify({"error": True, "message": "¡Debes subir un PNG transparente (sin fondo)! Ve primero a 'Quitar Fondo'."}), 400
              
-        # 🔴 LÓGICA ESPECIAL PARA EL STICKER CON COMBO (GENERACIÓN + FONDO TRANSPARENTE)
+        # SE QUITÓ EL "COMBO OCULTO" EN PYTHON QUE CAUSABA EL ERROR DE IMAGEN EN BLANCO. 
+        # AHORA EL STICKER SE GENERA NORMAL Y EL COMBO LO HARÁ LA PÁGINA WEB VISUALMENTE.
         if slug == "sticker":
-             data["prompt"] = "Die-cut sticker style with thick clean white border, solid contrasting background, vector art"
-             r1 = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data, timeout=120)
-             
-             if r1.status_code == 200:
-                 ct = r1.headers.get("Content-Type", "")
-                 img_bytes = None
-                 if "application/json" in ct:
-                     d_json = r1.json()
-                     url_img = d_json.get("data", [{}])[0].get("url") if isinstance(d_json.get("data"), list) else d_json.get("data", {}).get("url", d_json.get("url", d_json.get("image_url")))
-                     if url_img:
-                         if url_img.startswith("data:image"):
-                             header, encoded = url_img.split(",", 1)
-                             img_bytes = base64.b64decode(encoded)
-                         else:
-                             r_img = requests.get(url_img, headers={'User-Agent': 'Mozilla/5.0'}, timeout=60)
-                             if r_img.status_code == 200: img_bytes = r_img.content
-                 else:
-                     img_bytes = r1.content
+             data["prompt"] = "2D vector die-cut sticker, thick white border, flat colors, isolated on solid background"
 
-                 if img_bytes:
-                     f2 = {"input_image": ("sticker.png", img_bytes, "image/png")}
-                     response = requests.post(BASE + "/v1/images/remove-background-graphic", headers=HEADERS, files=f2, timeout=120)
-                 else:
-                     response = r1
-             else:
-                 response = r1
-
-        elif slug in ["detect-text", "detect-wires"]:
+        if slug in ["detect-text", "detect-wires"]:
             r1 = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files, timeout=120)
             if r1.status_code == 200:
                 d_json = r1.json()
