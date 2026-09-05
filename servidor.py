@@ -27,25 +27,19 @@ MODELS = [
     {"slug": "detect-objects", "label": L("Borrador Mágico (Auto)", "Magic Eraser (Auto)"), "icon": "fa-magic", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Encuentra objetos para borrarlos con un clic.", "Finds objects to erase them with a click."), "endpoint": "/v1/images/detect-objects", "response_type": "json", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen Base", "Base Image"), "required": True}, {"name": "lang", "type": "select", "label": L("Idioma", "Language"), "options": [{"value": "es", "label": L("Español", "Spanish")}]}, {"name": "erase_mode", "type": "select", "label": L("Calidad", "Quality"), "options": [{"value": "ultra", "label": L("Ultra HD", "Ultra HD")}, {"value": "super", "label": L("Super", "Super")}, {"value": "normal", "label": L("Normal", "Normal")}]}]},
     {"slug": "detect-text", "label": L("Borrar Texto (Auto)", "Erase Text (Auto)"), "icon": "fa-font", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Detecta y borra los textos automáticamente.", "Detects and erases text automatically."), "endpoint": "/v1/images/detect-text", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "detect-wires", "label": L("Borrar Cables (Auto)", "Erase Wires (Auto)"), "icon": "fa-plug", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Detecta y borra cables/postes.", "Detects and erases wires."), "endpoint": "/v1/images/detect-wires", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
-    
-    # 🔴 NUEVO: HERRAMIENTA AUTOMÁTICA DE MARCAS DE AGUA
     {"slug": "remove-logo", "label": L("Quitar Marcas de Agua (Auto)", "Remove Watermarks"), "icon": "fa-copyright", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Detecta y elimina logos y marcas de protección en un clic.", "Auto remove logos and watermarks."), "endpoint": "/v1/images/remove-logo", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
     {"slug": "remove-background", "label": L("Quitar Fondo (Fotos)", "Remove Background"), "icon": "fa-user-slash", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Recorte de personas o productos.", "Cutout for people/products."), "endpoint": "/v1/images/remove-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "remove-background-graphic", "label": L("Quitar Fondo (Arte)", "Remove BG (Graphics)"), "icon": "fa-shapes", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Ideal para anime, stickers y logos.", "Ideal for anime, stickers and logos."), "endpoint": "/v1/images/remove-background-graphic", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
-    {"slug": "remove-objects", "label": L("Borrar Objetos (Máscara)", "Remove Objects (Mask)"), "icon": "fa-eraser", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Usa el pincel para borrar lo que quieras.", "Use the brush to erase anything."), "endpoint": "/v1/images/remove-objects", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "input_mask", "type": "mask", "label": L("Máscara (B/N)", "Mask (B/W)"), "required": True}, {"name": "erase_mode", "type": "select", "label": L("Calidad", "Quality"), "options": [{"value": "ultra", "label": L("Ultra HD", "Ultra HD")}, {"value": "normal", "label": L("Normal", "Normal")}]}]},
-    {"slug": "erase-text", "label": L("Borrar Texto (Máscara)", "Erase Text (Mask)"), "icon": "fa-text-slash", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Pinta sobre el texto para borrarlo.", "Paint over text to erase it."), "endpoint": "/v1/images/remove-text", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "input_mask", "type": "mask", "label": L("Máscara", "Mask"), "required": True}, {"name": "erase_mode", "type": "select", "label": L("Calidad", "Quality"), "options": [{"value": "ultra", "label": L("Ultra HD", "Ultra HD")}, {"value": "normal", "label": L("Normal", "Normal")}]}]},
-    {"slug": "erase-wires", "label": L("Borrar Cables (Máscara)", "Erase Wires (Mask)"), "icon": "fa-bolt-slash", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Pinta sobre cables para borrarlos.", "Paint over wires to erase."), "endpoint": "/v1/images/remove-wires", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "input_mask", "type": "mask", "label": L("Máscara", "Mask"), "required": True}]},
+    {"slug": "remove-objects", "label": L("Borrar Objetos (Pincel)", "Remove Objects (Brush)"), "icon": "fa-eraser", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Usa el pincel para borrar lo que quieras.", "Use the brush to erase anything."), "endpoint": "/v1/images/remove-objects", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "input_mask", "type": "mask", "label": L("Máscara (B/N)", "Mask (B/W)"), "required": True}, {"name": "erase_mode", "type": "select", "label": L("Calidad", "Quality"), "options": [{"value": "ultra", "label": L("Ultra HD", "Ultra HD")}, {"value": "normal", "label": L("Normal", "Normal")}]}]},
     {"slug": "remove-reflection", "label": L("Quitar Reflejos", "Remove Reflections"), "icon": "fa-camera", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Suaviza reflejos en vidrios.", "Softens reflections on glass."), "endpoint": "/v1/images/remove-reflection", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "clean-mirror", "label": L("Limpiar Espejo", "Clean Mirror"), "icon": "fa-broom", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Quita destellos de espejos.", "Removes flash glare from mirrors."), "endpoint": "/v1/images/clean-mirror", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
     {"slug": "enhance", "label": L("Escalar Resolución", "Upscale Resolution"), "icon": "fa-expand", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Mejora la calidad general.", "Improves overall quality."), "endpoint": "/v1/images/enhance", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen (máx 1500px)", "Image (max)"), "required": True, "resize_max": 1500}, {"name": "zoom_factor", "type": "select", "label": L("Factor", "Factor"), "required": True, "options": [{"value": "2", "label": L("2x", "2x")}, {"value": "4", "label": L("4x", "4x")}, {"value": "8", "label": L("8x (Máximo)", "8x (Max)")}]}, {"name": "enhance_faces", "type": "checkbox", "label": L("Mejorar rostros", "Enhance faces"), "default": True}]},
     {"slug": "enhance-pro", "label": L("Escalar Rostros (Pro)", "Upscale Faces (Pro)"), "icon": "fa-user-check", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Ideal para fotos de personas.", "Ideal for photos of people."), "endpoint": "/v1/images/enhance/pro", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True, "resize_max": 1500}, {"name": "zoom_factor", "type": "select", "label": L("Factor", "Factor"), "required": True, "options": [{"value": "2", "label": L("2x", "2x")}, {"value": "4", "label": L("4x", "4x")}, {"value": "8", "label": L("8x (Máximo)", "8x (Max)")}]}]},
-    {"slug": "enhance-art", "label": L("Escalar Arte / Anime", "Upscale Art / Anime"), "icon": "fa-dragon", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Ideal para dibujos.", "Ideal for drawings."), "endpoint": "/v1/images/enhance-art", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True, "resize_max": 1500}, {"name": "zoom_factor", "type": "select", "label": L("Factor", "Factor"), "required": True, "options": [{"value": "2", "label": L("2x", "2x")}, {"value": "4", "label": L("4x", "4x")}, {"value": "8", "label": L("8x (Máximo)", "8x (Max)")}]}]},
-    {"slug": "restore", "label": L("Restaurar Antigua", "Restore Old Photo"), "icon": "fa-clock-rotate-left", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Repara rasguños leves.", "Repairs light scratches."), "endpoint": "/v1/images/restore", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
-    {"slug": "restore-pro", "label": L("Restaurar Antigua (Pro)", "Restore Old (Pro)"), "icon": "fa-hammer", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Reparación severa.", "Heavy damage repair."), "endpoint": "/v1/images/restore/pro", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
-    {"slug": "colorize", "label": L("Colorear B/N", "Colorize B/W"), "icon": "fa-palette", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Da color a fotos antiguas.", "Adds color to old photos."), "endpoint": "/v1/images/colorize", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
-    {"slug": "colorize-pro", "label": L("Colorear B/N (Pro)", "Colorize B/W (Pro)"), "icon": "fa-paint-roller", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Colorización avanzada.", "Advanced colorization."), "endpoint": "/v1/images/colorize/pro", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
+    {"slug": "enhance-art", "label": L("Escalar Arte / Anime", "Upscale Art / Anime"), "icon": "fa-dragon", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Ideal para dibujos.", "Ideal for drawings."), "endpoint": "/v1/images/enhance-art", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True, "resize_max": 1500}, {"name": "zoom_factor", "type": "select", "label": L("Factor", "Factor"), "required": True, "options": [{"value": "2", "label": L("2x", "2x")}, {"value": "4", "label": L("4x", "4x")}]}]},
+    {"slug": "restore-pro", "label": L("Restaurar Antigua (Pro)", "Restore Old (Pro)"), "icon": "fa-hammer", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Reparación severa de rasguños.", "Heavy damage repair."), "endpoint": "/v1/images/restore/pro", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
+    {"slug": "colorize-pro", "label": L("Colorear B/N (Pro)", "Colorize B/W (Pro)"), "icon": "fa-paint-roller", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Colorización avanzada y realista.", "Advanced colorization."), "endpoint": "/v1/images/colorize/pro", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "light-restore", "label": L("Corregir Iluminación", "Fix Lighting"), "icon": "fa-sun", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Arregla fotos oscuras.", "Fixes dark photos."), "endpoint": "/v1/images/light-restore", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
     {"slug": "generate-zimage", "label": L("Crear: Z-Image (Texto)", "Create: Z-Image (Text)"), "icon": "fa-rocket", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Crea imagen rápida.", "Create image fast."), "endpoint": "/v1/images/generates/zimage", "response_type": "image", "needs_image": False, "fields": [
@@ -73,15 +67,13 @@ MODELS = [
         ]}
     ]},
     
-    {"slug": "fairy-art", "label": L("Retrato a Arte", "Portrait to Art"), "icon": "fa-wand-magic-sparkles", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Convierte fotos a Anime/3D.", "Convert photos to Anime/3D."), "endpoint": "/v1/images/generates/art", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "style", "type": "select", "label": L("Estilo", "Style"), "required": True, "options_url": "https://storage.googleapis.com/assets.snapedit.app/fairyai/anime_styles_6mar25.json"}]},
+    {"slug": "fairy-art", "label": L("Retrato a Arte", "Portrait to Art"), "icon": "fa-wand-magic-sparkles", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Convierte fotos a Anime/3D con muestrario visual.", "Convert photos to Anime/3D."), "endpoint": "/v1/images/generates/art", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "style", "type": "visual_select", "label": L("Elige un Estilo Visual", "Style"), "required": True, "options_url": "https://storage.googleapis.com/assets.snapedit.app/fairyai/anime_styles_6mar25.json"}]},
     {"slug": "generate-background", "label": L("Generar Fondo Nuevo", "Generate Background"), "icon": "fa-image", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Fondo para productos. ¡Sube un PNG SIN FONDO!", "Background for products."), "endpoint": "/v1/images/generates-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen (Transparente)", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Descripción del fondo", "Background prompt"), "required": True}]},
-    {"slug": "sticker", "label": L("Crear Sticker", "Create Sticker"), "icon": "fa-note-sticky", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Haz un sticker de tu foto.", "Make a sticker from photo."), "endpoint": "/v1/images/generates/sticker", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Estilo (Ej: Zombie)", "Style (e.g. Zombie)"), "required": True}]},
+    {"slug": "sticker", "label": L("Crear Sticker", "Create Sticker"), "icon": "fa-note-sticky", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Haz un sticker de tu foto con borde blanco al instante.", "Make a sticker from photo."), "endpoint": "/v1/images/generates/sticker", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    {"slug": "recolor-ai", "label": L("🎨 Cambiar Colores (IA)", "🎨 Recolor (AI)"), "icon": "fa-palette", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Cambia colores de un elemento sin tocar el resto.", "Change colors of specific elements."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
-        {"name": "input_image", "type": "image", "label": L("Sube tu Diseño", "Upload Design"), "required": True}, 
-        {"name": "target", "type": "text", "label": L("¿Qué elemento? (Ej: las letras 'Super', la moto)", "Which element?"), "required": True},
-        {"name": "color_from", "type": "text", "label": L("Color actual (Ej: naranja)", "Current color"), "required": True},
-        {"name": "color_to", "type": "text", "label": L("Nuevo color (Ej: verde neón)", "New color"), "required": True}
+    # 🔴 NUEVO MASTER COLOR NATIVO
+    {"slug": "master-color", "label": L("🎨 Master Color", "🎨 Master Color"), "icon": "fa-fill-drip", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Sustituye colores manualmente con gotero inteligente.", "Change colors manually with smart eyedropper."), "endpoint": "/local/canvas", "response_type": "image", "fields": [
+        {"name": "input_image", "type": "image", "label": L("Sube tu Diseño", "Upload Design"), "required": True}
     ]},
 
     {"slug": "edit-multi", "label": L("Fusión IA (Múltiple)", "AI Fusion (Multi)"), "icon": "fa-object-group", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Edita hasta 3 imágenes juntas (Ej: Pon a la persona de la Imagen 2 en la 1).", "Edit using up to 3 images."), "endpoint": "/v1/images/edits/multi", "response_type": "image", "fields": [
@@ -93,10 +85,11 @@ MODELS = [
 
     {"slug": "studio-vignette", "label": L("🌟 Resplandor Mágico", "🌟 Magic Glow"), "icon": "fa-star", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Añade resplandor HD a diseños sin fondo.", "Adds a glow to a transparent design."), "endpoint": "/local/canvas", "response_type": "image", "fields": [
         {"name": "input_image", "type": "image", "label": L("Sube tu Diseño (Sin Fondo)", "Upload Transparent Design"), "required": True}, 
-        {"name": "bg_color", "type": "color", "label": L("Elige el Color del Resplandor", "Glow Color"), "default": "#ff0000"}
+        {"name": "bg_color", "type": "color", "label": L("Elige el Color del Resplandor", "Glow Color"), "default": "#ff0000"},
+        {"name": "glow_size", "type": "range", "label": L("Grosor del Resplandor", "Glow Thickness"), "min": 1, "max": 100, "default": 30}
     ]},
 
-    {"slug": "edit-image", "label": L("Edición Mágica (Texto)", "Magic Edit (Text)"), "icon": "fa-wand-sparkles", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Edita usando órdenes.", "Edit using text prompts."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Instrucción", "Prompt"), "required": True}, {"name": "mode", "type": "select", "label": L("Modo", "Mode"), "required": True, "options": [{"value": "editing", "label": L("General", "General")}, {"value": "inpaint", "label": L("Inpaint", "Inpaint")}]}, {"name": "input_mask", "type": "mask", "label": L("Máscara", "Mask"), "required": False}]},
+    {"slug": "edit-image", "label": L("Edición Mágica (Texto)", "Magic Edit (Text)"), "icon": "fa-wand-sparkles", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Edita usando órdenes.", "Edit using text prompts."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Instrucción", "Prompt"), "required": True}, {"name": "mode", "type": "select", "label": L("Modo", "Mode"), "required": True, "options": [{"value": "editing", "label": L("General", "General")}, {"value": "inpaint", "label": L("Inpaint", "Inpaint")}]}]},
     
     {"slug": "textile-styles", "label": L("Texturas Mágicas 3D", "3D Magic Textures"), "icon": "fa-cubes", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Aplica lana, bordado, parche o inflado.", "Applies yarn, thread, patch or puffy styles."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
         {"name": "input_image", "type": "image", "label": L("Sube tu Diseño Original", "Upload Design"), "required": True}, 
@@ -122,37 +115,23 @@ def resize_if_needed(file_bytes, slug, original_filename="image.jpg"):
         max_dim = 1500 if "enhance" in slug else (512 if "pose" in slug else 3000)
         img = Image.open(io.BytesIO(file_bytes))
         img_format = (img.format or "JPEG").upper()
-        
-        # 🔴 SALVAVIDAS: GUARDAR EL PERFIL DE COLOR ORIGINAL
         icc_profile = img.info.get('icc_profile')
         
         width, height = img.size
         needs_resize = (max(width, height) > max_dim)
         needs_convert = (img_format == "JPEG" and img.mode in ("RGBA", "P"))
         
-        if not needs_resize and not needs_convert: 
-            return file_bytes, original_filename, f"image/{img_format.lower()}"
-            
+        if not needs_resize and not needs_convert: return file_bytes, original_filename, f"image/{img_format.lower()}"
         if needs_resize:
             scale = max_dim / max(width, height)
             img = img.resize((int(width * scale), int(height * scale)), Image.LANCZOS)
-            
-        if needs_convert: 
-            img = img.convert("RGB")
-            
+        if needs_convert: img = img.convert("RGB")
         buffer = io.BytesIO()
-        
-        # 🔴 INYECTAR EL PERFIL DE COLOR AL GUARDAR PARA EVITAR CAMBIOS DE TONO
-        if img_format == "JPEG": 
-            img.save(buffer, format=img_format, quality=100, subsampling=0, icc_profile=icc_profile)
-        else: 
-            img.save(buffer, format=img_format, icc_profile=icc_profile)
-            
+        if img_format == "JPEG": img.save(buffer, format=img_format, quality=100, subsampling=0, icc_profile=icc_profile)
+        else: img.save(buffer, format=img_format, icc_profile=icc_profile)
         return buffer.getvalue(), original_filename, f"image/{img_format.lower()}"
-    except Exception: 
-        return file_bytes, original_filename, "image/jpeg"
-    finally: 
-        gc.collect()
+    except Exception: return file_bytes, original_filename, "image/jpeg"
+    finally: gc.collect()
 
 @app.route("/")
 def index(): return render_template("index.html")
@@ -214,14 +193,10 @@ def check_task():
 def run_model(slug):
     model = MODELS_BY_SLUG.get(slug)
     if slug == "execute-magic-erase": model = {"endpoint": "/v1/images/remove-objects", "fields": []}
-    elif slug in ["erase-text", "erase-wires"]:
-        model = model.copy()
-        model["endpoint"] = "/v1/images/remove-objects"
     if not model: return jsonify({"error": True, "message": "Herramienta desconocida"}), 404
 
     try:
         files, data = {}, {}
-        
         for key, file_obj in request.files.items():
             if file_obj and file_obj.filename:
                 buf, fname, mime = resize_if_needed(file_obj.read(), slug, file_obj.filename)
@@ -236,29 +211,17 @@ def run_model(slug):
             api_secret = "65596jb1noid56iogfuq4aigtt0ccda7ku0clj0ti46d65skt8tj"
             img_tuple = files.get("input_image") or files.get("image")
             if not img_tuple: return jsonify({"error": True, "message": "Falta la imagen"}), 400
-            
-            resp = requests.post(
-                'https://vectorizer.ai/api/v1/vectorize',
-                files={'image': img_tuple},
-                auth=(api_id, api_secret),
-                timeout=120
-            )
-            if resp.status_code == 200:
-                return Response(resp.content, mimetype="image/svg+xml")
-            else:
-                return jsonify({"error": True, "message": f"Error Vectorizer ({resp.status_code}): {resp.text}"}), 400
+            resp = requests.post('https://vectorizer.ai/api/v1/vectorize', files={'image': img_tuple}, auth=(api_id, api_secret), timeout=120)
+            if resp.status_code == 200: return Response(resp.content, mimetype="image/svg+xml")
+            else: return jsonify({"error": True, "message": f"Error Vectorizer ({resp.status_code}): {resp.text}"}), 400
 
-        if slug in ["textile-styles", "recolor-ai", "edit-multi"]: 
-            data["mode"] = "editing"
+        if slug in ["textile-styles", "edit-multi"]: data["mode"] = "editing"
             
-        if slug == "recolor-ai" and "prompt" in data:
-            target = data.pop("target", "everything")
-            c_from = data.pop("color_from", "current color")
-            c_to = data.pop("color_to", "new color")
-            data["prompt"] = f"CRITICAL INSTRUCTION: Keep exactly the same design, layout, text, lines, transparent background and style. DO NOT invent new objects or alter the image. ONLY change the {c_from} color of the {target} to {c_to}."
-
         if slug == "generate-background" and ("png" not in mime.lower()):
              return jsonify({"error": True, "message": "¡Debes subir un PNG transparente (sin fondo)! Ve primero a 'Quitar Fondo'."}), 400
+             
+        if slug == "sticker":
+             data["prompt"] = "Die-cut sticker style with thick clean white border around the character, transparent or isolated background"
 
         if slug in ["detect-text", "detect-wires"]:
             r1 = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files, timeout=120)
@@ -274,23 +237,13 @@ def run_model(slug):
                     response = requests.post(BASE + ep_remove, headers=HEADERS, files=f2, data={"erase_mode": "ultra"}, timeout=300)
                 else: return jsonify({"error": True, "message": "No se detectó texto o cables."}), 400
             else: response = r1
-
         else:
-            if slug == "execute-magic-erase":
-                files = None
-                data.pop("input_image", None)
-
             if model.get("needs_image") is False:
-                payload = {
-                    "prompt": data.get("prompt", ""),
-                    "aspect_ratio": data.get("aspect_ratio", "1:1")
-                }
-                
+                payload = {"prompt": data.get("prompt", ""), "aspect_ratio": data.get("aspect_ratio", "1:1")}
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, json=payload, timeout=120)
                 if response.status_code >= 500:
                     multipart_data = {k: (None, str(v)) for k, v in payload.items()}
                     response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=multipart_data, timeout=120)
-            
             else:
                 response = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
         
@@ -313,7 +266,6 @@ def run_model(slug):
         else:
             if response.status_code != 200: return jsonify({"error": True, "message": f"Servidores saturados (HTTP {response.status_code})."}), 400
             return Response(response.content, mimetype=response.headers.get("Content-Type", "image/png"))
-
     except Exception as e: 
         print(f"❌ ERROR: {str(e)}")
         return jsonify({"error": True, "message": f"Error interno: {str(e)}"}), 400
