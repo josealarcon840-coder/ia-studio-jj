@@ -285,7 +285,7 @@
              </button>
           </div>
           
-          <!-- 🔴 NUEVO: PANEL MASTER COLOR (GOTERO Y SELECCIÓN) -->
+          <!-- 🔴 PANEL MASTER COLOR (GOTERO Y SELECCIÓN TIPO PHOTOSHOP) -->
           <div id="masterColorPanel" style="display:none; background: #000; border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-top: 15px;">
               <h4 style="margin: 0 0 10px; font-size: 1rem; color: var(--ok); text-transform: uppercase; font-weight: 800; text-align: center;"><i class="fa-solid fa-fill-drip mr-2"></i> Master Color</h4>
               <p style="font-size:0.75rem; color:#888; text-align:center; margin-bottom:15px;">1. Copia un color con el gotero.<br>2. Selecciona una zona o reemplázalo en todo.</p>
@@ -302,7 +302,7 @@
                   <input type="range" id="mcTolerance" min="1" max="150" value="40" style="width:100%; accent-color:var(--red-bright);" oninput="document.getElementById('mcTolVal').innerText=this.value">
               </div>
 
-              <button type="button" id="btnMcSelect" class="btn-qa" style="width:100%; margin-bottom:10px; background:#444;"><i class="fa-solid fa-vector-square mr-2"></i> Seleccionar Zona</button>
+              <button type="button" id="btnMcSelect" class="btn-qa" style="width:100%; margin-bottom:10px; background:#444;"><i class="fa-solid fa-vector-square mr-2"></i> Dibujar Zona</button>
               
               <div style="display:flex; gap:10px;">
                   <button type="button" onclick="applyMasterColorZone()" class="btn-primary" style="margin-top:0; flex:1; padding: 10px; font-size: 0.75rem;"><i class="fa-solid fa-square-check block mb-1 text-lg"></i> En Zona</button>
@@ -336,10 +336,10 @@
                   <div id="imgContainer" style="position:relative; display:inline-block; line-height:0;">
                       <img id="mainResultImg" src="" alt="Resultado" style="display:block; max-width: 90vw; max-height: 70vh; border-radius: 8px;">
                       
-                      <!-- Pincel Master Color Nativo (Oculto hasta que se llame) -->
+                      <!-- Canvas oculto de Master Color -->
                       <canvas id="editCanvas" style="display:none; max-width: 90vw; max-height: 70vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.8); margin: 0 auto;"></canvas>
 
-                      <!-- 🔴 LIENZOS PARA DIBUJAR (MÁSCARA Y SELECCIÓN MASTER COLOR) -->
+                      <!-- Lienzo interactivo (Máscaras y Selección de cuadro) -->
                       <canvas id="maskCanvas" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; z-index:10; opacity:0.6; cursor:crosshair; touch-action:none; border-radius: 8px;"></canvas>
 
                       <div id="inlineSvgContainer" style="display:none; align-items:center; justify-content:center;"></div>
@@ -535,7 +535,7 @@ function openTool(slug) {
               
               maskCanvas.width = img.naturalWidth; maskCanvas.height = img.naturalHeight;
               ctxMask = maskCanvas.getContext("2d"); ctxMask.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
-              maskCanvas.style.display = "block"; // Activamos máscara arriba para atrapar la selección
+              maskCanvas.style.display = "block";
           };
           img.src = urlResultMemoria || URL.createObjectURL(currentImageData);
       }, 100);
@@ -757,7 +757,7 @@ document.getElementById('btnMcSelect').addEventListener('click', () => {
 });
 
 function applyMasterColorZone() {
-    if(!mcSelection || mcSelection.w === 0 || mcSelection.h === 0) { alert("Por favor, activa 'Seleccionar Zona' y dibuja un recuadro en la imagen."); return; }
+    if(!mcSelection || mcSelection.w === 0 || mcSelection.h === 0) { alert("Por favor, activa 'Dibujar Zona' y dibuja un recuadro en la imagen con tu mouse."); return; }
     const x = Math.max(0, Math.floor(mcSelection.x)); const y = Math.max(0, Math.floor(mcSelection.y));
     const w = Math.min(editCanvas.width - x, Math.floor(mcSelection.w)); const h = Math.min(editCanvas.height - y, Math.floor(mcSelection.h));
     if (w <= 0 || h <= 0) return;
@@ -795,9 +795,10 @@ function applyMasterColorGlobal() {
 // 🔴 ACCIONES RÁPIDAS
 function renderQuickActions(slug) {
     const qaContainer = document.querySelector('.qa-buttons'); qaContainer.innerHTML = ''; const isEs = currentLang === 'es';
+    
     const actionsDict = {
         "remove-bg": { slug: "remove-background", label: isEs ? "Quitar Fondo" : "Remove BG", icon: "fa-user-slash text-red-500", params: {} },
-        "extract-logo": { slug: "remove-background-graphic", label: isEs ? "Extraer Logo" : "Extract Logo", icon: "fa-shapes text-orange-500", params: {} },
+        "extract-logo": { slug: "remove-background-graphic", label: isEs ? "Quitar Fondo (Arte)" : "Extract Logo", icon: "fa-shapes text-orange-500", params: {} },
         "upscale-8x": { slug: "enhance", label: isEs ? "Escalar Máx (8x)" : "Upscale Max (8x)", icon: "fa-rocket text-purple-500", params: {zoom_factor: "8"} },
         "upscale-faces": { slug: "enhance-pro", label: isEs ? "Mejorar Rostros" : "Enhance Faces", icon: "fa-user-check text-blue-500", params: {zoom_factor: "2"} },
         "magic-eraser": { slug: "detect-objects", label: isEs ? "Borrador Mágico" : "Magic Eraser", icon: "fa-magic text-yellow-500", params: {erase_mode: "ultra"} },
@@ -820,7 +821,10 @@ function renderQuickActions(slug) {
         if (slug.includes("restore") || slug === "light-restore") { keys = ["colorize", "upscale-faces", "magic-eraser", "light"]; } 
         else if (slug.includes("colorize")) { keys = ["restore", "upscale-faces", "magic-eraser"]; } 
         else if (slug.includes("remove-background") || slug === "master-color") { keys = ["vectorize", "upscale-8x", "gen-bg", "studio-glow", "textile-crochet"]; } 
-        else if (slug.includes("generate") || slug.includes("fairy") || slug.includes("sticker")) { keys = ["extract-logo", "upscale-8x"]; } 
+        
+        // 🔴 EN STICKER, EL USUARIO VE CLARAMENTE EL BOTON DE QUITAR FONDO NORMAL Y DE ARTE 
+        else if (slug.includes("generate") || slug.includes("fairy") || slug.includes("sticker")) { keys = ["remove-bg", "extract-logo", "upscale-8x"]; } 
+        
         else if (slug === "detect-objects" || slug === "remove-objects" || slug === "erase-text" || slug === "erase-wires") { keys = ["upscale-8x", "remove-bg", "light"]; } 
         else if (slug === "vectorize") { keys = []; }
         else { keys = ["upscale-8x", "remove-bg", "magic-eraser"]; }
