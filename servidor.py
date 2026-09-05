@@ -67,7 +67,18 @@ MODELS = [
         ]}
     ]},
     
-    {"slug": "fairy-art", "label": L("Retrato a Arte", "Portrait to Art"), "icon": "fa-wand-magic-sparkles", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Convierte fotos a Anime/3D con muestrario visual.", "Convert photos to Anime/3D."), "endpoint": "/v1/images/generates/art", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "style", "type": "visual_select", "label": L("Elige un Estilo Visual", "Style"), "required": True, "options_url": "https://storage.googleapis.com/assets.snapedit.app/fairyai/anime_styles_6mar25.json"}]},
+    {"slug": "fairy-art", "label": L("Retrato a Arte", "Portrait to Art"), "icon": "fa-wand-magic-sparkles", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Convierte fotos a Anime/Boceto respetando la forma y ropa original.", "Convert photos to Art keeping original shape."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
+        {"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, 
+        {"name": "prompt", "type": "visual_select", "label": L("Elige un Estilo (Mantiene la forma real)", "Style"), "required": True, "options": [
+            {"value": "CRITICAL INSTRUCTION: Keep the exact same original shape, face, clothes and layout. Transform the photo into a highly detailed artistic black and white pencil sketch drawing.", "label": "Boceto a Lápiz", "thumbnail": "https://images.unsplash.com/photo-1580974582391-a6269c5e5058?w=200&h=200&fit=crop"},
+            {"value": "CRITICAL INSTRUCTION: Keep the exact same original shape, face, clothes and layout. Transform the photo into a Studio Ghibli 2D anime style, vibrant flat colors, anime masterpiece.", "label": "Estilo Ghibli", "thumbnail": "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=200&h=200&fit=crop"},
+            {"value": "CRITICAL INSTRUCTION: Keep the exact same original shape, face, clothes and layout. Transform the photo into a 3D Pixar Disney style animated character, smooth 3D render.", "label": "Animado 3D", "thumbnail": "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=200&h=200&fit=crop"},
+            {"value": "CRITICAL INSTRUCTION: Keep the exact same original shape, face, clothes and layout. Apply a 1990s vintage retro anime aesthetic, VHS effect, pastel muted colors.", "label": "Retro Vintage", "thumbnail": "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=200&h=200&fit=crop"},
+            {"value": "CRITICAL INSTRUCTION: Keep the exact same original shape, face, clothes and layout. Transform the photo into a classic fine art oil painting, visible brush strokes.", "label": "Pintura al Óleo", "thumbnail": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=200&h=200&fit=crop"},
+            {"value": "CRITICAL INSTRUCTION: Keep the exact same original shape, face, clothes and layout. Transform the photo into a futuristic Cyberpunk style, glowing neon lights, dark sci-fi aesthetic.", "label": "Cyberpunk Neón", "thumbnail": "https://images.unsplash.com/photo-1535295972055-1c762f4483e5?w=200&h=200&fit=crop"}
+        ]}
+    ]},
+
     {"slug": "generate-background", "label": L("Generar Fondo Nuevo", "Generate Background"), "icon": "fa-image", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Fondo para productos. ¡Sube un PNG SIN FONDO!", "Background for products."), "endpoint": "/v1/images/generates-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen (Transparente)", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Descripción del fondo", "Background prompt"), "required": True}]},
     
     {"slug": "sticker", "label": L("Crear Sticker", "Create Sticker"), "icon": "fa-note-sticky", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Haz un sticker de tu foto con borde blanco al instante.", "Make a sticker from photo."), "endpoint": "/v1/images/generates/sticker", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
@@ -91,12 +102,14 @@ MODELS = [
 
     {"slug": "edit-image", "label": L("Edición Mágica (Texto)", "Magic Edit (Text)"), "icon": "fa-wand-sparkles", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Edita usando órdenes.", "Edit using text prompts."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Instrucción", "Prompt"), "required": True}, {"name": "mode", "type": "select", "label": L("Modo", "Mode"), "required": True, "options": [{"value": "editing", "label": L("General", "General")}, {"value": "inpaint", "label": L("Inpaint", "Inpaint")}]}]},
     
+    # 🔴 HERRAMIENTA RENOVADA: SE REFINÓ LA ORDEN DE CROCHET/AMIGURUMI PARA EL FONDO
     {"slug": "textile-styles", "label": L("Texturas Mágicas 3D", "3D Magic Textures"), "icon": "fa-cubes", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Aplica lana, bordado, parche o inflado.", "Applies yarn, thread, patch or puffy styles."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
         {"name": "input_image", "type": "image", "label": L("Sube tu Diseño Original", "Upload Design"), "required": True}, 
         {"name": "prompt", "type": "select", "label": L("Elige la Textura", "Select Texture"), "required": True, "options": [
-            {"value": "Apply a highly detailed 3D amigurumi crochet texture. Create thick, visible, realistic knitted yarn loops. CRITICAL: Keep EXACT original colors. Do NOT invent colors. If the background is transparent, strictly preserve transparency. If the background is a solid flat color, keep it flat and untextured.", "label": L("🧶 Crochet / Amigurumi HD", "HD Crochet")},
+            {"value": "Apply a highly detailed 3D amigurumi crochet texture. CRITICAL: You MUST texture the main subject, TEXT, and LETTERS. Create thick, visible knitted yarn loops. Keep EXACT original colors. Do NOT invent colors. Strictly preserve transparency. BACKGROUND RULE: If the background is a complex or animated scene, texture it. If the background is a solid flat color, DO NOT texture it, keep it perfectly flat.", "label": L("🧶 Crochet / Amigurumi HD", "HD Crochet")},
             {"value": "Apply a highly detailed realistic 3D embroidery texture. Create thick, glossy, visible 3D thread stitches. CRITICAL INSTRUCTION: You MUST keep EXACT original colors. Do NOT invent colors. If transparent, strictly preserve transparency. If background is a solid flat color, keep it flat.", "label": L("🧵 Bordado Realista HD", "Realistic Embroidery")},
-            {"value": "Convert this exact design into a physical 3D embroidered patch. CRITICAL: Add a thick, dense embroidered border outline around the outer edges. Fill the inside with realistic shiny embroidery threads matching the EXACT original colors. Strictly PRESERVE the transparent background. DO NOT add any solid background behind the patch.", "label": L("🏷️ Parche Textil (Borde Grueso)", "Textile Patch")},
+            {"value": "Convert the entire design into a 3D embroidered patch WITH its background. Add realistic shiny embroidery threads to both the background and the main subject. CRITICAL: Keep EXACT original colors. Do NOT invent colors.", "label": L("🏷️ Parche Textil (Con Fondo)", "Patch with Background")},
+            {"value": "Apply a dense 3D embroidered patch texture. CRITICAL INSTRUCTION: DO NOT add any white borders, strokes, or extra outlines around the outer edges. Respect the exact original edges. Keep EXACT original colors. Strictly PRESERVE the transparent background. DO NOT add any solid background.", "label": L("🏷️ Parche Textil (Sin Borde / Sin Fondo)", "Patch without Background")},
             {"value": "Apply 3D inflated balloon puffy texture. Make elements look like thick, soft, highly glossy 3D plastic or vinyl. CRITICAL: Keep EXACT original colors. If transparent, strictly preserve transparency.", "label": L("🎈 Estilo Inflado 3D (Globo)", "3D Inflated/Puffer")}
         ]}
     ]},
@@ -215,12 +228,11 @@ def run_model(slug):
             if resp.status_code == 200: return Response(resp.content, mimetype="image/svg+xml")
             else: return jsonify({"error": True, "message": f"Error Vectorizer ({resp.status_code}): {resp.text}"}), 400
 
-        if slug in ["textile-styles", "edit-multi"]: data["mode"] = "editing"
+        if slug in ["textile-styles", "edit-multi", "fairy-art"]: data["mode"] = "editing"
             
         if slug == "generate-background" and ("png" not in mime.lower()):
              return jsonify({"error": True, "message": "¡Debes subir un PNG transparente (sin fondo)! Ve primero a 'Quitar Fondo'."}), 400
              
-        # 🔴 CORRECCIÓN DE STICKER: FONDO VERDE NEÓN PARA CHROMA KEY Y FÁCIL EXTRACCIÓN
         if slug == "sticker":
              data["prompt"] = "Die-cut sticker style, thick crisp white border around the subject, isolated on a solid highly contrasting neon green background"
 
