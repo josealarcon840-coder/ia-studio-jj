@@ -220,10 +220,9 @@ def run_model(slug):
         if slug == "generate-background" and ("png" not in mime.lower()):
              return jsonify({"error": True, "message": "¡Debes subir un PNG transparente (sin fondo)! Ve primero a 'Quitar Fondo'."}), 400
              
-        # SE QUITÓ EL "COMBO OCULTO" EN PYTHON QUE CAUSABA EL ERROR DE IMAGEN EN BLANCO. 
-        # AHORA EL STICKER SE GENERA NORMAL Y EL COMBO LO HARÁ LA PÁGINA WEB VISUALMENTE.
+        # 🔴 CORRECCIÓN DE STICKER: SE CREA SOBRE VERDE CHROMA PARA FACILITAR EL AUTO-RECORTE POSTERIOR
         if slug == "sticker":
-             data["prompt"] = "2D vector die-cut sticker, thick white border, flat colors, isolated on solid background"
+             data["prompt"] = "Die-cut sticker style, thick crisp white border around the subject, isolated on a solid neon green background"
 
         if slug in ["detect-text", "detect-wires"]:
             r1 = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files, timeout=120)
