@@ -220,9 +220,9 @@ def run_model(slug):
         if slug == "generate-background" and ("png" not in mime.lower()):
              return jsonify({"error": True, "message": "¡Debes subir un PNG transparente (sin fondo)! Ve primero a 'Quitar Fondo'."}), 400
              
-        # 🔴 CORRECCIÓN DE STICKER: SE CREA SOBRE VERDE CHROMA PARA FACILITAR EL AUTO-RECORTE POSTERIOR
+        # 🔴 CORRECCIÓN DE STICKER: FONDO BLANCO PURO PARA EVITAR CONFLICTOS Y DEJARLO COMO OPCIÓN
         if slug == "sticker":
-             data["prompt"] = "Die-cut sticker style, thick crisp white border around the subject, isolated on a solid neon green background"
+             data["prompt"] = "Die-cut sticker style, thick crisp white border around the subject, isolated on a solid plain white background"
 
         if slug in ["detect-text", "detect-wires"]:
             r1 = requests.post(BASE + model["endpoint"], headers=HEADERS, files=files, timeout=120)
