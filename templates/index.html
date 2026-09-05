@@ -206,7 +206,6 @@
     </div>
 </div>
 
-<!-- 🔴 NUEVO MODAL DE RESPLANDOR (PARA ACCIÓN EN LA MISMA PANTALLA) -->
 <div class="custom-modal-overlay" id="glowModal">
     <div class="custom-modal">
         <h3><i class="fa-solid fa-star mr-2 text-yellow-400"></i> Resplandor Mágico</h3>
@@ -359,11 +358,7 @@
               <div id="viewerWrapper">
                   <div id="imgContainer" style="position:relative; display:inline-block; line-height:0;">
                       <img id="mainResultImg" src="" alt="Resultado" style="display:block; max-width: 90vw; max-height: 70vh; border-radius: 8px;">
-                      
-                      <!-- Canvas oculto de Master Color -->
                       <canvas id="editCanvas" style="display:none; max-width: 90vw; max-height: 70vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.8); margin: 0 auto;"></canvas>
-
-                      <!-- Lienzo interactivo (Máscaras y Selección de cuadro) -->
                       <canvas id="maskCanvas" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; z-index:10; opacity:0.6; cursor:crosshair; touch-action:none; border-radius: 8px;"></canvas>
 
                       <div id="inlineSvgContainer" style="display:none; align-items:center; justify-content:center;"></div>
@@ -442,74 +437,39 @@ const UI = {
 let currentLang = localStorage.getItem("jj_lang") || "es";
 
 function t(key, ...args) { const val = UI[currentLang][key]; return typeof val === "function" ? val(...args) : val; }
-function tl(obj) { 
-    if (!obj) return ""; 
-    if (typeof obj === "string") return obj; 
-    return obj[currentLang] || obj.es || ""; 
-}
-
-function applyStaticText() {
-  document.querySelectorAll("[data-i18n]").forEach(el => { el.innerHTML = t(el.getAttribute("data-i18n")); });
-  document.documentElement.lang = currentLang;
-}
+function tl(obj) { if (!obj) return ""; if (typeof obj === "string") return obj; return obj[currentLang] || obj.es || ""; }
+function applyStaticText() { document.querySelectorAll("[data-i18n]").forEach(el => { el.innerHTML = t(el.getAttribute("data-i18n")); }); document.documentElement.lang = currentLang; }
 function setLang(lang) {
   currentLang = lang; localStorage.setItem("jj_lang", lang);
   document.querySelectorAll(".lang-switch button").forEach(btn => { btn.classList.toggle("active", btn.dataset.lang === lang); });
-  applyStaticText();
-  if (MODELS.length) { buildHome(MODELS); if (currentSlug) openTool(currentSlug); }
+  applyStaticText(); if (MODELS.length) { buildHome(MODELS); if (currentSlug) openTool(currentSlug); }
 }
 document.querySelectorAll(".lang-switch").forEach(sw => { sw.querySelectorAll("button").forEach(btn => { btn.addEventListener("click", () => setLang(btn.dataset.lang)); }); });
 
 const gate = document.getElementById("gate"); const appEl = document.getElementById("app"); const gateError = document.getElementById("gateError"); const userLabel = document.getElementById("userLabel");
 
 function checkSession() {
-  const perm = sessionStorage.getItem("jj_session_perm"); 
-  const name = sessionStorage.getItem("jj_user_name");
-  if (perm === "active") { showApp(name); return true; }
-  return false;
+  const perm = sessionStorage.getItem("jj_session_perm"); const name = sessionStorage.getItem("jj_user_name");
+  if (perm === "active") { showApp(name); return true; } return false;
 }
 function showApp(name) { gate.style.display = "none"; appEl.style.display = "block"; userLabel.textContent = name ? name.toUpperCase() : ""; loadModels(); }
 
 async function onTelegramAuth(user) {
   gateError.classList.remove("show");
   try {
-      const response = await fetch('/verify-telegram', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(user)
-      });
+      const response = await fetch('/verify-telegram', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(user) });
       const data = await response.json();
-      
-      if (data.access) {
-          sessionStorage.setItem("jj_session_perm", "active"); 
-          sessionStorage.setItem("jj_user_name", data.nombre || user.first_name); 
-          showApp(data.nombre || user.first_name);
-      } else {
-          gateError.textContent = data.message || t("gate_error");
-          gateError.classList.add("show");
-      }
-  } catch(e) {
-      gateError.textContent = "Error de conexión con el servidor.";
-      gateError.classList.add("show");
-  }
+      if (data.access) { sessionStorage.setItem("jj_session_perm", "active"); sessionStorage.setItem("jj_user_name", data.nombre || user.first_name); showApp(data.nombre || user.first_name); } 
+      else { gateError.textContent = data.message || t("gate_error"); gateError.classList.add("show"); }
+  } catch(e) { gateError.textContent = "Error de conexión con el servidor."; gateError.classList.add("show"); }
 }
 
-document.getElementById("logoutBtn").addEventListener("click", () => { 
-  if (!confirm(t("logout_confirm"))) return; 
-  sessionStorage.clear(); 
-  location.reload(); 
-});
+document.getElementById("logoutBtn").addEventListener("click", () => { if (!confirm(t("logout_confirm"))) return; sessionStorage.clear(); location.reload(); });
 
-let MODELS = []; let currentSlug = null; let currentImageData = null;
-let urlOriginalMemoria = ""; let urlResultMemoria = "";
+let MODELS = []; let currentSlug = null; let currentImageData = null; let urlOriginalMemoria = ""; let urlResultMemoria = "";
 
-let isMaskTool = false; let maskFieldName = ""; let ctxMask = null;
-const maskCanvas = document.getElementById("maskCanvas");
-let isDrawing = false;
-
-let isMcEyedropper = false; let isMcSelecting = false; let isMcDraggingSelection = false;
-let mcSelection = null; let mcStartX = 0; let mcStartY = 0;
-let mcTargetRGB = [255,255,255];
+let isMaskTool = false; let maskFieldName = ""; let ctxMask = null; const maskCanvas = document.getElementById("maskCanvas"); let isDrawing = false;
+let isMcEyedropper = false; let isMcSelecting = false; let isMcDraggingSelection = false; let mcSelection = null; let mcStartX = 0; let mcStartY = 0; let mcTargetRGB = [255,255,255];
 const editCanvas = document.getElementById('editCanvas');
 
 const homeView = document.getElementById("homeView"); const toolView = document.getElementById("toolView"); const catContainer = document.getElementById("catContainer"); const form = document.getElementById("form"); const statusLine = document.getElementById("status"); const statusText = document.getElementById("statusText"); const tray = document.getElementById("tray"); const mainResultImg = document.getElementById("mainResultImg"); const toolTitle = document.getElementById("toolTitle"); const toolDesc = document.getElementById("toolDesc"); const btnDownloadResult = document.getElementById("btnDownloadResult"); const btnRestart = document.getElementById("btnRestart");
@@ -517,8 +477,7 @@ const jsonViewer = document.getElementById("jsonViewer");
 
 let aiSessionId = ""; let aiObjects = []; let aiSelected = new Set();
 const magicTagsPanel = document.getElementById("magicTagsPanel"); const tagsContainer = document.getElementById("tagsContainer"); const boxesContainer = document.getElementById("boxesContainer"); const btnExecuteErase = document.getElementById("btnExecuteErase");
-const quickActionsBar = document.getElementById("quickActionsBar");
-const qaTitle = document.getElementById("qa-title");
+const quickActionsBar = document.getElementById("quickActionsBar"); const qaTitle = document.getElementById("qa-title");
 
 function loadModels() { if (MODELS.length) { buildHome(MODELS); return; } fetch("/models").then(r => r.json()).then(models => { MODELS = models; buildHome(models); }); }
 
@@ -530,8 +489,7 @@ function buildHome(models) {
     const heading = document.createElement("div"); heading.className = "cat-heading"; heading.innerHTML = `<i class="fa-solid fa-caret-right mr-2"></i> ${cat}`; catContainer.appendChild(heading);
     const grid = document.createElement("div"); grid.className = "card-grid";
     categories[cat].forEach(m => {
-      const card = document.createElement("button"); card.type = "button"; card.className = "tool-card";
-      const icon = m.icon ? m.icon : "fa-wand-magic-sparkles";
+      const card = document.createElement("button"); card.type = "button"; card.className = "tool-card"; const icon = m.icon ? m.icon : "fa-wand-magic-sparkles";
       card.innerHTML = `<i class="fa-solid ${icon}"></i><h3>${tl(m.label).split('|')[0].trim()}</h3><p>${tl(m.desc).split('|')[0].trim()}</p>`;
       card.addEventListener("click", () => openTool(m.slug)); grid.appendChild(card);
     });
@@ -548,16 +506,11 @@ function openTool(slug) {
 
   if (slug === 'master-color' && (urlResultMemoria || currentImageData)) {
       setTimeout(() => {
-          mainResultImg.style.display = 'none';
-          editCanvas.style.display = 'block';
+          mainResultImg.style.display = 'none'; editCanvas.style.display = 'block';
           const img = new Image();
           img.onload = () => {
-              editCanvas.width = img.naturalWidth; editCanvas.height = img.naturalHeight;
-              editCanvas.getContext('2d', {willReadFrequently: true}).drawImage(img, 0, 0);
-              
-              maskCanvas.width = img.naturalWidth; maskCanvas.height = img.naturalHeight;
-              ctxMask = maskCanvas.getContext("2d"); ctxMask.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
-              maskCanvas.style.display = "block";
+              editCanvas.width = img.naturalWidth; editCanvas.height = img.naturalHeight; editCanvas.getContext('2d', {willReadFrequently: true}).drawImage(img, 0, 0);
+              maskCanvas.width = img.naturalWidth; maskCanvas.height = img.naturalHeight; ctxMask = maskCanvas.getContext("2d"); ctxMask.clearRect(0, 0, maskCanvas.width, maskCanvas.height); maskCanvas.style.display = "block";
           };
           img.src = urlResultMemoria || URL.createObjectURL(currentImageData);
       }, 100);
@@ -566,48 +519,28 @@ function openTool(slug) {
 
 function reiniciarHerramienta(keepTool = false) {
     form.reset(); tray.style.display = "none"; mainResultImg.src = ""; 
-    
-    isMaskTool = false; maskFieldName = ""; maskCanvas.style.display = "none";
-    if (ctxMask && maskCanvas.width) ctxMask.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
-    
+    isMaskTool = false; maskFieldName = ""; maskCanvas.style.display = "none"; if (ctxMask && maskCanvas.width) ctxMask.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
     isMcEyedropper = false; isMcSelecting = false; mcSelection = null; editCanvas.style.display = 'none';
-
-    const mainResultVideo = document.getElementById("mainResultVideo");
-    if(mainResultVideo) { mainResultVideo.style.display = "none"; mainResultVideo.src = ""; }
-    mainResultImg.style.display = "block";
-
-    currentImageData = null; urlOriginalMemoria = ""; urlResultMemoria = "";
-    statusLine.classList.remove("show", "error", "ok"); btnDownloadResult.style.display = "none"; btnRestart.style.display = "none";
-    magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; quickActionsBar.style.display = "none";
-    document.getElementById("masterColorPanel").style.display = "none";
-    
-    document.getElementById("downloadBtnText").innerText = t("download_btn");
-    document.getElementById('btnAntes').style.display = 'none'; document.getElementById('imgContainer').style.display = 'inline-block';
-    document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block';
-    jsonViewer.style.display = "none"; document.getElementById("svgEditorPanel").style.display = "none";
-    let inlineCont = document.getElementById("inlineSvgContainer");
-    if(inlineCont) { inlineCont.style.display = "none"; inlineCont.style.position = "relative"; inlineCont.style.clipPath = "none"; }
+    const mainResultVideo = document.getElementById("mainResultVideo"); if(mainResultVideo) { mainResultVideo.style.display = "none"; mainResultVideo.src = ""; }
+    mainResultImg.style.display = "block"; currentImageData = null; urlOriginalMemoria = ""; urlResultMemoria = "";
+    statusLine.classList.remove("show", "error", "ok"); btnDownloadResult.style.display = "none"; btnRestart.style.display = "none"; magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; quickActionsBar.style.display = "none"; document.getElementById("masterColorPanel").style.display = "none";
+    document.getElementById("downloadBtnText").innerText = t("download_btn"); document.getElementById('btnAntes').style.display = 'none'; document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block'; jsonViewer.style.display = "none"; document.getElementById("svgEditorPanel").style.display = "none";
+    let inlineCont = document.getElementById("inlineSvgContainer"); if(inlineCont) { inlineCont.style.display = "none"; inlineCont.style.position = "relative"; inlineCont.style.clipPath = "none"; }
     document.getElementById('sliderHandle').style.display = "none"; isSplitMode = false; document.getElementById('btnSplitMode').classList.remove('active');
-    
     document.querySelectorAll('.dropzone').forEach(dz => { dz.classList.remove("has-file"); dz.querySelector('i').className = "fa-solid fa-cloud-arrow-up"; dz.querySelector('.dz-text').textContent = t("dropzone_text"); });
-    if (currentSlug && keepTool) renderForm(MODELS.find(m => m.slug === currentSlug));
-    resetearZoom();
+    if (currentSlug && keepTool) renderForm(MODELS.find(m => m.slug === currentSlug)); resetearZoom();
 }
 
 document.getElementById("backBtn").addEventListener("click", () => { toolView.style.display = "none"; homeView.style.display = "block"; currentSlug = null; });
 
 function renderForm(model) {
   form.innerHTML = "";
-  if (model.slug === 'master-color') { document.getElementById('masterColorPanel').style.display = 'block'; } 
-  else { document.getElementById('masterColorPanel').style.display = 'none'; }
+  if (model.slug === 'master-color') { document.getElementById('masterColorPanel').style.display = 'block'; } else { document.getElementById('masterColorPanel').style.display = 'none'; }
 
   model.fields.forEach(field => {
     const wrap = document.createElement("div"); wrap.className = "field";
-    
     if (field.type === "checkbox") {
-      const row = document.createElement("div"); row.className = "checkbox-row";
-      const input = document.createElement("input"); input.type = "checkbox"; input.id = "field_" + field.name; input.name = field.name; input.checked = field.default !== undefined ? field.default : false;
-      const label = document.createElement("label"); label.htmlFor = input.id; label.textContent = tl(field.label).split('|')[0].trim();
+      const row = document.createElement("div"); row.className = "checkbox-row"; const input = document.createElement("input"); input.type = "checkbox"; input.id = "field_" + field.name; input.name = field.name; input.checked = field.default !== undefined ? field.default : false; const label = document.createElement("label"); label.htmlFor = input.id; label.textContent = tl(field.label).split('|')[0].trim();
       row.appendChild(input); row.appendChild(label); wrap.appendChild(row); form.appendChild(wrap); return;
     }
 
@@ -616,34 +549,26 @@ function renderForm(model) {
         wrap.innerHTML = `
             <label><i class="fa-solid fa-paintbrush mr-2"></i> Pincel Mágico</label>
             <div style="display: flex; gap: 10px; align-items: center; background: #111; padding: 15px; border-radius: 8px; border: 1px solid #333;">
-                <div style="flex:1;">
-                    <span style="font-size: 0.75rem; color: #888;">Grosor del Pincel</span>
-                    <input type="range" id="brushSize" min="5" max="150" value="30" style="width: 100%; cursor: pointer; accent-color: var(--red-bright);">
-                </div>
+                <div style="flex:1;"><span style="font-size: 0.75rem; color: #888;">Grosor del Pincel</span><input type="range" id="brushSize" min="5" max="150" value="30" style="width: 100%; cursor: pointer; accent-color: var(--red-bright);"></div>
                 <button type="button" id="btnClearMask" class="btn-qa" style="min-width: unset; padding: 10px 15px; height: 100%; border-color: var(--danger);"><i class="fa-solid fa-trash text-danger"></i> Limpiar</button>
             </div>
             <p style="font-size: 0.75rem; color: var(--ok); margin-top: 8px;">💡 Pinta con tu mouse o dedo sobre lo que deseas borrar.</p>
         `;
-        form.appendChild(wrap);
-        setTimeout(() => { document.getElementById("btnClearMask").addEventListener("click", () => { if (ctxMask && maskCanvas.width) { ctxMask.clearRect(0, 0, maskCanvas.width, maskCanvas.height); } }); }, 100);
-        return; 
+        form.appendChild(wrap); setTimeout(() => { document.getElementById("btnClearMask").addEventListener("click", () => { if (ctxMask && maskCanvas.width) { ctxMask.clearRect(0, 0, maskCanvas.width, maskCanvas.height); } }); }, 100); return; 
     }
 
     const label = document.createElement("label"); label.htmlFor = "field_" + field.name; label.textContent = tl(field.label).split('|')[0].trim();
-    if (field.required) { const req = document.createElement("span"); req.className = "req"; req.textContent = "*"; label.appendChild(req); }
-    wrap.appendChild(label);
+    if (field.required) { const req = document.createElement("span"); req.className = "req"; req.textContent = "*"; label.appendChild(req); } wrap.appendChild(label);
 
     if (field.type === "range") {
         const valSpan = document.createElement("span"); valSpan.style = "float: right; color: var(--ok); font-weight: bold;"; valSpan.textContent = field.default || 50; label.appendChild(valSpan);
-        const input = document.createElement("input"); input.type = "range"; input.id = "field_" + field.name; input.name = field.name; input.min = field.min || 1; input.max = field.max || 100; input.value = field.default || 50;
-        input.style = "width: 100%; cursor: pointer; accent-color: var(--red-bright); padding: 0;"; input.addEventListener("input", (e) => { valSpan.textContent = e.target.value; }); wrap.appendChild(input); form.appendChild(wrap); return;
+        const input = document.createElement("input"); input.type = "range"; input.id = "field_" + field.name; input.name = field.name; input.min = field.min || 1; input.max = field.max || 100; input.value = field.default || 50; input.style = "width: 100%; cursor: pointer; accent-color: var(--red-bright); padding: 0;"; input.addEventListener("input", (e) => { valSpan.textContent = e.target.value; }); wrap.appendChild(input); form.appendChild(wrap); return;
     }
 
     if (field.type === "visual_select") {
         const hiddenInp = document.createElement("input"); hiddenInp.type = "hidden"; hiddenInp.id = "field_" + field.name; hiddenInp.name = field.name; if(field.required) hiddenInp.required = true; wrap.appendChild(hiddenInp);
         const grid = document.createElement("div"); grid.style = "display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; margin-top: 10px; max-height: 350px; overflow-y: auto; padding-right: 5px;"; wrap.appendChild(grid);
-        fetch("/style-list?url=" + encodeURIComponent(field.options_url)).then(r => r.json()).then(data => {
-            const items = Array.isArray(data) ? data : (data.styles || data.data || []);
+        const renderItems = (items) => {
             if(items.length > 0) hiddenInp.value = items[0].id || items[0].style_id || items[0].value || items[0];
             items.forEach((item, idx) => {
                 const id = item.id || item.style_id || item.value || item; const name = item.name || item.label || id; const thumb = item.thumbnail || item.preview_url || item.image || "";
@@ -652,7 +577,8 @@ function renderForm(model) {
                 itemDiv.innerHTML += `<div style="padding: 6px 2px; font-weight: bold;">${name.substring(0,14)}</div>`; if(idx === 0) itemDiv.style.borderColor = "var(--red-bright)";
                 itemDiv.onclick = () => { hiddenInp.value = id; Array.from(grid.children).forEach(c => c.style.borderColor = "transparent"); itemDiv.style.borderColor = "var(--red-bright)"; }; grid.appendChild(itemDiv);
             });
-        });
+        };
+        if (field.options_url) { fetch("/style-list?url=" + encodeURIComponent(field.options_url)).then(r => r.json()).then(data => { renderItems(Array.isArray(data) ? data : (data.styles || data.data || [])); }); } else if (field.options) { renderItems(field.options); }
         form.appendChild(wrap); return;
     }
 
@@ -664,19 +590,12 @@ function renderForm(model) {
           dz.classList.add("has-file"); dzIcon.className = "fa-solid fa-file-circle-check"; dzText.textContent = input.files[0].name;
           if(field.name === "input_image" || field.name === "model_image" || field.name === "input_image_0") {
               currentImageData = input.files[0]; urlOriginalMemoria = URL.createObjectURL(input.files[0]); urlResultMemoria = urlOriginalMemoria; 
-              tray.style.display = "block"; btnDownloadResult.style.display = "none"; btnRestart.style.display = "block"; quickActionsBar.style.display = "none";
-              magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; document.getElementById('btnAntes').style.display = 'none'; resetearZoom();
-              document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block'; jsonViewer.style.display = "none";
+              tray.style.display = "block"; btnDownloadResult.style.display = "none"; btnRestart.style.display = "block"; quickActionsBar.style.display = "none"; magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; document.getElementById('btnAntes').style.display = 'none'; resetearZoom(); document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block'; jsonViewer.style.display = "none";
               const mainResultVideo = document.getElementById("mainResultVideo"); if(mainResultVideo) { mainResultVideo.style.display = "none"; mainResultVideo.src = ""; }
               document.getElementById("svgEditorPanel").style.display = "none"; let inlineCont = document.getElementById("inlineSvgContainer"); if(inlineCont) inlineCont.style.display = "none";
               
-              if (currentSlug === 'master-color') {
-                  mainResultImg.style.display = 'none'; editCanvas.style.display = 'block';
-                  const img = new Image(); img.onload = () => { 
-                      editCanvas.width = img.naturalWidth; editCanvas.height = img.naturalHeight; editCanvas.getContext('2d', {willReadFrequently: true}).drawImage(img, 0, 0); 
-                      maskCanvas.width = img.naturalWidth; maskCanvas.height = img.naturalHeight; ctxMask = maskCanvas.getContext("2d"); ctxMask.clearRect(0, 0, maskCanvas.width, maskCanvas.height); maskCanvas.style.display = "block";
-                  }; img.src = urlOriginalMemoria;
-              } else { mainResultImg.src = urlOriginalMemoria; mainResultImg.style.display = "block"; editCanvas.style.display = 'none'; }
+              if (currentSlug === 'master-color') { mainResultImg.style.display = 'none'; editCanvas.style.display = 'block'; const img = new Image(); img.onload = () => { editCanvas.width = img.naturalWidth; editCanvas.height = img.naturalHeight; editCanvas.getContext('2d', {willReadFrequently: true}).drawImage(img, 0, 0); maskCanvas.width = img.naturalWidth; maskCanvas.height = img.naturalHeight; ctxMask = maskCanvas.getContext("2d"); ctxMask.clearRect(0, 0, maskCanvas.width, maskCanvas.height); maskCanvas.style.display = "block"; }; img.src = urlOriginalMemoria; } 
+              else { mainResultImg.src = urlOriginalMemoria; mainResultImg.style.display = "block"; editCanvas.style.display = 'none'; }
           }
         } else { dz.classList.remove("has-file"); dzIcon.className = "fa-solid fa-cloud-arrow-up"; dzText.textContent = t("dropzone_text"); }
       });
@@ -697,8 +616,7 @@ function renderForm(model) {
   });
 
   const submitBtn = document.createElement("button"); submitBtn.type = "submit"; submitBtn.className = "btn-primary"; submitBtn.id = "btnMainSubmit";
-  submitBtn.innerHTML = model.slug === 'master-color' ? `<i class="fa-solid fa-floppy-disk mr-2"></i> GUARDAR CAMBIOS` : `<i class="fa-solid fa-bolt mr-2"></i> ${t("run_btn")}`; 
-  form.appendChild(submitBtn);
+  submitBtn.innerHTML = model.slug === 'master-color' ? `<i class="fa-solid fa-floppy-disk mr-2"></i> GUARDAR CAMBIOS` : `<i class="fa-solid fa-bolt mr-2"></i> ${t("run_btn")}`; form.appendChild(submitBtn);
 }
 
 function getCanvasMouseCoords(e, canvasElem) {
@@ -707,37 +625,24 @@ function getCanvasMouseCoords(e, canvasElem) {
     return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
 }
 
-
 // 🔴 GESTIÓN DE RATÓN EN LIENZOS (MÁSCARA Y MASTER COLOR SELECCIÓN)
 ctxMask = maskCanvas.getContext("2d");
 
 mainResultImg.addEventListener("load", () => {
-    if (isMaskTool) {
-        maskCanvas.width = mainResultImg.naturalWidth; maskCanvas.height = mainResultImg.naturalHeight;
-        ctxMask.clearRect(0, 0, maskCanvas.width, maskCanvas.height); maskCanvas.style.display = "block";
-    }
+    if (isMaskTool) { maskCanvas.width = mainResultImg.naturalWidth; maskCanvas.height = mainResultImg.naturalHeight; ctxMask.clearRect(0, 0, maskCanvas.width, maskCanvas.height); maskCanvas.style.display = "block"; }
 });
 
 function startCanvasMouse(e) {
     if (isMaskTool) {
-        isDrawing = true; const { x, y } = getCanvasMouseCoords(e, maskCanvas);
-        ctxMask.beginPath(); ctxMask.moveTo(x, y); const brushSize = document.getElementById("brushSize");
-        const scaleX = maskCanvas.width / maskCanvas.getBoundingClientRect().width;
-        ctxMask.lineWidth = (brushSize ? parseInt(brushSize.value) : 30) * scaleX;
-        ctxMask.lineCap = "round"; ctxMask.lineJoin = "round"; ctxMask.strokeStyle = "#ff0000"; 
-        ctxMask.lineTo(x, y); ctxMask.stroke(); e.preventDefault(); e.stopPropagation();
+        isDrawing = true; const { x, y } = getCanvasMouseCoords(e, maskCanvas); ctxMask.beginPath(); ctxMask.moveTo(x, y); const brushSize = document.getElementById("brushSize");
+        const scaleX = maskCanvas.width / maskCanvas.getBoundingClientRect().width; ctxMask.lineWidth = (brushSize ? parseInt(brushSize.value) : 30) * scaleX; ctxMask.lineCap = "round"; ctxMask.lineJoin = "round"; ctxMask.strokeStyle = "#ff0000"; ctxMask.lineTo(x, y); ctxMask.stroke(); e.preventDefault(); e.stopPropagation();
     } else if (currentSlug === 'master-color') {
         if (isMcEyedropper) {
-            const pos = getCanvasMouseCoords(e, editCanvas);
-            const pD = editCanvas.getContext('2d').getImageData(Math.floor(pos.x), Math.floor(pos.y), 1, 1).data;
-            mcTargetRGB = [pD[0], pD[1], pD[2]];
-            const hex = "#" + ((1 << 24) + (pD[0] << 16) + (pD[1] << 8) + pD[2]).toString(16).slice(1);
-            document.getElementById('mcOldColor').style.backgroundColor = hex;
+            const pos = getCanvasMouseCoords(e, editCanvas); const pD = editCanvas.getContext('2d').getImageData(Math.floor(pos.x), Math.floor(pos.y), 1, 1).data; mcTargetRGB = [pD[0], pD[1], pD[2]];
+            const hex = "#" + ((1 << 24) + (pD[0] << 16) + (pD[1] << 8) + pD[2]).toString(16).slice(1); document.getElementById('mcOldColor').style.backgroundColor = hex;
             isMcEyedropper = false; maskCanvas.style.cursor = 'default'; document.getElementById('btnEyedropper').style.borderColor = '#444';
         } else if (isMcSelecting) {
-            isMcDraggingSelection = true; const pos = getCanvasMouseCoords(e, maskCanvas);
-            mcStartX = pos.x; mcStartY = pos.y; mcSelection = {x: pos.x, y: pos.y, w: 0, h: 0};
-            ctxMask.clearRect(0,0, maskCanvas.width, maskCanvas.height);
+            isMcDraggingSelection = true; const pos = getCanvasMouseCoords(e, maskCanvas); mcStartX = pos.x; mcStartY = pos.y; mcSelection = {x: pos.x, y: pos.y, w: 0, h: 0}; ctxMask.clearRect(0,0, maskCanvas.width, maskCanvas.height);
         }
     }
 }
@@ -746,97 +651,46 @@ function moveCanvasMouse(e) {
     if (isMaskTool && isDrawing) {
         const { x, y } = getCanvasMouseCoords(e, maskCanvas); ctxMask.lineTo(x, y); ctxMask.stroke(); e.preventDefault(); e.stopPropagation();
     } else if (currentSlug === 'master-color' && isMcDraggingSelection) {
-        const pos = getCanvasMouseCoords(e, maskCanvas); const w = pos.x - mcStartX; const h = pos.y - mcStartY;
-        mcSelection = { x: Math.min(mcStartX, pos.x), y: Math.min(mcStartY, pos.y), w: Math.abs(w), h: Math.abs(h) };
-        ctxMask.clearRect(0,0, maskCanvas.width, maskCanvas.height);
-        ctxMask.strokeStyle = '#00ffcc'; ctxMask.lineWidth = 2 * (maskCanvas.width / maskCanvas.getBoundingClientRect().width);
-        ctxMask.setLineDash([10, 10]); ctxMask.strokeRect(mcSelection.x, mcSelection.y, mcSelection.w, mcSelection.h);
-        ctxMask.fillStyle = 'rgba(0, 255, 204, 0.1)'; ctxMask.fillRect(mcSelection.x, mcSelection.y, mcSelection.w, mcSelection.h);
+        const pos = getCanvasMouseCoords(e, maskCanvas); const w = pos.x - mcStartX; const h = pos.y - mcStartY; mcSelection = { x: Math.min(mcStartX, pos.x), y: Math.min(mcStartY, pos.y), w: Math.abs(w), h: Math.abs(h) };
+        ctxMask.clearRect(0,0, maskCanvas.width, maskCanvas.height); ctxMask.strokeStyle = '#00ffcc'; ctxMask.lineWidth = 2 * (maskCanvas.width / maskCanvas.getBoundingClientRect().width); ctxMask.setLineDash([10, 10]); ctxMask.strokeRect(mcSelection.x, mcSelection.y, mcSelection.w, mcSelection.h); ctxMask.fillStyle = 'rgba(0, 255, 204, 0.1)'; ctxMask.fillRect(mcSelection.x, mcSelection.y, mcSelection.w, mcSelection.h);
     }
 }
 
 function endCanvasMouse(e) {
-    if (isMaskTool && isDrawing) { isDrawing = false; ctxMask.closePath(); e.preventDefault(); e.stopPropagation(); }
-    else if (currentSlug === 'master-color' && isMcDraggingSelection) { isMcDraggingSelection = false; ctxMask.setLineDash([]); }
+    if (isMaskTool && isDrawing) { isDrawing = false; ctxMask.closePath(); e.preventDefault(); e.stopPropagation(); } else if (currentSlug === 'master-color' && isMcDraggingSelection) { isMcDraggingSelection = false; ctxMask.setLineDash([]); }
 }
 
-maskCanvas.addEventListener("mousedown", startCanvasMouse); maskCanvas.addEventListener("mousemove", moveCanvasMouse);
-window.addEventListener("mouseup", endCanvasMouse);
-maskCanvas.addEventListener("touchstart", startCanvasMouse, {passive: false}); maskCanvas.addEventListener("touchmove", moveCanvasMouse, {passive: false}); window.addEventListener("touchend", endCanvasMouse);
+maskCanvas.addEventListener("mousedown", startCanvasMouse); maskCanvas.addEventListener("mousemove", moveCanvasMouse); window.addEventListener("mouseup", endCanvasMouse); maskCanvas.addEventListener("touchstart", startCanvasMouse, {passive: false}); maskCanvas.addEventListener("touchmove", moveCanvasMouse, {passive: false}); window.addEventListener("touchend", endCanvasMouse);
 
-
-// 🔴 BOTONES DE MASTER COLOR (GOTERO Y SELECCIÓN)
-document.getElementById('btnEyedropper').addEventListener('click', () => {
-    isMcEyedropper = true; isMcSelecting = false; maskCanvas.style.cursor = 'crosshair';
-    document.getElementById('btnEyedropper').style.borderColor = 'var(--ok)'; document.getElementById('btnMcSelect').style.borderColor = '#444'; document.getElementById('btnMcSelect').style.background = '#444';
-});
-
-document.getElementById('btnMcSelect').addEventListener('click', () => {
-    isMcSelecting = !isMcSelecting; isMcEyedropper = false; document.getElementById('btnEyedropper').style.borderColor = '#444';
-    const btn = document.getElementById('btnMcSelect');
-    if (isMcSelecting) { btn.style.background = 'var(--red-bright)'; maskCanvas.style.cursor = 'crosshair'; } 
-    else { btn.style.background = '#444'; maskCanvas.style.cursor = 'default'; }
-});
+document.getElementById('btnEyedropper').addEventListener('click', () => { isMcEyedropper = true; isMcSelecting = false; maskCanvas.style.cursor = 'crosshair'; document.getElementById('btnEyedropper').style.borderColor = 'var(--ok)'; document.getElementById('btnMcSelect').style.borderColor = '#444'; document.getElementById('btnMcSelect').style.background = '#444'; });
+document.getElementById('btnMcSelect').addEventListener('click', () => { isMcSelecting = !isMcSelecting; isMcEyedropper = false; document.getElementById('btnEyedropper').style.borderColor = '#444'; const btn = document.getElementById('btnMcSelect'); if (isMcSelecting) { btn.style.background = 'var(--red-bright)'; maskCanvas.style.cursor = 'crosshair'; } else { btn.style.background = '#444'; maskCanvas.style.cursor = 'default'; } });
 
 function applyMasterColorZone() {
     if(!mcSelection || mcSelection.w === 0 || mcSelection.h === 0) { alert("Por favor, activa 'Dibujar Zona' y dibuja un recuadro en la imagen con tu mouse."); return; }
-    const x = Math.max(0, Math.floor(mcSelection.x)); const y = Math.max(0, Math.floor(mcSelection.y));
-    const w = Math.min(editCanvas.width - x, Math.floor(mcSelection.w)); const h = Math.min(editCanvas.height - y, Math.floor(mcSelection.h));
-    if (w <= 0 || h <= 0) return;
-
-    const ctx = editCanvas.getContext('2d'); const id = ctx.getImageData(x, y, w, h); const d = id.data;
-    const hex = document.getElementById('mcNewColor').value; const tol = parseInt(document.getElementById('mcTolerance').value); const tolSq = tol * tol;
-    const rN = parseInt(hex.slice(1,3),16), gN = parseInt(hex.slice(3,5),16), bN = parseInt(hex.slice(5,7),16);
-    const tR = mcTargetRGB[0], tG = mcTargetRGB[1], tB = mcTargetRGB[2];
-
-    for(let i=0; i<d.length; i+=4) {
-        if(d[i+3] < 10) continue;
-        const distSq = (d[i]-tR)*(d[i]-tR) + (d[i+1]-tG)*(d[i+1]-tG) + (d[i+2]-tB)*(d[i+2]-tB);
-        if(distSq <= tolSq) { d[i]=rN; d[i+1]=gN; d[i+2]=bN; }
-    }
-    ctx.putImageData(id, x, y);
-    ctxMask.clearRect(0,0, maskCanvas.width, maskCanvas.height); mcSelection = null;
-    document.getElementById('btnMcSelect').style.background = '#444'; isMcSelecting = false; maskCanvas.style.cursor = 'default';
+    const x = Math.max(0, Math.floor(mcSelection.x)); const y = Math.max(0, Math.floor(mcSelection.y)); const w = Math.min(editCanvas.width - x, Math.floor(mcSelection.w)); const h = Math.min(editCanvas.height - y, Math.floor(mcSelection.h)); if (w <= 0 || h <= 0) return;
+    const ctx = editCanvas.getContext('2d'); const id = ctx.getImageData(x, y, w, h); const d = id.data; const hex = document.getElementById('mcNewColor').value; const tol = parseInt(document.getElementById('mcTolerance').value); const tolSq = tol * tol; const rN = parseInt(hex.slice(1,3),16), gN = parseInt(hex.slice(3,5),16), bN = parseInt(hex.slice(5,7),16); const tR = mcTargetRGB[0], tG = mcTargetRGB[1], tB = mcTargetRGB[2];
+    for(let i=0; i<d.length; i+=4) { if(d[i+3] < 10) continue; const distSq = (d[i]-tR)*(d[i]-tR) + (d[i+1]-tG)*(d[i+1]-tG) + (d[i+2]-tB)*(d[i+2]-tB); if(distSq <= tolSq) { d[i]=rN; d[i+1]=gN; d[i+2]=bN; } }
+    ctx.putImageData(id, x, y); ctxMask.clearRect(0,0, maskCanvas.width, maskCanvas.height); mcSelection = null; document.getElementById('btnMcSelect').style.background = '#444'; isMcSelecting = false; maskCanvas.style.cursor = 'default';
 }
 
 function applyMasterColorGlobal() {
-    const ctx = editCanvas.getContext('2d'); const id = ctx.getImageData(0, 0, editCanvas.width, editCanvas.height); const d = id.data;
-    const hex = document.getElementById('mcNewColor').value; const tol = parseInt(document.getElementById('mcTolerance').value); const tolSq = tol * tol;
-    const rN = parseInt(hex.slice(1,3),16), gN = parseInt(hex.slice(3,5),16), bN = parseInt(hex.slice(5,7),16);
-    const tR = mcTargetRGB[0], tG = mcTargetRGB[1], tB = mcTargetRGB[2];
-
-    for(let i=0; i<d.length; i+=4) {
-        if(d[i+3] < 10) continue;
-        const distSq = (d[i]-tR)*(d[i]-tR) + (d[i+1]-tG)*(d[i+1]-tG) + (d[i+2]-tB)*(d[i+2]-tB);
-        if(distSq <= tolSq) { d[i]=rN; d[i+1]=gN; d[i+2]=bN; }
-    }
-    ctx.putImageData(id, 0, 0);
+    const ctx = editCanvas.getContext('2d'); const id = ctx.getImageData(0, 0, editCanvas.width, editCanvas.height); const d = id.data; const hex = document.getElementById('mcNewColor').value; const tol = parseInt(document.getElementById('mcTolerance').value); const tolSq = tol * tol; const rN = parseInt(hex.slice(1,3),16), gN = parseInt(hex.slice(3,5),16), bN = parseInt(hex.slice(5,7),16); const tR = mcTargetRGB[0], tG = mcTargetRGB[1], tB = mcTargetRGB[2];
+    for(let i=0; i<d.length; i+=4) { if(d[i+3] < 10) continue; const distSq = (d[i]-tR)*(d[i]-tR) + (d[i+1]-tG)*(d[i+1]-tG) + (d[i+2]-tB)*(d[i+2]-tB); if(distSq <= tolSq) { d[i]=rN; d[i+1]=gN; d[i+2]=bN; } } ctx.putImageData(id, 0, 0);
 }
-
 
 // 🔴 MODAL PARA RESPLANDOR (APLICA EN LA MISMA PANTALLA)
 document.getElementById('btnConfirmGlow').addEventListener('click', () => {
     document.getElementById('glowModal').style.display = 'none';
-    
     if(!urlResultMemoria) return;
-    statusLine.className = "status-line show"; 
-    statusText.innerHTML = "<i class='fa-solid fa-star fa-spin mr-2'></i> Aplicando resplandor...";
-    mainResultImg.classList.add("opacity-50", "blur-sm"); 
-    quickActionsBar.style.display = "none";
-    
-    const glowColor = document.getElementById('modalGlowColor').value;
-    const glowLevel = parseInt(document.getElementById('modalGlowSize').value);
-    
+    statusLine.className = "status-line show"; statusText.innerHTML = "<i class='fa-solid fa-star fa-spin mr-2'></i> Aplicando resplandor...";
+    mainResultImg.classList.add("opacity-50", "blur-sm"); quickActionsBar.style.display = "none";
+    const glowColor = document.getElementById('modalGlowColor').value; const glowLevel = parseInt(document.getElementById('modalGlowSize').value);
     const img = new Image(); img.crossOrigin = "Anonymous";
     img.onload = () => {
-        const canvas = document.createElement("canvas"); const ctx = canvas.getContext("2d");
-        const factor = glowLevel / 500; const pad = Math.floor(Math.max(img.width, img.height) * factor) + 10; 
-        canvas.width = img.width + pad * 2; canvas.height = img.height + pad * 2;
-        ctx.shadowColor = glowColor; ctx.shadowBlur = Math.floor(pad * 0.8); ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+        const canvas = document.createElement("canvas"); const ctx = canvas.getContext("2d"); const factor = glowLevel / 500; const pad = Math.floor(Math.max(img.width, img.height) * factor) + 10; 
+        canvas.width = img.width + pad * 2; canvas.height = img.height + pad * 2; ctx.shadowColor = glowColor; ctx.shadowBlur = Math.floor(pad * 0.8); ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
         ctx.drawImage(img, pad, pad); ctx.drawImage(img, pad, pad); ctx.drawImage(img, pad, pad);
-        
-        processFinalUrl(canvas.toDataURL("image/png"), currentSlug, "png");
-        mainResultImg.classList.remove("opacity-50", "blur-sm");
+        processFinalUrl(canvas.toDataURL("image/png"), currentSlug, "png"); mainResultImg.classList.remove("opacity-50", "blur-sm");
     };
     img.onerror = () => { alert("Error al aplicar resplandor."); mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block"; };
     img.src = urlResultMemoria;
@@ -845,7 +699,6 @@ document.getElementById('btnConfirmGlow').addEventListener('click', () => {
 // 🔴 ACCIONES RÁPIDAS
 function renderQuickActions(slug) {
     const qaContainer = document.querySelector('.qa-buttons'); qaContainer.innerHTML = ''; const isEs = currentLang === 'es';
-    
     const actionsDict = {
         "remove-bg": { slug: "remove-background", label: isEs ? "Quitar Fondo" : "Remove BG", icon: "fa-user-slash text-red-500", params: {} },
         "extract-logo": { slug: "remove-background-graphic", label: isEs ? "Quitar Fondo (Arte)" : "Extract Logo", icon: "fa-shapes text-orange-500", params: {} },
@@ -857,36 +710,30 @@ function renderQuickActions(slug) {
         "light": { slug: "light-restore", label: isEs ? "Corregir Luz" : "Fix Light", icon: "fa-sun text-yellow-400", params: {} },
         "gen-bg": { slug: "generate-background", label: isEs ? "Fondo con IA" : "AI Background", icon: "fa-image text-emerald-500", params: {prompt: "Fondo de estudio fotográfico profesional, iluminación perfecta, alta calidad"} },
         "vectorize": { slug: "vectorize", label: isEs ? "Convertir a Vector" : "Vectorize", icon: "fa-bezier-curve text-teal-500", params: {} },
-        "textile-crochet": { slug: "textile-styles", label: isEs ? "Estilo Crochet" : "Crochet Style", icon: "fa-cubes text-pink-500", params: {prompt: "Apply a highly detailed 3D amigurumi crochet texture. Create thick, visible, realistic knitted yarn loops. CRITICAL: Keep EXACT original colors and shapes. Do NOT invent colors. If the image has a complex background, texture it. If transparent, strictly preserve transparency. If the background is a solid flat color, keep it flat and untextured."} },
+        
+        // 🔴 LA ORDEN EN EL MENÚ RÁPIDO TAMBIÉN SE ACTUALIZÓ PARA CROCHET
+        "textile-crochet": { slug: "textile-styles", label: isEs ? "Estilo Crochet" : "Crochet Style", icon: "fa-cubes text-pink-500", params: {prompt: "Apply a highly detailed 3D amigurumi crochet texture. CRITICAL: You MUST texture the main subject, TEXT, and LETTERS. Create thick, visible knitted yarn loops. Keep EXACT original colors. Do NOT invent colors. Strictly preserve transparency. BACKGROUND RULE: If the background is a complex or animated scene, texture it. If the background is a solid flat color, DO NOT texture it, keep it perfectly flat."} },
+        
         "textile-embroidery": { slug: "textile-styles", label: isEs ? "Estilo Bordado" : "Embroidery Style", icon: "fa-cubes text-blue-400", params: {prompt: "Apply a highly detailed realistic 3D embroidery texture. Create thick, glossy, visible 3D thread stitches. CRITICAL INSTRUCTION: You MUST keep EXACT original colors. Do NOT invent colors. If transparent, strictly preserve transparency. If background is a solid flat color, keep it flat."} },
         "textile-patch": { slug: "textile-styles", label: isEs ? "Parche Textil" : "Patch Style", icon: "fa-tag text-purple-400", params: {prompt: "Convert this exact design into a physical 3D embroidered patch. CRITICAL: Add a thick, dense embroidered border outline around the outer edges. Fill the inside with realistic shiny embroidery threads matching the EXACT original colors. Strictly PRESERVE the transparent background. DO NOT add any solid background behind the patch."} },
         "studio-glow": { slug: "studio-vignette", label: isEs ? "🌟 Resplandor" : "🌟 Outer Glow", icon: "fa-star text-yellow-400", params: {bg_color: "#ff0000"} }
     };
     let keys = [];
 
-    if (slug.includes("enhance") && !slug.includes("video")) {
-        qaTitle.innerHTML = `<i class="fa-solid fa-check-circle text-ok mr-2"></i> Imagen Maximizada`; qaContainer.innerHTML = `<p style="color:var(--text-dim); font-size:0.85rem; margin:0;">La imagen está en su calidad máxima absoluta. ¡Lista para descargar o imprimir!</p>`; return; 
-    } else if (!slug.includes("video")) {
+    if (slug.includes("enhance") && !slug.includes("video")) { qaTitle.innerHTML = `<i class="fa-solid fa-check-circle text-ok mr-2"></i> Imagen Maximizada`; qaContainer.innerHTML = `<p style="color:var(--text-dim); font-size:0.85rem; margin:0;">La imagen está en su calidad máxima absoluta. ¡Lista para descargar o imprimir!</p>`; return; } 
+    else if (!slug.includes("video")) {
         qaTitle.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Sugerencias de la IA`;
         if (slug.includes("restore") || slug === "light-restore") { keys = ["colorize", "upscale-faces", "magic-eraser", "light"]; } 
         else if (slug.includes("colorize")) { keys = ["restore", "upscale-faces", "magic-eraser"]; } 
         else if (slug.includes("remove-background") || slug === "master-color") { keys = ["vectorize", "upscale-8x", "gen-bg", "studio-glow", "textile-crochet"]; } 
         else if (slug.includes("generate") || slug.includes("fairy") || slug.includes("sticker")) { keys = ["remove-bg", "extract-logo", "upscale-8x"]; } 
         else if (slug === "detect-objects" || slug === "remove-objects" || slug === "erase-text" || slug === "erase-wires") { keys = ["upscale-8x", "remove-bg", "light"]; } 
-        else if (slug === "vectorize") { keys = []; }
-        else { keys = ["upscale-8x", "remove-bg", "magic-eraser"]; }
+        else if (slug === "vectorize") { keys = []; } else { keys = ["upscale-8x", "remove-bg", "magic-eraser"]; }
     }
 
     keys.forEach(k => {
         const act = actionsDict[k]; const btn = document.createElement('button'); btn.className = "btn-qa"; btn.innerHTML = `<i class="fa-solid ${act.icon} mb-1 block text-lg"></i> ${act.label}`;
-        
-        // 🔴 CUANDO ES RESPLANDOR, ABRE EL MODAL EN LUGAR DE REDIRIGIR A LA HERRAMIENTA
-        if(act.slug === "studio-vignette") { 
-            btn.onclick = () => { document.getElementById('glowModal').style.display='flex'; }; 
-        } else { 
-            btn.onclick = () => ejecutarAccionRapida(act.slug, act.params); 
-        }
-        
+        if(act.slug === "studio-vignette") { btn.onclick = () => { document.getElementById('glowModal').style.display='flex'; }; } else { btn.onclick = () => ejecutarAccionRapida(act.slug, act.params); }
         qaContainer.appendChild(btn);
     });
 }
@@ -941,7 +788,6 @@ function updateSvgDownloadLink() {
     const blob = new Blob([svgData], {type: "image/svg+xml;charset=utf-8"}); const btn = document.getElementById("btnDownloadResult"); btn.href = URL.createObjectURL(blob);
 }
 
-// 🔴 ENVÍO DE FORMULARIO DE IA
 form.addEventListener("submit", async (e) => {
   e.preventDefault(); const model = MODELS.find(m => m.slug === currentSlug); const submitBtn = document.getElementById("btnMainSubmit"); submitBtn.disabled = true;
 
