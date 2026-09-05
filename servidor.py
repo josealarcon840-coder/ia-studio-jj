@@ -72,7 +72,7 @@ MODELS = [
     
     {"slug": "sticker", "label": L("Crear Sticker", "Create Sticker"), "icon": "fa-note-sticky", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Haz un sticker de tu foto con borde blanco al instante.", "Make a sticker from photo."), "endpoint": "/v1/images/generates/sticker", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    {"slug": "master-color", "label": L("🎨 Master Color", "🎨 Master Color"), "icon": "fa-fill-drip", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Sustituye colores manualmente con gotero inteligente.", "Change colors manually with smart eyedropper."), "endpoint": "/local/canvas", "response_type": "image", "fields": [
+    {"slug": "master-color", "label": L("🎨 Master Color", "🎨 Master Color"), "icon": "fa-fill-drip", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Sustituye colores seleccionando por gotero y zona.", "Change colors by selecting zone and eyedropper."), "endpoint": "/local/canvas", "response_type": "image", "fields": [
         {"name": "input_image", "type": "image", "label": L("Sube tu Diseño", "Upload Design"), "required": True}
     ]},
 
