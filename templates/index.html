@@ -710,12 +710,9 @@ function renderQuickActions(slug) {
         "light": { slug: "light-restore", label: isEs ? "Corregir Luz" : "Fix Light", icon: "fa-sun text-yellow-400", params: {} },
         "gen-bg": { slug: "generate-background", label: isEs ? "Fondo con IA" : "AI Background", icon: "fa-image text-emerald-500", params: {prompt: "Fondo de estudio fotográfico profesional, iluminación perfecta, alta calidad"} },
         "vectorize": { slug: "vectorize", label: isEs ? "Convertir a Vector" : "Vectorize", icon: "fa-bezier-curve text-teal-500", params: {} },
-        
-        // 🔴 LA ORDEN EN EL MENÚ RÁPIDO TAMBIÉN SE ACTUALIZÓ PARA CROCHET
         "textile-crochet": { slug: "textile-styles", label: isEs ? "Estilo Crochet" : "Crochet Style", icon: "fa-cubes text-pink-500", params: {prompt: "Apply a highly detailed 3D amigurumi crochet texture. CRITICAL: You MUST texture the main subject, TEXT, and LETTERS. Create thick, visible knitted yarn loops. Keep EXACT original colors. Do NOT invent colors. Strictly preserve transparency. BACKGROUND RULE: If the background is a complex or animated scene, texture it. If the background is a solid flat color, DO NOT texture it, keep it perfectly flat."} },
-        
         "textile-embroidery": { slug: "textile-styles", label: isEs ? "Estilo Bordado" : "Embroidery Style", icon: "fa-cubes text-blue-400", params: {prompt: "Apply a highly detailed realistic 3D embroidery texture. Create thick, glossy, visible 3D thread stitches. CRITICAL INSTRUCTION: You MUST keep EXACT original colors. Do NOT invent colors. If transparent, strictly preserve transparency. If background is a solid flat color, keep it flat."} },
-        "textile-patch": { slug: "textile-styles", label: isEs ? "Parche Textil" : "Patch Style", icon: "fa-tag text-purple-400", params: {prompt: "Convert this exact design into a physical 3D embroidered patch. CRITICAL: Add a thick, dense embroidered border outline around the outer edges. Fill the inside with realistic shiny embroidery threads matching the EXACT original colors. Strictly PRESERVE the transparent background. DO NOT add any solid background behind the patch."} },
+        "textile-patch": { slug: "textile-styles", label: isEs ? "Parche Textil" : "Patch Style", icon: "fa-tag text-purple-400", params: {prompt: "Apply a 3D embroidery texture. Create a tight embroidered thread border exactly ON the current edges. CRITICAL: NO extra white outlines, NO offset, NO die-cut borders. Keep original colors and strictly preserve transparent background."} },
         "studio-glow": { slug: "studio-vignette", label: isEs ? "🌟 Resplandor" : "🌟 Outer Glow", icon: "fa-star text-yellow-400", params: {bg_color: "#ff0000"} }
     };
     let keys = [];
