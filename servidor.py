@@ -123,9 +123,9 @@ MODELS_BY_SLUG = {m["slug"]: m for m in MODELS}
 
 def resize_if_needed(file_bytes, slug, original_filename="image.jpg"):
     try:
-        # 🔴 LÓGICA DE REDIMENSIONAMIENTO ACTUALIZADA Y SEGURA PARA IA PESADA
+        # 🔴 LÓGICA DE REDIMENSIONAMIENTO A PRUEBA DE BALAS
         if slug in ["textile-styles", "edit-multi", "edit-image", "fairy-art"]:
-            max_dim = 1024  # Evita que las APIs de IA crasheen con imágenes pesadas
+            max_dim = 1024
         elif "enhance" in slug:
             max_dim = 1500
         elif "pose" in slug:
@@ -134,24 +134,38 @@ def resize_if_needed(file_bytes, slug, original_filename="image.jpg"):
             max_dim = 3000
             
         img = Image.open(io.BytesIO(file_bytes))
-        img_format = (img.format or "JPEG").upper()
-        icc_profile = img.info.get('icc_profile')
         
+        # Convertimos a RGB siempre para evitar fallos de formato al guardar
+        if img.mode in ("RGBA", "LA", "P"):
+            img = img.convert("RGB")
+            img_format = "JPEG"
+        else:
+            img_format = (img.format or "JPEG").upper()
+            if img_format not in ["JPEG", "PNG", "WEBP"]:
+                img = img.convert("RGB")
+                img_format = "JPEG"
+                
         width, height = img.size
         needs_resize = (max(width, height) > max_dim)
-        needs_convert = (img_format == "JPEG" and img.mode in ("RGBA", "P"))
         
-        if not needs_resize and not needs_convert: return file_bytes, original_filename, f"image/{img_format.lower()}"
         if needs_resize:
             scale = max_dim / max(width, height)
             img = img.resize((int(width * scale), int(height * scale)), Image.LANCZOS)
-        if needs_convert: img = img.convert("RGB")
+            
         buffer = io.BytesIO()
-        if img_format == "JPEG": img.save(buffer, format=img_format, quality=100, subsampling=0, icc_profile=icc_profile)
-        else: img.save(buffer, format=img_format, icc_profile=icc_profile)
+        # Guardamos ignorando el perfil ICC oculto para evitar corrupción
+        if img_format == "PNG":
+            img.save(buffer, format="PNG")
+        else:
+            img.save(buffer, format="JPEG", quality=95)
+            img_format = "JPEG"
+            
         return buffer.getvalue(), original_filename, f"image/{img_format.lower()}"
-    except Exception: return file_bytes, original_filename, "image/jpeg"
-    finally: gc.collect()
+    except Exception as e: 
+        print(f"Resize Error: {e}")
+        return file_bytes, original_filename, "image/jpeg"
+    finally: 
+        gc.collect()
 
 @app.route("/")
 def index(): return render_template("index.html")
@@ -270,6 +284,7 @@ def run_model(slug):
             else:
                 response = requests.post(BASE + target_endpoint, headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
         
+        # 🔴 ESCÁNER ANTIFRAUDES PARA VERIFICAR QUE SEA UNA IMAGEN REAL
         content_type = response.headers.get("Content-Type", "")
         if "application/json" in content_type:
             datos = response.json()
@@ -278,17 +293,33 @@ def run_model(slug):
                 if url_img:
                     if url_img.startswith("data:image"):
                         header, encoded = url_img.split(",", 1)
-                        return Response(base64.b64decode(encoded), mimetype=header.split(";")[0].split(":")[1])
+                        img_data = base64.b64decode(encoded)
+                        try:
+                            Image.open(io.BytesIO(img_data)).verify()
+                            return Response(img_data, mimetype=header.split(";")[0].split(":")[1])
+                        except: return jsonify({"error": True, "message": "La IA devolvió una imagen encriptada corrupta."}), 400
                     try:
                         r_img = requests.get(url_img, headers={'User-Agent': 'Mozilla/5.0'}, timeout=60)
-                        if r_img.status_code == 200: return Response(r_img.content, mimetype=r_img.headers.get("Content-Type", "image/png"))
-                        return jsonify({"error": True, "message": "Fallo al descargar la imagen procesada."}), 400
+                        if r_img.status_code == 200: 
+                            try:
+                                Image.open(io.BytesIO(r_img.content)).verify()
+                                return Response(r_img.content, mimetype=r_img.headers.get("Content-Type", "image/png"))
+                            except: return jsonify({"error": True, "message": "La URL generada por la IA no contiene una imagen válida (Posible bloqueo)."}), 400
+                        return jsonify({"error": True, "message": "Fallo al descargar la imagen procesada de la nube."}), 400
                     except Exception as e: return jsonify({"error": True, "message": f"Error de red: {str(e)}"}), 400
                 return jsonify(datos), 200
             return jsonify({"error": True, "message": datos.get("message", str(datos))}), 400
         else:
             if response.status_code != 200: return jsonify({"error": True, "message": f"Servidores saturados (HTTP {response.status_code})."}), 400
-            return Response(response.content, mimetype=response.headers.get("Content-Type", "image/png"))
+            
+            # Verificamos que el archivo que nos mandó la API es 100% una foto y no texto HTML
+            try:
+                Image.open(io.BytesIO(response.content)).verify()
+                return Response(response.content, mimetype=response.headers.get("Content-Type", "image/png"))
+            except Exception:
+                # Si falló, es porque mandó texto. Lo extraemos para saber cuál fue el error.
+                text_err = response.text[:150] if response.text else "Archivo vacío"
+                return jsonify({"error": True, "message": f"SnapEdit devolvió texto en lugar de imagen: {text_err}"}), 400
     except Exception as e: 
         print(f"❌ ERROR: {str(e)}")
         return jsonify({"error": True, "message": f"Error interno: {str(e)}"}), 400
