@@ -722,7 +722,8 @@ form.addEventListener("submit", async (e) => {
         
         const contentType = res.headers.get("content-type") || "";
         if (!contentType.includes("application/json")) {
-            const blob = await res.blob(); const localBlobUrl = URL.createObjectURL(blob); processFinalUrl(localBlobUrl, currentSlug, "png"); submitBtn.disabled = false;
+            const blobFinal = await res.blob(); 
+            processFinalUrl(URL.createObjectURL(blobFinal), currentSlug, "png"); submitBtn.disabled = false;
         } else {
             const data = await res.json();
             if (data.error) { statusLine.className = "status-line show error"; statusText.textContent = t("error_prefix") + (data.message || data.detalle || t("generic_error")); submitBtn.disabled = false; } 
@@ -751,6 +752,9 @@ form.addEventListener("submit", async (e) => {
                     }
                 });
                 tray.style.display = "block"; renderQuickActions(currentSlug); quickActionsBar.style.display = "block"; document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block'; submitBtn.disabled = false;
+            } else if (data.url) {
+                processFinalUrl(data.url, currentSlug, "png");
+                submitBtn.disabled = false;
             } else {
                 statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done"); jsonViewer.value = JSON.stringify(data, null, 2); jsonViewer.style.display = "block"; document.getElementById('imgContainer').style.display = 'none'; submitBtn.disabled = false;
             }
@@ -784,22 +788,35 @@ async function proceedWithQuickAction(targetSlug, extraParams) {
         for(const [k, v] of Object.entries(extraParams)) formData.append(k, v);
         targetModel.fields.forEach(f => { if(f.name !== imgField && !extraParams[f.name]) { if(f.default) formData.append(f.name, f.default); else if(f.type === "select" && f.options) formData.append(f.name, f.options[0].value); } });
         const res = await fetch(`/run/${targetSlug}`, { method: "POST", body: formData }); mainResultImg.classList.remove("opacity-50", "blur-sm");
+        
         const contentType = res.headers.get("content-type") || "";
-        if (!contentType.includes("application/json")) { const blobFinal = await res.blob(); processFinalUrl(URL.createObjectURL(blobFinal), targetSlug, "png"); } 
-        else { const data = await res.json(); if(data.error) throw new Error(data.message); }
+        if (!contentType.includes("application/json")) { 
+            const blobFinal = await res.blob(); processFinalUrl(URL.createObjectURL(blobFinal), targetSlug, "png"); 
+        } 
+        else { 
+            const data = await res.json(); 
+            if(data.error) throw new Error(data.message); 
+            else if (data.url) processFinalUrl(data.url, targetSlug, "png");
+        }
     } catch(err) { alert("Error al procesar: " + err.message); mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block"; }
 }
 
 async function processFinalUrl(url, slugToUse = currentSlug, ext = "png") {
     let displayUrl = url; let downloadUrl = url;
-    if(url.startsWith("http")) { displayUrl = "/proxy-image?url=" + encodeURIComponent(url); downloadUrl = "/proxy-image?url=" + encodeURIComponent(url) + "&dl=1"; }
+    if(url.startsWith("http")) { 
+        displayUrl = "/proxy-image?url=" + encodeURIComponent(url); 
+        downloadUrl = "/proxy-image?url=" + encodeURIComponent(url) + "&dl=1"; 
+    } else if (url.startsWith("/static/temp/")) {
+        let filename = url.split('/').pop();
+        downloadUrl = "/download-temp?file=" + encodeURIComponent(filename);
+    }
     urlResultMemoria = displayUrl; 
     const mainResultVideo = document.getElementById("mainResultVideo"); if(mainResultVideo) { mainResultVideo.style.display = "none"; mainResultVideo.src = ""; }
     
     if (currentSlug === 'master-color') { mainResultImg.style.display = 'none'; } else { mainResultImg.style.display = "block"; mainResultImg.src = displayUrl; }
     
     statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + (currentSlug === 'master-color' ? "Cambios Guardados." : t("done"));
-    btnDownloadResult.href = downloadUrl; btnDownloadResult.setAttribute("download", `JJ_Studio_Diseño.${ext}`); btnDownloadResult.style.display = "block";
+    btnDownloadResult.href = downloadUrl; btnDownloadResult.setAttribute("download", `JJ_Studio_Diseno.${ext}`); btnDownloadResult.style.display = "block";
     
     document.getElementById("downloadBtnText").innerText = t("download_btn"); renderQuickActions(slugToUse); quickActionsBar.style.display = "block";
     
