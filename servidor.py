@@ -116,18 +116,23 @@ MODELS = [
         ]}
     ]},
 
-    {"slug": "retouch-skin", "label": L("Retoque Facial", "Skin Retouch"), "icon": "fa-face-smile", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Limpia la piel automáticamente.", "Cleans skin automatically."), "endpoint": "/v1/images/retouch-skin", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
-    
-    {"slug": "vectorize", "label": L("📐 Convertir a Vector (SVG)", "📐 Vectorize (SVG)"), "icon": "fa-bezier-curve", "category": L("6. Vectores y Formatos", "6. Vectors & Formats"), "desc": L("Convierte imágenes a vectores infinitos.", "Convert pixelated image to infinite scalable SVG."), "endpoint": "vectorizer", "response_type": "image", "fields": [
-        {"name": "input_image", "type": "image", "label": L("Imagen a Vectorizar", "Image to Vectorize"), "required": True}
-    ]}
+    {"slug": "retouch-skin", "label": L("Retoque Facial", "Skin Retouch"), "icon": "fa-face-smile", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Limpia la piel automáticamente.", "Cleans skin automatically."), "endpoint": "/v1/images/retouch-skin", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]}
 ]
 
 MODELS_BY_SLUG = {m["slug"]: m for m in MODELS}
 
 def resize_if_needed(file_bytes, slug, original_filename="image.jpg"):
     try:
-        max_dim = 1500 if "enhance" in slug else (512 if "pose" in slug else 3000)
+        # 🔴 LÓGICA DE REDIMENSIONAMIENTO ACTUALIZADA Y SEGURA PARA IA PESADA
+        if slug in ["textile-styles", "edit-multi", "edit-image", "fairy-art"]:
+            max_dim = 1024  # Evita que las APIs de IA crasheen con imágenes pesadas
+        elif "enhance" in slug:
+            max_dim = 1500
+        elif "pose" in slug:
+            max_dim = 512
+        else:
+            max_dim = 3000
+            
         img = Image.open(io.BytesIO(file_bytes))
         img_format = (img.format or "JPEG").upper()
         icc_profile = img.info.get('icc_profile')
@@ -221,15 +226,6 @@ def run_model(slug):
 
         for key, value in request.form.items():
             if value: data[key] = value
-
-        if slug == "vectorize":
-            api_id = "vkvh4gblnirc4hn"
-            api_secret = "65596jb1noid56iogfuq4aigtt0ccda7ku0clj0ti46d65skt8tj"
-            img_tuple = files.get("input_image") or files.get("image")
-            if not img_tuple: return jsonify({"error": True, "message": "Falta la imagen"}), 400
-            resp = requests.post('https://vectorizer.ai/api/v1/vectorize', files={'image': img_tuple}, auth=(api_id, api_secret), timeout=120)
-            if resp.status_code == 200: return Response(resp.content, mimetype="image/svg+xml")
-            else: return jsonify({"error": True, "message": f"Error Vectorizer ({resp.status_code}): {resp.text}"}), 400
 
         if slug in ["textile-styles", "edit-multi"]: data["mode"] = "editing"
             
