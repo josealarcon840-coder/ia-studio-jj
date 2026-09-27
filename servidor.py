@@ -6,12 +6,16 @@ import hashlib
 import hmac
 import gc  
 import time 
+import uuid
 from flask import Flask, render_template, request, jsonify, Response
 from PIL import Image
 
 Image.MAX_IMAGE_PIXELS = None
 
 app = Flask(__name__)
+
+# Creamos carpeta temporal para guardar las imágenes antes de descargar
+os.makedirs(os.path.join("static", "temp"), exist_ok=True)
 
 API_KEY = os.environ.get("SNAPEDIT_API_KEY", "sk-snap-uuh6Z0veQTW7z3DSQ7TUr5yuyaC7HIHAoUchqM_KrfI")
 BASE = "https://api.snapedit.app"
@@ -67,7 +71,6 @@ MODELS = [
         ]}
     ]},
     
-    # 🔴 HERRAMIENTA RENOVADA: SE RETORNA A LISTA DE TEXTO CON LAS DOS CARPETAS (OPTGROUPS)
     {"slug": "fairy-art", "label": L("Retrato a Arte", "Portrait to Art"), "icon": "fa-wand-magic-sparkles", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Convierte fotos a Anime/Boceto o estilos creativos.", "Convert photos to Art."), "endpoint": "/v1/images/generates/art", "response_type": "image", "fields": [
         {"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, 
         {"name": "hybrid_style", "type": "select_hybrid", "label": L("Elige un Estilo", "Style"), "required": True, "options_url": "https://storage.googleapis.com/assets.snapedit.app/fairyai/anime_styles_6mar25.json", "options": [
@@ -123,7 +126,7 @@ MODELS_BY_SLUG = {m["slug"]: m for m in MODELS}
 
 def resize_if_needed(file_bytes, slug, original_filename="image.jpg"):
     try:
-        # 🔴 LÓGICA DE REDIMENSIONAMIENTO A PRUEBA DE BALAS
+        # LÓGICA DE REDIMENSIONAMIENTO A PRUEBA DE BALAS
         if slug in ["textile-styles", "edit-multi", "edit-image", "fairy-art"]:
             max_dim = 1024
         elif "enhance" in slug:
@@ -191,9 +194,22 @@ def proxy_image():
         r = requests.get(url, timeout=60)
         if r.status_code != 200: return "Error CDN SnapEdit", 400
         headers = {}
-        if dl == "1": headers["Content-Disposition"] = "attachment; filename=JJ_Studio_Diseño.png"
+        if dl == "1": headers["Content-Disposition"] = "attachment; filename=JJ_Studio_Diseno.png"
         return Response(r.content, mimetype=r.headers.get("Content-Type", "image/png"), headers=headers)
     except Exception as e: return str(e), 500
+
+# 🔴 NUEVO ENDPOINT PARA DESCARGAS SEGURAS EN TELEGRAM
+@app.route("/download-temp")
+def download_temp():
+    filename = request.args.get("file")
+    if not filename: return "No file", 400
+    filepath = os.path.join("static", "temp", filename)
+    if not os.path.exists(filepath): return "File not found", 404
+    
+    with open(filepath, "rb") as f:
+        data = f.read()
+    headers = {"Content-Disposition": "attachment; filename=JJ_Studio_Diseno.png"}
+    return Response(data, mimetype="image/png", headers=headers)
 
 @app.route("/verify-telegram", methods=["POST"])
 def verify_telegram():
@@ -249,7 +265,6 @@ def run_model(slug):
         if slug == "sticker":
              data["prompt"] = "Die-cut sticker style, thick crisp white border around the subject, isolated on a solid highly contrasting neon green background"
 
-        # 🔴 ENRUTADOR HÍBRIDO PARA 'RETRATO A ARTE' (Combina textos fieles con los de JSON)
         if slug == "fairy-art":
              style_val = data.pop("hybrid_style", "")
              if style_val.startswith("PROMPT:"):
@@ -284,7 +299,7 @@ def run_model(slug):
             else:
                 response = requests.post(BASE + target_endpoint, headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
         
-        # 🔴 ESCÁNER ANTIFRAUDES PARA VERIFICAR QUE SEA UNA IMAGEN REAL
+        # 🔴 LÓGICA DE GUARDADO EN DISCO PARA EVITAR EL BUG DE TELEGRAM "0 BYTES"
         content_type = response.headers.get("Content-Type", "")
         if "application/json" in content_type:
             datos = response.json()
@@ -296,15 +311,21 @@ def run_model(slug):
                         img_data = base64.b64decode(encoded)
                         try:
                             Image.open(io.BytesIO(img_data)).verify()
-                            return Response(img_data, mimetype=header.split(";")[0].split(":")[1])
+                            filename = f"{uuid.uuid4().hex}.png"
+                            filepath = os.path.join("static", "temp", filename)
+                            with open(filepath, "wb") as f: f.write(img_data)
+                            return jsonify({"url": f"/static/temp/{filename}"}), 200
                         except: return jsonify({"error": True, "message": "La IA devolvió una imagen encriptada corrupta."}), 400
                     try:
                         r_img = requests.get(url_img, headers={'User-Agent': 'Mozilla/5.0'}, timeout=60)
                         if r_img.status_code == 200: 
                             try:
                                 Image.open(io.BytesIO(r_img.content)).verify()
-                                return Response(r_img.content, mimetype=r_img.headers.get("Content-Type", "image/png"))
-                            except: return jsonify({"error": True, "message": "La URL generada por la IA no contiene una imagen válida (Posible bloqueo)."}), 400
+                                filename = f"{uuid.uuid4().hex}.png"
+                                filepath = os.path.join("static", "temp", filename)
+                                with open(filepath, "wb") as f: f.write(r_img.content)
+                                return jsonify({"url": f"/static/temp/{filename}"}), 200
+                            except: return jsonify({"error": True, "message": "La URL generada por la IA no contiene una imagen válida (Posible bloqueo de seguridad)."}), 400
                         return jsonify({"error": True, "message": "Fallo al descargar la imagen procesada de la nube."}), 400
                     except Exception as e: return jsonify({"error": True, "message": f"Error de red: {str(e)}"}), 400
                 return jsonify(datos), 200
@@ -312,12 +333,13 @@ def run_model(slug):
         else:
             if response.status_code != 200: return jsonify({"error": True, "message": f"Servidores saturados (HTTP {response.status_code})."}), 400
             
-            # Verificamos que el archivo que nos mandó la API es 100% una foto y no texto HTML
             try:
                 Image.open(io.BytesIO(response.content)).verify()
-                return Response(response.content, mimetype=response.headers.get("Content-Type", "image/png"))
+                filename = f"{uuid.uuid4().hex}.png"
+                filepath = os.path.join("static", "temp", filename)
+                with open(filepath, "wb") as f: f.write(response.content)
+                return jsonify({"url": f"/static/temp/{filename}"}), 200
             except Exception:
-                # Si falló, es porque mandó texto. Lo extraemos para saber cuál fue el error.
                 text_err = response.text[:150] if response.text else "Archivo vacío"
                 return jsonify({"error": True, "message": f"SnapEdit devolvió texto en lugar de imagen: {text_err}"}), 400
     except Exception as e: 
