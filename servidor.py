@@ -35,7 +35,7 @@ MODELS = [
     {"slug": "remove-reflection", "label": L("Quitar Reflejos", "Remove Reflections"), "icon": "fa-camera", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Suaviza reflejos en vidrios.", "Softens reflections on glass."), "endpoint": "/v1/images/remove-reflection", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "clean-mirror", "label": L("Limpiar Espejo", "Clean Mirror"), "icon": "fa-broom", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Quita destellos de espejos.", "Removes flash glare from mirrors."), "endpoint": "/v1/images/clean-mirror", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    {"slug": "enhance", "label": L("Escalar Resolución", "Upscale Resolution"), "icon": "fa-expand", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Mejora la calidad general.", "Improves overall quality."), "endpoint": "/v1/images/enhance", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen (máx 1500px)", "Image (max)"), "required": True, "resize_max": 1500}, {"name": "zoom_factor", "type": "select", "label": L("Factor", "Factor"), "required": True, "options": [{"value": "2", "label": L("2x", "2x")}, {"value": "4", "label": L("4x", "4x")}, {"value": "8", "label": L("8x (Máximo)", "8x (Max)")}]}, {"name": "enhance_faces", "type": "checkbox", "label": L("Mejorar rostros", "Enhance faces"), "default": True}]},
+    {"slug": "enhance", "label": L("Escalar Resolución", "Upscale Resolution"), "icon": "fa-expand", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Mejora la calidad general.", "Improves overall quality."), "endpoint": "/v1/images/enhance", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True, "resize_max": 1500}, {"name": "zoom_factor", "type": "select", "label": L("Factor", "Factor"), "required": True, "options": [{"value": "2", "label": L("2x", "2x")}, {"value": "4", "label": L("4x", "4x")}, {"value": "8", "label": L("8x (Máximo)", "8x (Max)")}]}, {"name": "enhance_faces", "type": "checkbox", "label": L("Mejorar rostros", "Enhance faces"), "default": True}]},
     {"slug": "enhance-pro", "label": L("Escalar Rostros (Pro)", "Upscale Faces (Pro)"), "icon": "fa-user-check", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Ideal para fotos de personas.", "Ideal for photos of people."), "endpoint": "/v1/images/enhance/pro", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True, "resize_max": 1500}, {"name": "zoom_factor", "type": "select", "label": L("Factor", "Factor"), "required": True, "options": [{"value": "2", "label": L("2x", "2x")}, {"value": "4", "label": L("4x", "4x")}, {"value": "8", "label": L("8x (Máximo)", "8x (Max)")}]}]},
     {"slug": "enhance-art", "label": L("Escalar Arte / Anime", "Upscale Art / Anime"), "icon": "fa-dragon", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Ideal para dibujos.", "Ideal for drawings."), "endpoint": "/v1/images/enhance-art", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True, "resize_max": 1500}, {"name": "zoom_factor", "type": "select", "label": L("Factor", "Factor"), "required": True, "options": [{"value": "2", "label": L("2x", "2x")}, {"value": "4", "label": L("4x", "4x")}]}]},
     {"slug": "restore-pro", "label": L("Restaurar Antigua (Pro)", "Restore Old (Pro)"), "icon": "fa-hammer", "category": L("3. Mejora y Restauración", "3. Enhance & Restore"), "desc": L("Reparación severa de rasguños.", "Heavy damage repair."), "endpoint": "/v1/images/restore/pro", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
@@ -120,11 +120,21 @@ MODELS = [
 
 MODELS_BY_SLUG = {m["slug"]: m for m in MODELS}
 
-def resize_if_needed(file_bytes, slug, original_filename="image.jpg"):
+def resize_if_needed(file_bytes, slug, original_filename="image.jpg", zoom_factor="2"):
     if not file_bytes or len(file_bytes) == 0:
         raise ValueError("El archivo enviado está vacío (0 bytes).")
     try:
-        max_dim = 1500 if "enhance" in slug else 2400
+        if "enhance" in slug:
+            zf = str(zoom_factor).strip()
+            if zf == "8":
+                max_dim = 500
+            elif zf == "4":
+                max_dim = 950
+            else:
+                max_dim = 1500
+        else:
+            max_dim = 2400
+
         img = Image.open(io.BytesIO(file_bytes))
         img_format = (img.format or "PNG").upper()
         width, height = img.size
@@ -264,15 +274,17 @@ def run_model(slug):
         files, data = {}, {}
         mime = "image/png"
 
+        for key, value in request.form.items():
+            if value: data[key] = value
+
+        zoom_factor = data.get("zoom_factor", "2")
+
         for key, file_obj in request.files.items():
             if file_obj and file_obj.filename:
                 raw_input = file_obj.read()
-                buf, fname, mime = resize_if_needed(raw_input, slug, file_obj.filename)
+                buf, fname, mime = resize_if_needed(raw_input, slug, file_obj.filename, zoom_factor)
                 ext = "png" if "png" in mime else "jpg"
                 files[key] = (f"{key}.{ext}", buf, mime)
-
-        for key, value in request.form.items():
-            if value: data[key] = value
 
         if slug in ["textile-styles", "edit-multi"]: data["mode"] = "editing"
             
@@ -364,7 +376,8 @@ def run_model(slug):
                     return resp_obj
 
                 return jsonify(datos), 200
-            return jsonify({"error": True, "message": datos.get("message", str(datos))}), 400
+            err_msg = datos.get("error", {}).get("message") if isinstance(datos.get("error"), dict) else datos.get("message", str(datos))
+            return jsonify({"error": True, "message": err_msg}), 400
         else:
             if response.status_code != 200:
                 return jsonify({"error": True, "message": f"Servidores de IA ocupados (HTTP {response.status_code}). Intenta en unos segundos."}), 400
