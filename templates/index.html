@@ -730,10 +730,16 @@ function renderQuickActions(slug) {
     });
 }
 
-async function optimizarImagenEnNavegador(fileOrBlob, slug) {
+async function optimizarImagenEnNavegador(fileOrBlob, slug, zoomFactor = "2") {
     return new Promise((resolve) => {
         if (!fileOrBlob) return resolve(fileOrBlob);
-        const maxDim = (slug && slug.includes("enhance")) ? 1500 : 2400;
+        let maxDim = 2400;
+        if (slug && slug.includes("enhance")) {
+            const zf = String(zoomFactor).trim();
+            if (zf === "8") maxDim = 500;
+            else if (zf === "4") maxDim = 950;
+            else maxDim = 1500;
+        }
         const img = new Image();
         const objUrl = URL.createObjectURL(fileOrBlob);
 
@@ -828,28 +834,31 @@ form.addEventListener("submit", async (e) => {
   statusText.textContent = "Optimizando y enviando imagen...";
   btnDownloadResult.style.display = "none"; btnRestart.style.display = "block"; quickActionsBar.style.display = "none"; magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; document.getElementById('btnAntes').style.display = 'none'; mainResultImg.classList.add("opacity-50", "blur-sm"); jsonViewer.style.display = "none";
 
+  const zoomEl = document.getElementById("field_zoom_factor");
+  const currentZoom = zoomEl && zoomEl.value ? zoomEl.value : "2";
+
   const formData = new FormData(); let hasImage = false;
   for (const field of model.fields) {
       if (field.type === "mask" && isMaskTool) {
           const tempCanvas = document.createElement("canvas"); tempCanvas.width = maskCanvas.width; tempCanvas.height = maskCanvas.height; const tCtx = tempCanvas.getContext("2d");
           tCtx.fillStyle = "black"; tCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height); tCtx.drawImage(maskCanvas, 0, 0); tCtx.globalCompositeOperation = "source-in"; tCtx.fillStyle = "white"; tCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
           const blobMask = await new Promise(res => tempCanvas.toBlob(res, "image/png"));
-          const optMask = await optimizarImagenEnNavegador(blobMask, model.slug);
+          const optMask = await optimizarImagenEnNavegador(blobMask, model.slug, currentZoom);
           formData.append(field.name, optMask);
       } else if (field.type === "image") {
           const el = document.getElementById("field_" + field.name);
           if (el && el.files[0]) {
-              const optFile = await optimizarImagenEnNavegador(el.files[0], model.slug);
+              const optFile = await optimizarImagenEnNavegador(el.files[0], model.slug, currentZoom);
               formData.append(field.name, optFile);
               hasImage = true;
           } else if (urlResultMemoria && field.name === "input_image") {
               const imgRes = await fetch(urlResultMemoria);
               const imgBlob = await imgRes.blob();
-              const optFile = await optimizarImagenEnNavegador(imgBlob, model.slug);
+              const optFile = await optimizarImagenEnNavegador(imgBlob, model.slug, currentZoom);
               formData.append(field.name, optFile);
               hasImage = true;
           } else if (currentImageData && field.name === "input_image") {
-              const optFile = await optimizarImagenEnNavegador(currentImageData, model.slug);
+              const optFile = await optimizarImagenEnNavegador(currentImageData, model.slug, currentZoom);
               formData.append(field.name, optFile);
               hasImage = true;
           }
@@ -863,10 +872,10 @@ form.addEventListener("submit", async (e) => {
       if (urlResultMemoria) {
           const imgRes = await fetch(urlResultMemoria);
           const imgBlob = await imgRes.blob();
-          const optFile = await optimizarImagenEnNavegador(imgBlob, model.slug);
+          const optFile = await optimizarImagenEnNavegador(imgBlob, model.slug, currentZoom);
           formData.append("input_image", optFile);
       } else {
-          const optFile = await optimizarImagenEnNavegador(currentImageData, model.slug);
+          const optFile = await optimizarImagenEnNavegador(currentImageData, model.slug, currentZoom);
           formData.append("input_image", optFile);
       }
   }
@@ -947,13 +956,14 @@ async function proceedWithQuickAction(targetSlug, extraParams) {
     statusLine.className = "status-line show"; statusText.textContent = t("processing"); mainResultImg.classList.add("opacity-50", "blur-sm"); magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; quickActionsBar.style.display = "none"; jsonViewer.style.display = "none"; document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block';
     try {
         const targetModel = MODELS.find(m => m.slug === targetSlug); const formData = new FormData(); const imgField = targetModel.fields.find(f => f.type === "image").name;
+        const quickZoom = extraParams.zoom_factor || "2";
         if (useOriginal && currentImageData) {
-            const optFile = await optimizarImagenEnNavegador(currentImageData, targetSlug);
+            const optFile = await optimizarImagenEnNavegador(currentImageData, targetSlug, quickZoom);
             formData.append(imgField, optFile);
         } else {
             const imgRes = await fetch(urlResultMemoria);
             const imgBlob = await imgRes.blob();
-            const optFile = await optimizarImagenEnNavegador(imgBlob, targetSlug);
+            const optFile = await optimizarImagenEnNavegador(imgBlob, targetSlug, quickZoom);
             formData.append(imgField, optFile);
         }
         for(const [k, v] of Object.entries(extraParams)) formData.append(k, v);
