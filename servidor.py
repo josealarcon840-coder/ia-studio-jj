@@ -6,16 +6,12 @@ import hashlib
 import hmac
 import gc  
 import time 
-import uuid
 from flask import Flask, render_template, request, jsonify, Response
 from PIL import Image
 
 Image.MAX_IMAGE_PIXELS = None
 
 app = Flask(__name__)
-
-# Creamos carpeta temporal para guardar las imágenes antes de descargar
-os.makedirs(os.path.join("static", "temp"), exist_ok=True)
 
 API_KEY = os.environ.get("SNAPEDIT_API_KEY", "sk-snap-uuh6Z0veQTW7z3DSQ7TUr5yuyaC7HIHAoUchqM_KrfI")
 BASE = "https://api.snapedit.app"
@@ -126,49 +122,26 @@ MODELS_BY_SLUG = {m["slug"]: m for m in MODELS}
 
 def resize_if_needed(file_bytes, slug, original_filename="image.jpg"):
     try:
-        # LÓGICA DE REDIMENSIONAMIENTO A PRUEBA DE BALAS
-        if slug in ["textile-styles", "edit-multi", "edit-image", "fairy-art"]:
-            max_dim = 1024
-        elif "enhance" in slug:
-            max_dim = 1500
-        elif "pose" in slug:
-            max_dim = 512
-        else:
-            max_dim = 3000
-            
+        max_dim = 1500 if "enhance" in slug else (512 if "pose" in slug else 3000)
         img = Image.open(io.BytesIO(file_bytes))
+        img_format = (img.format or "JPEG").upper()
+        icc_profile = img.info.get('icc_profile')
         
-        # Convertimos a RGB siempre para evitar fallos de formato al guardar
-        if img.mode in ("RGBA", "LA", "P"):
-            img = img.convert("RGB")
-            img_format = "JPEG"
-        else:
-            img_format = (img.format or "JPEG").upper()
-            if img_format not in ["JPEG", "PNG", "WEBP"]:
-                img = img.convert("RGB")
-                img_format = "JPEG"
-                
         width, height = img.size
         needs_resize = (max(width, height) > max_dim)
+        needs_convert = (img_format == "JPEG" and img.mode in ("RGBA", "P"))
         
+        if not needs_resize and not needs_convert: return file_bytes, original_filename, f"image/{img_format.lower()}"
         if needs_resize:
             scale = max_dim / max(width, height)
             img = img.resize((int(width * scale), int(height * scale)), Image.LANCZOS)
-            
+        if needs_convert: img = img.convert("RGB")
         buffer = io.BytesIO()
-        # Guardamos ignorando el perfil ICC oculto para evitar corrupción
-        if img_format == "PNG":
-            img.save(buffer, format="PNG")
-        else:
-            img.save(buffer, format="JPEG", quality=95)
-            img_format = "JPEG"
-            
+        if img_format == "JPEG": img.save(buffer, format=img_format, quality=100, subsampling=0, icc_profile=icc_profile)
+        else: img.save(buffer, format=img_format, icc_profile=icc_profile)
         return buffer.getvalue(), original_filename, f"image/{img_format.lower()}"
-    except Exception as e: 
-        print(f"Resize Error: {e}")
-        return file_bytes, original_filename, "image/jpeg"
-    finally: 
-        gc.collect()
+    except Exception: return file_bytes, original_filename, "image/jpeg"
+    finally: gc.collect()
 
 @app.route("/")
 def index(): return render_template("index.html")
@@ -194,22 +167,9 @@ def proxy_image():
         r = requests.get(url, timeout=60)
         if r.status_code != 200: return "Error CDN SnapEdit", 400
         headers = {}
-        if dl == "1": headers["Content-Disposition"] = "attachment; filename=JJ_Studio_Diseno.png"
+        if dl == "1": headers["Content-Disposition"] = "attachment; filename=JJ_Studio_Diseño.png"
         return Response(r.content, mimetype=r.headers.get("Content-Type", "image/png"), headers=headers)
     except Exception as e: return str(e), 500
-
-# 🔴 NUEVO ENDPOINT PARA DESCARGAS SEGURAS EN TELEGRAM
-@app.route("/download-temp")
-def download_temp():
-    filename = request.args.get("file")
-    if not filename: return "No file", 400
-    filepath = os.path.join("static", "temp", filename)
-    if not os.path.exists(filepath): return "File not found", 404
-    
-    with open(filepath, "rb") as f:
-        data = f.read()
-    headers = {"Content-Disposition": "attachment; filename=JJ_Studio_Diseno.png"}
-    return Response(data, mimetype="image/png", headers=headers)
 
 @app.route("/verify-telegram", methods=["POST"])
 def verify_telegram():
@@ -299,7 +259,6 @@ def run_model(slug):
             else:
                 response = requests.post(BASE + target_endpoint, headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
         
-        # 🔴 LÓGICA DE GUARDADO EN DISCO PARA EVITAR EL BUG DE TELEGRAM "0 BYTES"
         content_type = response.headers.get("Content-Type", "")
         if "application/json" in content_type:
             datos = response.json()
@@ -308,40 +267,17 @@ def run_model(slug):
                 if url_img:
                     if url_img.startswith("data:image"):
                         header, encoded = url_img.split(",", 1)
-                        img_data = base64.b64decode(encoded)
-                        try:
-                            Image.open(io.BytesIO(img_data)).verify()
-                            filename = f"{uuid.uuid4().hex}.png"
-                            filepath = os.path.join("static", "temp", filename)
-                            with open(filepath, "wb") as f: f.write(img_data)
-                            return jsonify({"url": f"/static/temp/{filename}"}), 200
-                        except: return jsonify({"error": True, "message": "La IA devolvió una imagen encriptada corrupta."}), 400
+                        return Response(base64.b64decode(encoded), mimetype=header.split(";")[0].split(":")[1])
                     try:
                         r_img = requests.get(url_img, headers={'User-Agent': 'Mozilla/5.0'}, timeout=60)
-                        if r_img.status_code == 200: 
-                            try:
-                                Image.open(io.BytesIO(r_img.content)).verify()
-                                filename = f"{uuid.uuid4().hex}.png"
-                                filepath = os.path.join("static", "temp", filename)
-                                with open(filepath, "wb") as f: f.write(r_img.content)
-                                return jsonify({"url": f"/static/temp/{filename}"}), 200
-                            except: return jsonify({"error": True, "message": "La URL generada por la IA no contiene una imagen válida (Posible bloqueo de seguridad)."}), 400
-                        return jsonify({"error": True, "message": "Fallo al descargar la imagen procesada de la nube."}), 400
+                        if r_img.status_code == 200: return Response(r_img.content, mimetype=r_img.headers.get("Content-Type", "image/png"))
+                        return jsonify({"error": True, "message": "Fallo al descargar la imagen procesada."}), 400
                     except Exception as e: return jsonify({"error": True, "message": f"Error de red: {str(e)}"}), 400
                 return jsonify(datos), 200
             return jsonify({"error": True, "message": datos.get("message", str(datos))}), 400
         else:
             if response.status_code != 200: return jsonify({"error": True, "message": f"Servidores saturados (HTTP {response.status_code})."}), 400
-            
-            try:
-                Image.open(io.BytesIO(response.content)).verify()
-                filename = f"{uuid.uuid4().hex}.png"
-                filepath = os.path.join("static", "temp", filename)
-                with open(filepath, "wb") as f: f.write(response.content)
-                return jsonify({"url": f"/static/temp/{filename}"}), 200
-            except Exception:
-                text_err = response.text[:150] if response.text else "Archivo vacío"
-                return jsonify({"error": True, "message": f"SnapEdit devolvió texto en lugar de imagen: {text_err}"}), 400
+            return Response(response.content, mimetype=response.headers.get("Content-Type", "image/png"))
     except Exception as e: 
         print(f"❌ ERROR: {str(e)}")
         return jsonify({"error": True, "message": f"Error interno: {str(e)}"}), 400
