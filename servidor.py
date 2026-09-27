@@ -106,20 +106,16 @@ MODELS = [
     {"slug": "textile-styles", "label": L("Texturas Mágicas 3D", "3D Magic Textures"), "icon": "fa-cubes", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Aplica lana, bordado, parche o inflado.", "Applies yarn, thread, patch or puffy styles."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
         {"name": "input_image", "type": "image", "label": L("Sube tu Diseño Original", "Upload Design"), "required": True}, 
         {"name": "prompt", "type": "select", "label": L("Elige la Textura", "Select Texture"), "required": True, "options": [
-            {"value": "Apply a highly detailed 3D amigurumi crochet texture. CRITICAL: You MUST texture the main subject, TEXT, and LETTERS. Create thick, visible knitted yarn loops. Keep EXACT original colors. Do NOT invent colors. Strictly preserve transparency. BACKGROUND RULE: If the background is a complex or animated scene, texture it. If the background is a solid flat color, DO NOT texture it, keep it perfectly flat.", "label": L("🧶 Crochet / Amigurumi HD", "HD Crochet")},
-            {"value": "Apply a highly detailed realistic 3D embroidery texture. Create thick, glossy, visible 3D thread stitches. CRITICAL INSTRUCTION: You MUST keep EXACT original colors. Do NOT invent colors. If transparent, strictly preserve transparency. If background is a solid flat color, keep it flat.", "label": L("🧵 Bordado Realista HD", "Realistic Embroidery")},
-            {"value": "Apply a 3D embroidery texture. Create a tight embroidered thread border exactly ON the current edges. CRITICAL: NO extra white outlines, NO offset, NO die-cut borders. Keep original colors and strictly preserve transparent background.", "label": L("🏷️ Parche (Sin Fondo - Borde Ajustado)", "Patch Tight Border")},
-            {"value": "Transform into a 3D embroidered patch on a perfectly SQUARE fabric background. Add a noticeable embroidered thread border around the square's outer edge. Fill the background with fabric texture. Keep the main subject's exact original colors.", "label": L("⬛ Parche (Fondo Cuadrado)", "Square Patch")},
-            {"value": "Transform into a 3D embroidered patch on a perfectly CIRCULAR fabric background. Add a noticeable embroidered thread border around the circle's outer edge. Fill the background with fabric texture. Keep the main subject's exact original colors.", "label": L("🔴 Parche (Fondo Redondo)", "Round Patch")},
-            {"value": "Apply 3D inflated balloon puffy texture. Make elements look like thick, soft, highly glossy 3D plastic or vinyl. CRITICAL: Keep EXACT original colors. If transparent, strictly preserve transparency.", "label": L("🎈 Estilo Inflado 3D (Globo)", "3D Inflated/Puffer")}
+            {"value": "Transform the entire graphic and all its existing shapes and details into a realistic 3D amigurumi crochet style with thick, visible knitted yarn loops. Keep the exact original colors, shapes, and composition. Do not add any new elements, words, or symbols.", "label": L("🧶 Crochet / Amigurumi HD", "HD Crochet")},
+            {"value": "Transform the entire graphic and all its existing shapes and details into a realistic 3D embroidery style with thick, glossy thread stitches. Keep the exact original colors, shapes, and composition. Do not add any new elements, words, or symbols.", "label": L("🧵 Bordado Realista HD", "Realistic Embroidery")},
+            {"value": "Transform the graphic into a 3D embroidered patch with a tight stitched thread border strictly following the current outer edges. Keep the exact original colors and composition. Do not add any new elements, words, or extra outlines.", "label": L("🏷️ Parche (Sin Fondo - Borde Ajustado)", "Patch Tight Border")},
+            {"value": "Transform the graphic into a 3D embroidered patch on a square fabric background with a stitched thread border around the outer square edge. Keep the main subject's exact original colors and shapes. Do not add any new words or symbols.", "label": L("⬛ Parche (Fondo Cuadrado)", "Square Patch")},
+            {"value": "Transform the graphic into a 3D embroidered patch on a circular fabric background with a stitched thread border around the outer circle edge. Keep the main subject's exact original colors and shapes. Do not add any new words or symbols.", "label": L("🔴 Parche (Fondo Redondo)", "Round Patch")},
+            {"value": "Transform the entire graphic and all its existing shapes into a 3D inflated puffy balloon texture made of glossy soft vinyl. Keep the exact original colors, shapes, and composition. Do not add any new elements, words, or symbols.", "label": L("🎈 Estilo Inflado 3D (Globo)", "3D Inflated/Puffer")}
         ]}
     ]},
 
-    {"slug": "retouch-skin", "label": L("Retoque Facial", "Skin Retouch"), "icon": "fa-face-smile", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Limpia la piel automáticamente.", "Cleans skin automatically."), "endpoint": "/v1/images/retouch-skin", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
-    
-    {"slug": "vectorize", "label": L("📐 Convertir a Vector (SVG)", "📐 Vectorize (SVG)"), "icon": "fa-bezier-curve", "category": L("6. Vectores y Formatos", "6. Vectors & Formats"), "desc": L("Convierte imágenes a vectores infinitos.", "Convert pixelated image to infinite scalable SVG."), "endpoint": "vectorizer", "response_type": "image", "fields": [
-        {"name": "input_image", "type": "image", "label": L("Imagen a Vectorizar", "Image to Vectorize"), "required": True}
-    ]}
+    {"slug": "retouch-skin", "label": L("Retoque Facial", "Skin Retouch"), "icon": "fa-face-smile", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Limpia la piel automáticamente.", "Cleans skin automatically."), "endpoint": "/v1/images/retouch-skin", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]}
 ]
 
 MODELS_BY_SLUG = {m["slug"]: m for m in MODELS}
@@ -128,77 +124,78 @@ def resize_if_needed(file_bytes, slug, original_filename="image.jpg"):
     if not file_bytes or len(file_bytes) == 0:
         raise ValueError("El archivo enviado está vacío (0 bytes).")
     try:
-        max_dim = 1500 if "enhance" in slug else (512 if "pose" in slug else 3000)
+        max_dim = 1500 if "enhance" in slug else 2400
         img = Image.open(io.BytesIO(file_bytes))
-        img.load()
         img_format = (img.format or "PNG").upper()
-        if img_format not in ("JPEG", "PNG", "WEBP"):
-            img_format = "PNG"
-
         width, height = img.size
+
         needs_resize = (max(width, height) > max_dim)
-        needs_convert = (img_format == "JPEG" and img.mode in ("RGBA", "P", "LA")) or (img_format == "WEBP")
-        
+        needs_convert = (img_format == "JPEG" and img.mode in ("RGBA", "P", "LA")) or (img_format not in ("JPEG", "PNG"))
+
         if not needs_resize and not needs_convert:
+            img.close()
             return file_bytes, original_filename, f"image/{img_format.lower()}"
 
+        if img_format == "JPEG" and needs_resize:
+            img.draft("RGB", (max_dim, max_dim))
+
         if needs_resize:
-            scale = max_dim / max(width, height)
-            img = img.resize((int(width * scale), int(height * scale)), Image.LANCZOS)
+            filtro = Image.BILINEAR if max(width, height) > 4000 else Image.LANCZOS
+            img.thumbnail((max_dim, max_dim), filtro)
 
         buffer = io.BytesIO()
-        # Si tenía transparencia o era WEBP, lo pasamos a PNG limpio para no perder canal alfa
         if img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
             img = img.convert("RGBA")
-            img.save(buffer, format="PNG")
-            return buffer.getvalue(), "image.png", "image/png"
+            img.save(buffer, format="PNG", optimize=False)
+            out_bytes = buffer.getvalue()
+            img.close()
+            return out_bytes, "image.png", "image/png"
         else:
             img = img.convert("RGB")
-            img.save(buffer, format="JPEG", quality=98, subsampling=0)
-            return buffer.getvalue(), "image.jpg", "image/jpeg"
+            img.save(buffer, format="JPEG", quality=95)
+            out_bytes = buffer.getvalue()
+            img.close()
+            return out_bytes, "image.jpg", "image/jpeg"
     except Exception as e:
         print(f"⚠️ Aviso en resize_if_needed: {e}")
         return file_bytes, original_filename, "image/png"
     finally:
         gc.collect()
 
-
-def ensure_valid_image_response(raw_bytes):
-    """
-    Verifica que los bytes recibidos no estén vacíos ni corruptos y los convierte
-    a un archivo PNG auténtico compatible con Photoshop, Corel, Illustrator y Windows.
-    """
+def validate_and_build_response(raw_bytes):
     if not raw_bytes or len(raw_bytes) < 64:
-        return None, "El servidor devolvió un archivo vacío (0 bytes)."
-    try:
-        img = Image.open(io.BytesIO(raw_bytes))
-        img.load()  # Fuerza a decodificar la imagen completa para detectar corrupción
-        out = io.BytesIO()
-        if img.mode not in ("RGB", "RGBA"):
-            img = img.convert("RGBA" if "A" in img.mode or "transparency" in img.info else "RGB")
-        img.save(out, format="PNG")
-        png_bytes = out.getvalue()
-        if len(png_bytes) < 64:
-            return None, "Error al codificar el PNG de salida."
-        return Response(png_bytes, mimetype="image/png"), None
-    except Exception as e:
-        return None, f"El archivo devuelto por la IA no era una imagen válida ({str(e)})."
+        return None, "El servidor de IA devolvió un archivo vacío (0 bytes)."
 
+    if raw_bytes[:8] == b'\x89PNG\r\n\x1a\n':
+        return Response(raw_bytes, mimetype="image/png"), None
+    elif raw_bytes[:3] == b'\xff\xd8\xff':
+        return Response(raw_bytes, mimetype="image/jpeg"), None
+    elif raw_bytes[:4] == b'RIFF' and raw_bytes[8:12] == b'WEBP':
+        try:
+            img = Image.open(io.BytesIO(raw_bytes))
+            out = io.BytesIO()
+            img.save(out, format="PNG")
+            png_bytes = out.getvalue()
+            img.close()
+            gc.collect()
+            return Response(png_bytes, mimetype="image/png"), None
+        except Exception:
+            return Response(raw_bytes, mimetype="image/webp"), None
+    else:
+        return None, "La IA devolvió un archivo corrupto o está saturada. Intenta nuevamente."
 
 def download_from_cdn_with_retry(url_img, retries=3):
-    """Descarga la imagen del CDN reintentando si entrega 0 bytes temporalmente."""
     for attempt in range(retries):
         try:
-            r_img = requests.get(url_img, headers={'User-Agent': 'Mozilla/5.0'}, timeout=60)
+            r_img = requests.get(url_img, headers={'User-Agent': 'Mozilla/5.0'}, timeout=45)
             if r_img.status_code == 200 and len(r_img.content) > 100:
                 return r_img.content, None
-            time.sleep(1.2)
+            time.sleep(1)
         except Exception as e:
             if attempt == retries - 1:
                 return None, str(e)
-            time.sleep(1.2)
-    return None, "El CDN de SnapEdit entregó un archivo de 0 bytes o expiró."
-
+            time.sleep(1)
+    return None, "El CDN de SnapEdit entregó 0 bytes."
 
 @app.route("/")
 def index(): return render_template("index.html")
@@ -222,7 +219,7 @@ def proxy_image():
     if not url: return jsonify({"error": True, "message": "No URL"}), 400
     raw_bytes, err = download_from_cdn_with_retry(url)
     if err: return jsonify({"error": True, "message": err}), 400
-    resp_obj, err_img = ensure_valid_image_response(raw_bytes)
+    resp_obj, err_img = validate_and_build_response(raw_bytes)
     if err_img: return jsonify({"error": True, "message": err_img}), 400
     if dl == "1":
         resp_obj.headers["Content-Disposition"] = "attachment; filename=JJ_Studio_Diseno.png"
@@ -277,17 +274,6 @@ def run_model(slug):
         for key, value in request.form.items():
             if value: data[key] = value
 
-        if slug == "vectorize":
-            api_id = "vkvh4gblnirc4hn"
-            api_secret = "65596jb1noid56iogfuq4aigtt0ccda7ku0clj0ti46d65skt8tj"
-            img_tuple = files.get("input_image") or files.get("image")
-            if not img_tuple: return jsonify({"error": True, "message": "Falta la imagen"}), 400
-            resp = requests.post('https://vectorizer.ai/api/v1/vectorize', files={'image': img_tuple}, auth=(api_id, api_secret), timeout=120)
-            if resp.status_code == 200 and len(resp.content) > 50 and b"<svg" in resp.content:
-                return Response(resp.content, mimetype="image/svg+xml")
-            else:
-                return jsonify({"error": True, "message": f"Error Vectorizer ({resp.status_code}): {resp.text[:200]}"}), 400
-
         if slug in ["textile-styles", "edit-multi"]: data["mode"] = "editing"
             
         if slug == "generate-background" and ("png" not in mime.lower()):
@@ -301,13 +287,13 @@ def run_model(slug):
              if style_val.startswith("PROMPT:"):
                  target_endpoint = "/v1/images/edits"
                  data["mode"] = "editing"
-                 data["prompt"] = "CRITICAL INSTRUCTION: " + style_val.replace("PROMPT:", "").strip()
+                 data["prompt"] = style_val.replace("PROMPT:", "").strip()
              else:
                  target_endpoint = "/v1/images/generates/art"
                  data["style"] = style_val
 
         if slug in ["detect-text", "detect-wires"]:
-            r1 = requests.post(BASE + target_endpoint, headers=HEADERS, files=files, timeout=120)
+            r1 = requests.post(BASE + target_endpoint, headers=HEADERS, files=files, timeout=90)
             if r1.status_code == 200:
                 d_json = r1.json()
                 if d_json.get("detected") and d_json.get("mask"):
@@ -317,31 +303,34 @@ def run_model(slug):
                     mask_b64 += "=" * ((4 - len(mask_b64) % 4) % 4)
                     f2 = {"input_image": files.get("input_image") or files.get("image"), "input_mask": ("mask.png", base64.b64decode(mask_b64), "image/png")}
                     ep_remove = "/v1/images/remove-text" if slug == "detect-text" else "/v1/images/remove-wires"
-                    response = requests.post(BASE + ep_remove, headers=HEADERS, files=f2, data={"erase_mode": "ultra"}, timeout=300)
+                    response = requests.post(BASE + ep_remove, headers=HEADERS, files=f2, data={"erase_mode": "ultra"}, timeout=180)
                 else: return jsonify({"error": True, "message": "No se detectó texto o cables en la imagen."}), 400
             else: response = r1
         else:
-            if model.get("needs_image") is False:
-                payload = {"prompt": data.get("prompt", ""), "aspect_ratio": data.get("aspect_ratio", "1:1")}
-                response = requests.post(BASE + target_endpoint, headers=HEADERS, json=payload, timeout=120)
-                if response.status_code >= 500:
-                    multipart_data = {k: (None, str(v)) for k, v in payload.items()}
-                    response = requests.post(BASE + target_endpoint, headers=HEADERS, files=multipart_data, timeout=120)
-            else:
-                response = requests.post(BASE + target_endpoint, headers=HEADERS, files=files if files else None, data=data if data else None, timeout=300)
+            response = None
+            for attempt in range(2):
+                if model.get("needs_image") is False:
+                    payload = {"prompt": data.get("prompt", ""), "aspect_ratio": data.get("aspect_ratio", "1:1")}
+                    response = requests.post(BASE + target_endpoint, headers=HEADERS, json=payload, timeout=90)
+                    if response.status_code >= 500:
+                        multipart_data = {k: (None, str(v)) for k, v in payload.items()}
+                        response = requests.post(BASE + target_endpoint, headers=HEADERS, files=multipart_data, timeout=90)
+                else:
+                    response = requests.post(BASE + target_endpoint, headers=HEADERS, files=files if files else None, data=data if data else None, timeout=180)
+                
+                if response.status_code not in (502, 503, 504):
+                    break
+                time.sleep(1.5)
         
         content_type = response.headers.get("Content-Type", "").lower()
         if "application/json" in content_type:
             datos = response.json()
             if response.status_code == 200:
-                # Si es una herramienta que devuelve JSON puro (como detect-objects)
                 if model.get("response_type") == "json" or "detected_objects" in datos:
                     return jsonify(datos), 200
 
-                # Buscar URL o Base64 en todas las estructuras posibles de SnapEdit
                 data_field = datos.get("data")
-                url_img = None
-                b64_img = None
+                url_img, b64_img = None, None
 
                 if isinstance(data_field, list) and len(data_field) > 0:
                     url_img = data_field[0].get("url") or data_field[0].get("image_url")
@@ -359,10 +348,9 @@ def run_model(slug):
                         raw_bytes = base64.b64decode(encoded)
                     else:
                         raw_bytes, err_dl = download_from_cdn_with_retry(url_img)
-                        if err_dl:
-                            return jsonify({"error": True, "message": f"Error descargando imagen: {err_dl}"}), 400
+                        if err_dl: return jsonify({"error": True, "message": f"Error descargando imagen: {err_dl}"}), 400
                     
-                    resp_obj, err_img = ensure_valid_image_response(raw_bytes)
+                    resp_obj, err_img = validate_and_build_response(raw_bytes)
                     if err_img: return jsonify({"error": True, "message": err_img}), 400
                     return resp_obj
 
@@ -371,7 +359,7 @@ def run_model(slug):
                     b64_img = b64_img.replace('\n', '').replace('\r', '').strip()
                     b64_img += "=" * ((4 - len(b64_img) % 4) % 4)
                     raw_bytes = base64.b64decode(b64_img)
-                    resp_obj, err_img = ensure_valid_image_response(raw_bytes)
+                    resp_obj, err_img = validate_and_build_response(raw_bytes)
                     if err_img: return jsonify({"error": True, "message": err_img}), 400
                     return resp_obj
 
@@ -379,15 +367,15 @@ def run_model(slug):
             return jsonify({"error": True, "message": datos.get("message", str(datos))}), 400
         else:
             if response.status_code != 200:
-                return jsonify({"error": True, "message": f"Servidores saturados (HTTP {response.status_code})."}), 400
-            resp_obj, err_img = ensure_valid_image_response(response.content)
-            if err_img:
-                return jsonify({"error": True, "message": err_img}), 400
+                return jsonify({"error": True, "message": f"Servidores de IA ocupados (HTTP {response.status_code}). Intenta en unos segundos."}), 400
+            resp_obj, err_img = validate_and_build_response(response.content)
+            if err_img: return jsonify({"error": True, "message": err_img}), 400
             return resp_obj
     except Exception as e: 
         print(f"❌ ERROR: {str(e)}")
         return jsonify({"error": True, "message": f"Error interno: {str(e)}"}), 400
-    finally: gc.collect()
+    finally:
+        gc.collect()
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=10000)
