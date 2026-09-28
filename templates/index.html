@@ -697,7 +697,7 @@ function renderQuickActions(slug) {
     const actionsDict = {
         "remove-bg": { slug: "remove-background", label: isEs ? "Quitar Fondo" : "Remove BG", icon: "fa-user-slash text-red-500", params: {} },
         "extract-logo": { slug: "remove-background-graphic", label: isEs ? "Quitar Fondo (Arte)" : "Extract Logo", icon: "fa-shapes text-orange-500", params: {} },
-        "extract-dtf": { slug: "extract-print", label: isEs ? "👕 Extraer DTF" : "👕 Extract DTF", icon: "fa-shirt text-cyan-400", params: {extract_mode: "AUTO_WHITE"} },
+        "extract-dtf": { slug: "extract-print", label: isEs ? "👕 Extraer DTF" : "👕 Extract DTF", icon: "fa-shirt text-cyan-400", params: {extract_mode: "AUTO_BLACK"} },
         "upscale-8x": { slug: "enhance", label: isEs ? "Escalar Máx (8x)" : "Upscale Max (8x)", icon: "fa-rocket text-purple-500", params: {zoom_factor: "8"} },
         "upscale-faces": { slug: "enhance-pro", label: isEs ? "Mejorar Rostros" : "Enhance Faces", icon: "fa-user-check text-blue-500", params: {zoom_factor: "2"} },
         "magic-eraser": { slug: "detect-objects", label: isEs ? "Borrador Mágico" : "Magic Eraser", icon: "fa-magic text-yellow-500", params: {erase_mode: "ultra"} },
@@ -895,9 +895,8 @@ form.addEventListener("submit", async (e) => {
             if (!blob || blob.size < 64) {
                 throw new Error("El servidor entregó un archivo vacío (0 B). Intenta procesar de nuevo.");
             }
-            const ext = contentType.includes("jpeg") || contentType.includes("jpg") ? "jpg" : "png";
             const localBlobUrl = URL.createObjectURL(blob);
-            processFinalUrl(localBlobUrl, currentSlug, ext);
+            processFinalUrl(localBlobUrl, currentSlug, "png");
             submitBtn.disabled = false;
         } else if (contentType.includes("application/json")) {
             const data = await res.json();
@@ -974,8 +973,7 @@ async function proceedWithQuickAction(targetSlug, extraParams) {
         if (res.ok && contentType.startsWith("image/")) {
             const blobFinal = await res.blob();
             if (!blobFinal || blobFinal.size < 64) throw new Error("Imagen recibida en 0 bytes.");
-            const ext = contentType.includes("jpeg") || contentType.includes("jpg") ? "jpg" : "png";
-            processFinalUrl(URL.createObjectURL(blobFinal), targetSlug, ext);
+            processFinalUrl(URL.createObjectURL(blobFinal), targetSlug, "png");
         } else if (contentType.includes("application/json")) {
             const data = await res.json();
             throw new Error(data.message || "Error al procesar la sugerencia.");
@@ -994,7 +992,7 @@ async function processFinalUrl(url, slugToUse = currentSlug, ext = "png") {
     if (currentSlug === 'master-color') { mainResultImg.style.display = 'none'; } else { mainResultImg.style.display = "block"; mainResultImg.src = displayUrl; }
     
     statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + (currentSlug === 'master-color' ? "Cambios Guardados." : t("done"));
-    btnDownloadResult.href = downloadUrl; btnDownloadResult.setAttribute("download", `JJ_Studio_Diseno.${ext}`); btnDownloadResult.style.display = "block";
+    btnDownloadResult.href = downloadUrl; btnDownloadResult.setAttribute("download", `JJ_Studio_Diseno.png`); btnDownloadResult.style.display = "block";
     
     document.getElementById("downloadBtnText").innerText = t("download_btn"); renderQuickActions(slugToUse); quickActionsBar.style.display = "block";
     
@@ -1064,8 +1062,7 @@ btnExecuteErase.addEventListener("click", async () => {
         if (res.ok && contentType.startsWith("image/")) {
             const blob = await res.blob();
             if (!blob || blob.size < 64) throw new Error("Imagen recibida en 0 bytes.");
-            const ext = contentType.includes("jpeg") || contentType.includes("jpg") ? "jpg" : "png";
-            processFinalUrl(URL.createObjectURL(blob), currentSlug, ext);
+            processFinalUrl(URL.createObjectURL(blob), currentSlug, "png");
         } else {
             const json = await res.json();
             throw new Error(json.message || json.detalle || "Parámetros incorrectos");
