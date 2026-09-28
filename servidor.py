@@ -29,6 +29,15 @@ MODELS = [
     {"slug": "detect-wires", "label": L("Borrar Cables (Auto)", "Erase Wires (Auto)"), "icon": "fa-plug", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Detecta y borra cables/postes.", "Detects and erases wires."), "endpoint": "/v1/images/detect-wires", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "remove-logo", "label": L("Quitar Marcas de Agua (Auto)", "Remove Watermarks"), "icon": "fa-copyright", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Detecta y elimina logos y marcas de protección en un clic.", "Auto remove logos and watermarks."), "endpoint": "/v1/images/remove-logo", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
+    {"slug": "extract-print", "label": L("👕 Extraer Diseño (Mockup a DTF)", "👕 Extract Shirt Design (DTF)"), "icon": "fa-shirt", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Extrae el estampado de camisetas, elimina arrugas y lo reconstruye en HD.", "Extracts and flattens graphic print from shirts/mockups."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
+        {"name": "input_image", "type": "image", "label": L("Foto de la Camiseta / Mockup", "Shirt / Mockup Photo"), "required": True},
+        {"name": "extract_mode", "type": "select", "label": L("Modo de Extracción", "Extraction Mode"), "required": True, "options": [
+            {"value": "AUTO_WHITE", "label": L("✨ PNG Sin Fondo (Para diseños oscuros o a color)", "✨ Transparent PNG (For dark/colorful designs)")},
+            {"value": "AUTO_BLACK", "label": L("✨ PNG Sin Fondo (Para diseños con letras/bordes blancos)", "✨ Transparent PNG (For designs with white parts)")},
+            {"value": "SOLID_WHITE", "label": L("⬜ Extraer sobre Fondo Blanco Puro", "⬜ Solid White Background")},
+            {"value": "SOLID_BLACK", "label": L("⬛ Extraer sobre Fondo Negro Puro", "⬛ Solid Black Background")}
+        ]}
+    ]},
     {"slug": "remove-background", "label": L("Quitar Fondo (Fotos)", "Remove Background"), "icon": "fa-user-slash", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Recorte de personas o productos.", "Cutout for people/products."), "endpoint": "/v1/images/remove-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "remove-background-graphic", "label": L("Quitar Fondo (Arte)", "Remove BG (Graphics)"), "icon": "fa-shapes", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Ideal para anime, stickers y logos.", "Ideal for anime, stickers and logos."), "endpoint": "/v1/images/remove-background-graphic", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "remove-objects", "label": L("Borrar Objetos (Pincel)", "Remove Objects (Brush)"), "icon": "fa-eraser", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Usa el pincel para borrar lo que quieras.", "Use the brush to erase anything."), "endpoint": "/v1/images/remove-objects", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "input_mask", "type": "mask", "label": L("Máscara (B/N)", "Mask (B/W)"), "required": True}, {"name": "erase_mode", "type": "select", "label": L("Calidad", "Quality"), "options": [{"value": "ultra", "label": L("Ultra HD", "Ultra HD")}, {"value": "normal", "label": L("Normal", "Normal")}]}]},
@@ -106,12 +115,12 @@ MODELS = [
     {"slug": "textile-styles", "label": L("Texturas Mágicas 3D", "3D Magic Textures"), "icon": "fa-cubes", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Aplica lana, bordado, parche o inflado.", "Applies yarn, thread, patch or puffy styles."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
         {"name": "input_image", "type": "image", "label": L("Sube tu Diseño Original", "Upload Design"), "required": True}, 
         {"name": "prompt", "type": "select", "label": L("Elige la Textura", "Select Texture"), "required": True, "options": [
-            {"value": "Convert 100% of the artwork from top to bottom—including top header shapes, the main character, held accessories, drinks, and all bottom base waves, splashes, and small details—into a uniform 3D amigurumi crochet texture made of thick knitted yarn loops. Every colored part of the illustration must be fully knitted in yarn while keeping its exact original position, shape, and color, leaving only the plain background untouched.", "label": L("🧶 Crochet / Amigurumi HD", "HD Crochet")},
-            {"value": "Convert 100% of the artwork from top to bottom—including top header shapes, the main character, held accessories, drinks, and all bottom base waves, splashes, and small details—into a uniform 3D embroidery texture made of thick glossy thread stitches. Every colored part of the illustration must be fully stitched in thread while keeping its exact original position, shape, and color, leaving only the plain background untouched.", "label": L("🧵 Bordado Realista HD", "Realistic Embroidery")},
-            {"value": "Convert 100% of the artwork from top to bottom—including top header shapes, character, accessories, and bottom base waves—into a 3D embroidered patch with a tight stitched thread border strictly along the existing outer silhouette. Keep every element in its exact original position, shape, and color.", "label": L("🏷️ Parche (Sin Fondo - Borde Ajustado)", "Patch Tight Border")},
-            {"value": "Place the complete artwork from top to bottom—including top header shapes, character, accessories, and bottom base elements—onto a square fabric patch with a stitched thread border around the outer square edge. Render all parts in 3D embroidery keeping their exact original positions and colors.", "label": L("⬛ Parche (Fondo Cuadrado)", "Square Patch")},
-            {"value": "Place the complete artwork from top to bottom—including top header shapes, character, accessories, and bottom base elements—onto a circular fabric patch with a stitched thread border around the outer circle edge. Render all parts in 3D embroidery keeping their exact original positions and colors.", "label": L("🔴 Parche (Fondo Redondo)", "Round Patch")},
-            {"value": "Convert 100% of the artwork from top to bottom—including top header shapes, the main character, held accessories, drinks, and all bottom base waves, splashes, and small details—into a uniform 3D inflated puffy balloon texture made of glossy soft vinyl. Every colored part of the illustration must be 3D puffy vinyl while keeping its exact original position, shape, and color, leaving only the plain background untouched.", "label": L("🎈 Estilo Inflado 3D (Globo)", "3D Inflated/Puffer")}
+            {"value": "Convert every single colored region of this image from top to bottom—including the top shapes, main subject, accessories, cups, glasses, bottom waves, splashes, and base details—into a uniform 3D amigurumi crochet texture made entirely of thick knitted yarn loops. Every surface must be made of yarn while keeping its exact original position, shape, and color.", "label": L("🧶 Crochet / Amigurumi HD", "HD Crochet")},
+            {"value": "Convert every single colored region of this image from top to bottom—including the top shapes, main subject, accessories, cups, glasses, bottom waves, splashes, and base details—into a uniform 3D embroidery texture made entirely of thick glossy thread stitches. Every surface must be stitched thread while keeping its exact original position, shape, and color.", "label": L("🧵 Bordado Realista HD", "Realistic Embroidery")},
+            {"value": "Convert the entire image from top to bottom—including all top shapes, main subject, accessories, and bottom wave or base details—into a 3D embroidered patch made of thick thread stitches with a tight stitched border along the outer silhouette. Keep every element in its exact original position and color.", "label": L("🏷️ Parche (Sin Fondo - Borde Ajustado)", "Patch Tight Border")},
+            {"value": "Place the complete graphic from top to bottom onto a square fabric patch with a stitched thread border around the outer square edge. Render every single element, including top shapes, accessories, and bottom base details, in 3D embroidered thread keeping their exact original positions and colors.", "label": L("⬛ Parche (Fondo Cuadrado)", "Square Patch")},
+            {"value": "Place the complete graphic from top to bottom onto a circular fabric patch with a stitched thread border around the outer circle edge. Render every single element, including top shapes, accessories, and bottom base details, in 3D embroidered thread keeping their exact original positions and colors.", "label": L("🔴 Parche (Fondo Redondo)", "Round Patch")},
+            {"value": "Convert every single colored region of this image from top to bottom—including the top shapes, main subject, accessories, cups, glasses, bottom waves, splashes, and base details—into a uniform 3D inflated puffy balloon texture made of glossy soft vinyl. Keep every element in its exact original position, shape, and color.", "label": L("🎈 Estilo Inflado 3D (Globo)", "3D Inflated/Puffer")}
         ]}
     ]},
 
@@ -171,6 +180,48 @@ def resize_if_needed(file_bytes, slug, original_filename="image.jpg", zoom_facto
         return file_bytes, original_filename, "image/png"
     finally:
         gc.collect()
+
+def extract_raw_bytes_from_response(response):
+    content_type = response.headers.get("Content-Type", "").lower()
+    if "application/json" in content_type:
+        datos = response.json()
+        if response.status_code == 200:
+            data_field = datos.get("data")
+            url_img, b64_img = None, None
+
+            if isinstance(data_field, list) and len(data_field) > 0:
+                url_img = data_field[0].get("url") or data_field[0].get("image_url")
+                b64_img = data_field[0].get("b64_json") or data_field[0].get("image") or data_field[0].get("output_image")
+            elif isinstance(data_field, dict):
+                url_img = data_field.get("url") or data_field.get("image_url")
+                b64_img = data_field.get("b64_json") or data_field.get("image") or data_field.get("output_image")
+
+            url_img = url_img or datos.get("url") or datos.get("image_url")
+            b64_img = b64_img or datos.get("output_image") or datos.get("image") or datos.get("b64_json")
+
+            if url_img:
+                if url_img.startswith("data:image"):
+                    _, encoded = url_img.split(",", 1)
+                    return base64.b64decode(encoded), None
+                raw_bytes, err_dl = download_from_cdn_with_retry(url_img)
+                if err_dl:
+                    return None, f"Error descargando imagen: {err_dl}"
+                return raw_bytes, None
+
+            if b64_img:
+                if "," in b64_img:
+                    b64_img = b64_img.split(",", 1)[1]
+                b64_img = b64_img.replace('\n', '').replace('\r', '').strip()
+                b64_img += "=" * ((4 - len(b64_img) % 4) % 4)
+                return base64.b64decode(b64_img), None
+
+            return None, "Respuesta JSON sin imagen."
+        err_msg = datos.get("error", {}).get("message") if isinstance(datos.get("error"), dict) else datos.get("message", str(datos))
+        return None, err_msg
+    else:
+        if response.status_code != 200:
+            return None, f"Servidores de IA ocupados (HTTP {response.status_code}). Intenta en unos segundos."
+        return response.content, None
 
 def validate_and_build_response(raw_bytes):
     if not raw_bytes or len(raw_bytes) < 64:
@@ -286,7 +337,21 @@ def run_model(slug):
                 ext = "png" if "png" in mime else "jpg"
                 files[key] = (f"{key}.{ext}", buf, mime)
 
-        if slug in ["textile-styles", "edit-multi"]: data["mode"] = "editing"
+        if slug in ["textile-styles", "edit-multi", "extract-print"]:
+            data["mode"] = "editing"
+
+        auto_remove_bg = False
+        if slug == "extract-print":
+            extract_mode = data.pop("extract_mode", "AUTO_WHITE")
+            auto_remove_bg = extract_mode.startswith("AUTO_")
+            bg_color_name = "pure solid flat black" if "BLACK" in extract_mode else "pure solid flat white"
+            data["prompt"] = (
+                f"Extract only the printed graphic design from the t-shirt or garment shown in this image. "
+                f"Completely remove the shirt, background, lighting shadows, fabric wrinkles, folds, and the person. "
+                f"Reconstruct the graphic as a perfectly flat, front-facing, high-resolution 2D illustration "
+                f"with clean crisp edges, sharp details, and 100% faithful original colors ready for DTF textile printing, "
+                f"isolated on a {bg_color_name} background."
+            )
             
         if slug == "generate-background" and ("png" not in mime.lower()):
              return jsonify({"error": True, "message": "¡Debes subir un PNG transparente (sin fondo)! Ve primero a 'Quitar Fondo'."}), 400
@@ -335,55 +400,36 @@ def run_model(slug):
                 time.sleep(1.5)
         
         content_type = response.headers.get("Content-Type", "").lower()
-        if "application/json" in content_type:
+        if "application/json" in content_type and (model.get("response_type") == "json" or "detected_objects" in response.text):
             datos = response.json()
             if response.status_code == 200:
-                if model.get("response_type") == "json" or "detected_objects" in datos:
-                    return jsonify(datos), 200
-
-                data_field = datos.get("data")
-                url_img, b64_img = None, None
-
-                if isinstance(data_field, list) and len(data_field) > 0:
-                    url_img = data_field[0].get("url") or data_field[0].get("image_url")
-                    b64_img = data_field[0].get("b64_json") or data_field[0].get("image") or data_field[0].get("output_image")
-                elif isinstance(data_field, dict):
-                    url_img = data_field.get("url") or data_field.get("image_url")
-                    b64_img = data_field.get("b64_json") or data_field.get("image") or data_field.get("output_image")
-
-                url_img = url_img or datos.get("url") or datos.get("image_url")
-                b64_img = b64_img or datos.get("output_image") or datos.get("image") or datos.get("b64_json")
-
-                if url_img:
-                    if url_img.startswith("data:image"):
-                        _, encoded = url_img.split(",", 1)
-                        raw_bytes = base64.b64decode(encoded)
-                    else:
-                        raw_bytes, err_dl = download_from_cdn_with_retry(url_img)
-                        if err_dl: return jsonify({"error": True, "message": f"Error descargando imagen: {err_dl}"}), 400
-                    
-                    resp_obj, err_img = validate_and_build_response(raw_bytes)
-                    if err_img: return jsonify({"error": True, "message": err_img}), 400
-                    return resp_obj
-
-                if b64_img:
-                    if "," in b64_img: b64_img = b64_img.split(",", 1)[1]
-                    b64_img = b64_img.replace('\n', '').replace('\r', '').strip()
-                    b64_img += "=" * ((4 - len(b64_img) % 4) % 4)
-                    raw_bytes = base64.b64decode(b64_img)
-                    resp_obj, err_img = validate_and_build_response(raw_bytes)
-                    if err_img: return jsonify({"error": True, "message": err_img}), 400
-                    return resp_obj
-
                 return jsonify(datos), 200
             err_msg = datos.get("error", {}).get("message") if isinstance(datos.get("error"), dict) else datos.get("message", str(datos))
             return jsonify({"error": True, "message": err_msg}), 400
-        else:
-            if response.status_code != 200:
-                return jsonify({"error": True, "message": f"Servidores de IA ocupados (HTTP {response.status_code}). Intenta en unos segundos."}), 400
-            resp_obj, err_img = validate_and_build_response(response.content)
-            if err_img: return jsonify({"error": True, "message": err_img}), 400
-            return resp_obj
+
+        raw_bytes, err_extract = extract_raw_bytes_from_response(response)
+        if err_extract:
+            return jsonify({"error": True, "message": err_extract}), 400
+
+        if slug == "extract-print" and auto_remove_bg:
+            try:
+                img_temp = Image.open(io.BytesIO(raw_bytes))
+                buf_temp = io.BytesIO()
+                img_temp.save(buf_temp, format="PNG")
+                img_temp.close()
+                f_bg = {"input_image": ("extracted.png", buf_temp.getvalue(), "image/png")}
+                r_bg = requests.post(BASE + "/v1/images/remove-background-graphic", headers=HEADERS, files=f_bg, timeout=120)
+                bg_bytes, bg_err = extract_raw_bytes_from_response(r_bg)
+                if not bg_err and bg_bytes and len(bg_bytes) > 100:
+                    raw_bytes = bg_bytes
+            except Exception as e:
+                print(f"⚠️ Aviso al quitar fondo en extract-print: {e}")
+
+        resp_obj, err_img = validate_and_build_response(raw_bytes)
+        if err_img:
+            return jsonify({"error": True, "message": err_img}), 400
+        return resp_obj
+
     except Exception as e: 
         print(f"❌ ERROR: {str(e)}")
         return jsonify({"error": True, "message": f"Error interno: {str(e)}"}), 400
