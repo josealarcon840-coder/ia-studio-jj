@@ -7,7 +7,7 @@ import hmac
 import gc  
 import time 
 from flask import Flask, render_template, request, jsonify, Response
-from PIL import Image
+from PIL import Image, ImageChops
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -29,13 +29,13 @@ MODELS = [
     {"slug": "detect-wires", "label": L("Borrar Cables (Auto)", "Erase Wires (Auto)"), "icon": "fa-plug", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Detecta y borra cables/postes.", "Detects and erases wires."), "endpoint": "/v1/images/detect-wires", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "remove-logo", "label": L("Quitar Marcas de Agua (Auto)", "Remove Watermarks"), "icon": "fa-copyright", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Detecta y elimina logos y marcas de protección en un clic.", "Auto remove logos and watermarks."), "endpoint": "/v1/images/remove-logo", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    {"slug": "extract-print", "label": L("👕 Extraer Diseño (Mockup a DTF)", "👕 Extract Shirt Design (DTF)"), "icon": "fa-shirt", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Extrae el estampado de camisetas, elimina arrugas y lo reconstruye en HD.", "Extracts and flattens graphic print from shirts/mockups."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
+    {"slug": "extract-print", "label": L("👕 Extraer Diseño (Mockup a DTF)", "👕 Extract Shirt Design (DTF)"), "icon": "fa-shirt", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Extrae el estampado de camisetas, elimina arrugas, recorta bordes y lo deja en PNG sin fondo.", "Extracts, crops, and flattens graphic print from shirts into transparent PNG."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
         {"name": "input_image", "type": "image", "label": L("Foto de la Camiseta / Mockup", "Shirt / Mockup Photo"), "required": True},
-        {"name": "extract_mode", "type": "select", "label": L("Modo de Extracción", "Extraction Mode"), "required": True, "options": [
-            {"value": "AUTO_WHITE", "label": L("✨ PNG Sin Fondo (Para diseños oscuros o a color)", "✨ Transparent PNG (For dark/colorful designs)")},
-            {"value": "AUTO_BLACK", "label": L("✨ PNG Sin Fondo (Para diseños con letras/bordes blancos)", "✨ Transparent PNG (For designs with white parts)")},
-            {"value": "SOLID_WHITE", "label": L("⬜ Extraer sobre Fondo Blanco Puro", "⬜ Solid White Background")},
-            {"value": "SOLID_BLACK", "label": L("⬛ Extraer sobre Fondo Negro Puro", "⬛ Solid Black Background")}
+        {"name": "extract_mode", "type": "select", "label": L("Tipo de Prenda / Diseño", "Garment / Design Type"), "required": True, "options": [
+            {"value": "AUTO_BLACK", "label": L("✨ PNG Sin Fondo (Para Polos Negros / Diseños con líneas o letras blancas)", "✨ Transparent PNG (From Black Shirt / White lines)")},
+            {"value": "AUTO_WHITE", "label": L("✨ PNG Sin Fondo (Para Polos Blancos o Claros / Diseños oscuros)", "✨ Transparent PNG (From Light Shirt / Dark design)")},
+            {"value": "SOLID_BLACK", "label": L("⬛ Extraer y Encuadrar sobre Fondo Negro", "⬛ Cropped on Solid Black")},
+            {"value": "SOLID_WHITE", "label": L("⬜ Extraer y Encuadrar sobre Fondo Blanco", "⬜ Cropped on Solid White")}
         ]}
     ]},
     {"slug": "remove-background", "label": L("Quitar Fondo (Fotos)", "Remove Background"), "icon": "fa-user-slash", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Recorte de personas o productos.", "Cutout for people/products."), "endpoint": "/v1/images/remove-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
@@ -223,15 +223,82 @@ def extract_raw_bytes_from_response(response):
             return None, f"Servidores de IA ocupados (HTTP {response.status_code}). Intenta en unos segundos."
         return response.content, None
 
+def process_dtf_extraction(raw_bytes, extract_mode):
+    """
+    Desfonda el color base (Knockout DTF para negro o blanco) respetando líneas finas y textos,
+    y recorta automáticamente los márgenes vacíos gigantes para entregar el diseño centrado en PNG.
+    """
+    try:
+        img = Image.open(io.BytesIO(raw_bytes)).convert("RGBA")
+        r, g, b, a = img.split()
+
+        if "BLACK" in extract_mode:
+            # Canal de luminosidad máxima para detectar dónde hay diseño sobre el fondo negro
+            max_c = ImageChops.lighter(ImageChops.lighter(r, g), b)
+            # Máscara para detectar el área del diseño y recortar todo el borde negro gigante
+             crop_mask = max_c.point(lambda p: 255 if p > 28 else 0)
+            bbox = crop_mask.getbbox()
+            if bbox:
+                pad = 24
+                left = max(0, bbox[0] - pad)
+                top = max(0, bbox[1] - pad)
+                right = min(img.width, bbox[2] + pad)
+                bottom = min(img.height, bbox[3] + pad)
+                img = img.crop((left, top, right, bottom))
+                r, g, b, a = img.split()
+                max_c = ImageChops.lighter(ImageChops.lighter(r, g), b)
+
+            if extract_mode == "AUTO_BLACK":
+                # Knockout de negro estilo DTF: elimina el negro puro (<=18) y suaviza bordes (18..48)
+                alpha = max_c.point(lambda p: 0 if p <= 18 else (255 if p >= 48 else int((p - 18) * 255 / 30)))
+                img.putalpha(alpha)
+
+        else:
+            # Fondo blanco (AUTO_WHITE o SOLID_WHITE)
+            min_c = ImageChops.darker(ImageChops.darker(r, g), b)
+            crop_mask = min_c.point(lambda p: 255 if p < 235 else 0)
+            bbox = crop_mask.getbbox()
+            if bbox:
+                pad = 24
+                left = max(0, bbox[0] - pad)
+                top = max(0, bbox[1] - pad)
+                right = min(img.width, bbox[2] + pad)
+                bottom = min(img.height, bbox[3] + pad)
+                img = img.crop((left, top, right, bottom))
+
+            if extract_mode == "AUTO_WHITE":
+                # Primero intentamos recorte por IA de arte sobre la imagen ya encuadrada
+                buf_crop = io.BytesIO()
+                img.save(buf_crop, format="PNG")
+                f_bg = {"input_image": ("extracted.png", buf_crop.getvalue(), "image/png")}
+                r_bg = requests.post(BASE + "/v1/images/remove-background-graphic", headers=HEADERS, files=f_bg, timeout=120)
+                bg_bytes, bg_err = extract_raw_bytes_from_response(r_bg)
+                if not bg_err and bg_bytes and len(bg_bytes) > 100:
+                    img = Image.open(io.BytesIO(bg_bytes)).convert("RGBA")
+                else:
+                    # Respaldo Knockout Blanco si falla la red
+                    r, g, b, _ = img.split()
+                    min_c = ImageChops.darker(ImageChops.darker(r, g), b)
+                    alpha = min_c.point(lambda p: 0 if p >= 242 else (255 if p <= 215 else int((242 - p) * 255 / 27)))
+                    img.putalpha(alpha)
+
+        out = io.BytesIO()
+        img.save(out, format="PNG")
+        res_bytes = out.getvalue()
+        img.close()
+        gc.collect()
+        return res_bytes
+    except Exception as e:
+        print(f"⚠️ Error en process_dtf_extraction: {e}")
+        return raw_bytes
+
 def validate_and_build_response(raw_bytes):
     if not raw_bytes or len(raw_bytes) < 64:
         return None, "El servidor de IA devolvió un archivo vacío (0 bytes)."
 
     if raw_bytes[:8] == b'\x89PNG\r\n\x1a\n':
         return Response(raw_bytes, mimetype="image/png"), None
-    elif raw_bytes[:3] == b'\xff\xd8\xff':
-        return Response(raw_bytes, mimetype="image/jpeg"), None
-    elif raw_bytes[:4] == b'RIFF' and raw_bytes[8:12] == b'WEBP':
+    elif (raw_bytes[:3] == b'\xff\xd8\xff') or (raw_bytes[:4] == b'RIFF' and raw_bytes[8:12] == b'WEBP'):
         try:
             img = Image.open(io.BytesIO(raw_bytes))
             out = io.BytesIO()
@@ -241,7 +308,7 @@ def validate_and_build_response(raw_bytes):
             gc.collect()
             return Response(png_bytes, mimetype="image/png"), None
         except Exception:
-            return Response(raw_bytes, mimetype="image/webp"), None
+            return Response(raw_bytes, mimetype="image/png"), None
     else:
         return None, "La IA devolvió un archivo corrupto o está saturada. Intenta nuevamente."
 
@@ -340,17 +407,15 @@ def run_model(slug):
         if slug in ["textile-styles", "edit-multi", "extract-print"]:
             data["mode"] = "editing"
 
-        auto_remove_bg = False
+        extract_mode = "AUTO_BLACK"
         if slug == "extract-print":
-            extract_mode = data.pop("extract_mode", "AUTO_WHITE")
-            auto_remove_bg = extract_mode.startswith("AUTO_")
-            bg_color_name = "pure solid flat black" if "BLACK" in extract_mode else "pure solid flat white"
+            extract_mode = data.pop("extract_mode", "AUTO_BLACK")
+            bg_color_name = "pure solid flat #000000 black" if "BLACK" in extract_mode else "pure solid flat #FFFFFF white"
             data["prompt"] = (
-                f"Extract only the printed graphic design from the t-shirt or garment shown in this image. "
-                f"Completely remove the shirt, background, lighting shadows, fabric wrinkles, folds, and the person. "
-                f"Reconstruct the graphic as a perfectly flat, front-facing, high-resolution 2D illustration "
-                f"with clean crisp edges, sharp details, and 100% faithful original colors ready for DTF textile printing, "
-                f"isolated on a {bg_color_name} background."
+                f"Crop tightly and zoom in on the printed graphic design from the garment so the artwork fills 90% of the canvas frame at maximum scale. "
+                f"Completely remove the t-shirt collar, sleeves, fabric wrinkles, folds, lighting shadows, and background. "
+                f"Reconstruct the graphic as a perfectly flat, straight, front-facing high-resolution 2D illustration "
+                f"keeping all thin lines, blueprints, details, and exact original colors crisp and sharp on a {bg_color_name} background."
             )
             
         if slug == "generate-background" and ("png" not in mime.lower()):
@@ -411,19 +476,8 @@ def run_model(slug):
         if err_extract:
             return jsonify({"error": True, "message": err_extract}), 400
 
-        if slug == "extract-print" and auto_remove_bg:
-            try:
-                img_temp = Image.open(io.BytesIO(raw_bytes))
-                buf_temp = io.BytesIO()
-                img_temp.save(buf_temp, format="PNG")
-                img_temp.close()
-                f_bg = {"input_image": ("extracted.png", buf_temp.getvalue(), "image/png")}
-                r_bg = requests.post(BASE + "/v1/images/remove-background-graphic", headers=HEADERS, files=f_bg, timeout=120)
-                bg_bytes, bg_err = extract_raw_bytes_from_response(r_bg)
-                if not bg_err and bg_bytes and len(bg_bytes) > 100:
-                    raw_bytes = bg_bytes
-            except Exception as e:
-                print(f"⚠️ Aviso al quitar fondo en extract-print: {e}")
+        if slug == "extract-print":
+            raw_bytes = process_dtf_extraction(raw_bytes, extract_mode)
 
         resp_obj, err_img = validate_and_build_response(raw_bytes)
         if err_img:
