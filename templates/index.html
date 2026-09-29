@@ -881,7 +881,7 @@ form.addEventListener("submit", async (e) => {
       }
   }
 
-  statusText.textContent = t("processing");
+  statusText.textContent = model.slug === "extract-print" ? "Extrayendo, escalando en Ultra HD (4x) y limpiando fondo..." : t("processing");
 
   setTimeout(async () => {
       try {
