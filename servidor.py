@@ -29,13 +29,13 @@ MODELS = [
     {"slug": "detect-wires", "label": L("Borrar Cables (Auto)", "Erase Wires (Auto)"), "icon": "fa-plug", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Detecta y borra cables/postes.", "Detects and erases wires."), "endpoint": "/v1/images/detect-wires", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "remove-logo", "label": L("Quitar Marcas de Agua (Auto)", "Remove Watermarks"), "icon": "fa-copyright", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Detecta y elimina logos y marcas de protección en un clic.", "Auto remove logos and watermarks."), "endpoint": "/v1/images/remove-logo", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    {"slug": "extract-print", "label": L("👕 Extraer Diseño (Mockup a DTF)", "👕 Extract Shirt Design (DTF)"), "icon": "fa-shirt", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Extrae el estampado de camisetas, elimina arrugas, recorta bordes y lo deja en PNG sin fondo.", "Extracts, crops, and flattens graphic print from shirts into transparent PNG."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
+    {"slug": "extract-print", "label": L("👕 Extraer Diseño (Mockup a DTF)", "👕 Extract Shirt Design (DTF)"), "icon": "fa-shirt", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Extrae el estampado, recorta bordes, lo escala en Ultra HD (4x) y entrega PNG sin fondo.", "Extracts, crops, upscales 4x HD, and flattens graphic print into transparent PNG."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
         {"name": "input_image", "type": "image", "label": L("Foto de la Camiseta / Mockup", "Shirt / Mockup Photo"), "required": True},
         {"name": "extract_mode", "type": "select", "label": L("Tipo de Prenda / Diseño", "Garment / Design Type"), "required": True, "options": [
-            {"value": "AUTO_BLACK", "label": L("✨ PNG Sin Fondo (Para Polos Negros / Diseños con líneas o letras blancas)", "✨ Transparent PNG (From Black Shirt / White lines)")},
-            {"value": "AUTO_WHITE", "label": L("✨ PNG Sin Fondo (Para Polos Blancos o Claros / Diseños oscuros)", "✨ Transparent PNG (From Light Shirt / Dark design)")},
-            {"value": "SOLID_BLACK", "label": L("⬛ Extraer y Encuadrar sobre Fondo Negro", "⬛ Cropped on Solid Black")},
-            {"value": "SOLID_WHITE", "label": L("⬜ Extraer y Encuadrar sobre Fondo Blanco", "⬜ Cropped on Solid White")}
+            {"value": "AUTO_BLACK", "label": L("✨ PNG Sin Fondo Ultra HD (Polos Negros / Diseños con líneas blancas)", "✨ Transparent PNG HD (From Black Shirt / White lines)")},
+            {"value": "AUTO_WHITE", "label": L("✨ PNG Sin Fondo Ultra HD (Polos Blancos o Claros / Diseños oscuros)", "✨ Transparent PNG HD (From Light Shirt / Dark design)")},
+            {"value": "SOLID_BLACK", "label": L("⬛ Extraer en Ultra HD sobre Fondo Negro", "⬛ HD Cropped on Solid Black")},
+            {"value": "SOLID_WHITE", "label": L("⬜ Extraer en Ultra HD sobre Fondo Blanco", "⬜ HD Cropped on Solid White")}
         ]}
     ]},
     {"slug": "remove-background", "label": L("Quitar Fondo (Fotos)", "Remove Background"), "icon": "fa-user-slash", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Recorte de personas o productos.", "Cutout for people/products."), "endpoint": "/v1/images/remove-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
@@ -223,64 +223,96 @@ def extract_raw_bytes_from_response(response):
             return None, f"Servidores de IA ocupados (HTTP {response.status_code}). Intenta en unos segundos."
         return response.content, None
 
+def upscale_cropped_design_hd(img_pil):
+    """
+    Toma el diseño ya recortado y lo escala automáticamente 4x con IA (enhance-art / enhance)
+    para que pase de ~500px a +2400px Ultra HD con bordes definidos antes de quitar el fondo.
+    """
+    try:
+        w, h = img_pil.size
+        max_side = max(w, h)
+        # Elegir factor de zoom seguro según límites de la API de SnapEdit
+        if max_side <= 950:
+            zf = "4"
+        elif max_side <= 1500:
+            zf = "2"
+        else:
+            return img_pil
+
+        buf = io.BytesIO()
+        img_pil.convert("RGB").save(buf, format="JPEG", quality=98)
+        f_up = {"input_image": ("crop.jpg", buf.getvalue(), "image/jpeg")}
+
+        # Intentamos primero con enhance-art (ideal para estampados, vectores, textos y trazos)
+        r_up = requests.post(BASE + "/v1/images/enhance-art", headers=HEADERS, files=f_up, data={"zoom_factor": zf}, timeout=120)
+        up_bytes, up_err = extract_raw_bytes_from_response(r_up)
+
+        # Si falla enhance-art, probamos con enhance general
+        if up_err or not up_bytes:
+            f_up2 = {"input_image": ("crop.jpg", buf.getvalue(), "image/jpeg")}
+            r_up2 = requests.post(BASE + "/v1/images/enhance", headers=HEADERS, files=f_up2, data={"zoom_factor": zf, "enhance_faces": "true"}, timeout=120)
+            up_bytes, up_err = extract_raw_bytes_from_response(r_up2)
+
+        if not up_err and up_bytes and len(up_bytes) > 100:
+            upscaled_img = Image.open(io.BytesIO(up_bytes)).convert("RGBA")
+            img_pil.close()
+            return upscaled_img
+    except Exception as e:
+        print(f"⚠️ Aviso en upscale_cropped_design_hd: {e}")
+    return img_pil
+
 def process_dtf_extraction(raw_bytes, extract_mode):
     """
-    Desfonda el color base (Knockout DTF para negro o blanco) respetando líneas finas y textos,
-    y recorta automáticamente los márgenes vacíos gigantes para entregar el diseño centrado en PNG.
+    1. Recorta todo el margen vacío alrededor del estampado.
+    2. Escala el recorte a Ultra HD (4x) con IA para máxima nitidez.
+    3. Desfonda el color base (Knockout DTF para negro o blanco) respetando líneas finas.
     """
     try:
         img = Image.open(io.BytesIO(raw_bytes)).convert("RGBA")
-        r, g, b, a = img.split()
+        r, g, b, _ = img.split()
 
+        # PASO 1: Auto-Recorte Inteligente del margen vacío
         if "BLACK" in extract_mode:
-            # Canal de luminosidad máxima para detectar dónde hay diseño sobre el fondo negro
             max_c = ImageChops.lighter(ImageChops.lighter(r, g), b)
-            # Máscara para detectar el área del diseño y recortar todo el borde negro gigante
-             crop_mask = max_c.point(lambda p: 255 if p > 28 else 0)
-            bbox = crop_mask.getbbox()
-            if bbox:
-                pad = 24
-                left = max(0, bbox[0] - pad)
-                top = max(0, bbox[1] - pad)
-                right = min(img.width, bbox[2] + pad)
-                bottom = min(img.height, bbox[3] + pad)
-                img = img.crop((left, top, right, bottom))
-                r, g, b, a = img.split()
-                max_c = ImageChops.lighter(ImageChops.lighter(r, g), b)
-
-            if extract_mode == "AUTO_BLACK":
-                # Knockout de negro estilo DTF: elimina el negro puro (<=18) y suaviza bordes (18..48)
-                alpha = max_c.point(lambda p: 0 if p <= 18 else (255 if p >= 48 else int((p - 18) * 255 / 30)))
-                img.putalpha(alpha)
-
+            crop_mask = max_c.point(lambda p: 255 if p > 28 else 0)
         else:
-            # Fondo blanco (AUTO_WHITE o SOLID_WHITE)
             min_c = ImageChops.darker(ImageChops.darker(r, g), b)
             crop_mask = min_c.point(lambda p: 255 if p < 235 else 0)
-            bbox = crop_mask.getbbox()
-            if bbox:
-                pad = 24
-                left = max(0, bbox[0] - pad)
-                top = max(0, bbox[1] - pad)
-                right = min(img.width, bbox[2] + pad)
-                bottom = min(img.height, bbox[3] + pad)
-                img = img.crop((left, top, right, bottom))
 
-            if extract_mode == "AUTO_WHITE":
-                # Primero intentamos recorte por IA de arte sobre la imagen ya encuadrada
-                buf_crop = io.BytesIO()
-                img.save(buf_crop, format="PNG")
-                f_bg = {"input_image": ("extracted.png", buf_crop.getvalue(), "image/png")}
-                r_bg = requests.post(BASE + "/v1/images/remove-background-graphic", headers=HEADERS, files=f_bg, timeout=120)
-                bg_bytes, bg_err = extract_raw_bytes_from_response(r_bg)
-                if not bg_err and bg_bytes and len(bg_bytes) > 100:
-                    img = Image.open(io.BytesIO(bg_bytes)).convert("RGBA")
-                else:
-                    # Respaldo Knockout Blanco si falla la red
-                    r, g, b, _ = img.split()
-                    min_c = ImageChops.darker(ImageChops.darker(r, g), b)
-                    alpha = min_c.point(lambda p: 0 if p >= 242 else (255 if p <= 215 else int((242 - p) * 255 / 27)))
-                    img.putalpha(alpha)
+        bbox = crop_mask.getbbox()
+        if bbox:
+            pad = 20
+            left = max(0, bbox[0] - pad)
+            top = max(0, bbox[1] - pad)
+            right = min(img.width, bbox[2] + pad)
+            bottom = min(img.height, bbox[3] + pad)
+            img = img.crop((left, top, right, bottom))
+
+        # PASO 2: Súper Escalado Automático 4x HD sobre el diseño ya encuadrado
+        img = upscale_cropped_design_hd(img)
+
+        # PASO 3: Extracción de Fondo / Knockout DTF en Alta Resolución
+        if extract_mode == "AUTO_BLACK":
+            r, g, b, _ = img.split()
+            max_c = ImageChops.lighter(ImageChops.lighter(r, g), b)
+            # Desfondado de negro estilo DTF en HD: limpia el negro incluso dentro de líneas delgadas
+            alpha = max_c.point(lambda p: 0 if p <= 20 else (255 if p >= 52 else int((p - 20) * 255 / 32)))
+            img.putalpha(alpha)
+
+        elif extract_mode == "AUTO_WHITE":
+            buf_crop = io.BytesIO()
+            img.save(buf_crop, format="PNG")
+            f_bg = {"input_image": ("extracted_hd.png", buf_crop.getvalue(), "image/png")}
+            r_bg = requests.post(BASE + "/v1/images/remove-background-graphic", headers=HEADERS, files=f_bg, timeout=120)
+            bg_bytes, bg_err = extract_raw_bytes_from_response(r_bg)
+            if not bg_err and bg_bytes and len(bg_bytes) > 100:
+                img.close()
+                img = Image.open(io.BytesIO(bg_bytes)).convert("RGBA")
+            else:
+                r, g, b, _ = img.split()
+                min_c = ImageChops.darker(ImageChops.darker(r, g), b)
+                alpha = min_c.point(lambda p: 0 if p >= 242 else (255 if p <= 212 else int((242 - p) * 255 / 30)))
+                img.putalpha(alpha)
 
         out = io.BytesIO()
         img.save(out, format="PNG")
@@ -412,10 +444,10 @@ def run_model(slug):
             extract_mode = data.pop("extract_mode", "AUTO_BLACK")
             bg_color_name = "pure solid flat #000000 black" if "BLACK" in extract_mode else "pure solid flat #FFFFFF white"
             data["prompt"] = (
-                f"Crop tightly and zoom in on the printed graphic design from the garment so the artwork fills 90% of the canvas frame at maximum scale. "
+                f"Zoom in and crop tightly around the printed graphic artwork on the garment so the design fills 95% of the canvas frame from edge to edge. "
                 f"Completely remove the t-shirt collar, sleeves, fabric wrinkles, folds, lighting shadows, and background. "
-                f"Reconstruct the graphic as a perfectly flat, straight, front-facing high-resolution 2D illustration "
-                f"keeping all thin lines, blueprints, details, and exact original colors crisp and sharp on a {bg_color_name} background."
+                f"Reconstruct the graphic as a perfectly flat, straight, front-facing high-resolution 2D vector-sharp illustration "
+                f"preserving all fine lines, small letters, and exact original colors on a {bg_color_name} background."
             )
             
         if slug == "generate-background" and ("png" not in mime.lower()):
