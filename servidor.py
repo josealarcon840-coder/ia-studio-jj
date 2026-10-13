@@ -495,7 +495,13 @@ def download_from_cdn_with_retry(url_img, retries=3):
     return None, "El CDN de SnapEdit entregó 0 bytes."
 
 @app.route("/")
-def index(): return render_template("index.html")
+def index():
+    respuesta = render_template("index.html")
+    response = app.make_response(respuesta)
+    # Esta es la magia que le dice a Chrome en Android: "Confía en la ventanita de Telegram"
+    response.headers['Cross-Origin-Opener-Policy'] = 'same-origin-allow-popups'
+    return response
+
 
 @app.route("/models")
 def get_models():
