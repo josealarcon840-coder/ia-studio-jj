@@ -13,9 +13,10 @@
     --border: #3a141480; --red: #d81e2c; --red-bright: #ff2d3a; --red-dim: #7a0d14;
     --text: #f5eeee; --text-dim: #b99; --text-faint: #7a5c5c; --ok: #00ffcc; --danger: #ff5252;
     --font-display: "Anton", sans-serif; --font-body: "Inter", sans-serif;
+    --dtf-border: #2a2a2a;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 15% 0%, var(--bg-a) 0%, var(--bg-b) 55%); color: var(--text); font-family: var(--font-body); line-height: 1.5; }
+  body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 15% 0%, var(--bg-a) 0%, var(--bg-b) 55%); color: var(--text); font-family: var(--font-body); line-height: 1.5; overflow-x: hidden; }
   ::selection { background: var(--red); color: #fff; }
   button { font-family: inherit; color: inherit; cursor: pointer; }
 
@@ -170,6 +171,94 @@
     .form-container { max-width: 100%; position: relative; top: 0; }
     .canvas-container { width: 100%; }
   }
+
+
+  /* ==============================================================
+     CSS EXCLUSIVO PARA HERRAMIENTAS DTF (SEMITONOS Y DETECTOR)
+     ============================================================== */
+  .dtf-sidebar { width: 340px; background-color: var(--bg-panel); border-radius: 10px; border: 1px solid var(--border-color); padding: 15px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; z-index: 10; }
+  .dtf-sidebar::-webkit-scrollbar { width: 6px; }
+  .dtf-sidebar::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+
+  .dtf-section-box { background-color: var(--bg-section); padding: 12px; border-radius: 6px; border: 1px solid var(--dtf-border); position: relative;}
+  .dtf-section-title { font-size: 12px; font-weight: 700; color: var(--text-main); letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+  .dtf-section-title::before { content: ""; display: block; width: 3px; height: 12px; background-color: var(--primary-red); border-radius: 2px; }
+  .dtf-step-num { background: var(--primary-red); color: white; width: 22px; height: 22px; display: flex; justify-content: center; align-items: center; border-radius: 50%; font-size: 12px; font-weight: bold; }
+  .dtf-label { color: var(--text-muted); font-size: 10px; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; display: block; }
+  .dtf-hint-text { color: #888; font-size: 10px; margin-top: -2px; margin-bottom: 8px; font-style: italic; }
+
+  .dtf-switch-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .dtf-switch-row span { font-size: 12px; font-weight: 600; color: #ddd; }
+  .dtf-switch { position: relative; display: inline-block; width: 34px; height: 18px; }
+  .dtf-switch input { opacity: 0; width: 0; height: 0; }
+  .dtf-slider-tg { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 20px; }
+  .dtf-slider-tg:before { position: absolute; content: ""; height: 12px; width: 12px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+  .dtf-switch input:checked + .dtf-slider-tg { background-color: var(--primary-red); }
+  .dtf-switch input:checked + .dtf-slider-tg:before { transform: translateX(16px); }
+
+  .dtf-btn-scan { background: #222; border: 1px solid #ff00ff; color: #ff00ff; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 5px; transition: 0.2s; width: 100%;}
+  .dtf-btn-scan:hover { background: #333; border-color: #ff00ff; box-shadow: 0 0 10px rgba(255,0,255,0.2);}
+  .dtf-btn-reparar { background: var(--primary-red); color: white; border: none; padding: 15px; border-radius: 6px; font-size: 15px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; transition: 0.3s; margin-top: auto;}
+  .dtf-btn-reparar:hover { background: var(--primary-hover); box-shadow: 0 0 20px rgba(230,0,0,0.5); transform: translateY(-2px);}
+  .dtf-btn-reparar:disabled { background: #333; color: #666; cursor: not-allowed; box-shadow: none; transform: none;}
+
+  .dtf-dim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 5px; }
+  .dtf-input-group input { background: #000; border: 1px solid var(--dtf-border); color: white; padding: 6px; border-radius: 4px; font-weight: bold; font-size: 12px; text-align: center; width: 100%; transition:0.3s;}
+  .dtf-input-group input:focus { border-color: var(--primary-red); outline: none; box-shadow: 0 0 10px rgba(230,0,0,0.3);}
+  
+  .dtf-btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+  .dtf-btn-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .dtf-btn-select { background: #0a0a0a; border: 1px solid var(--dtf-border); color: var(--text-muted); padding: 6px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 5px;}
+  .dtf-btn-select:hover { border-color: #555; }
+  .dtf-btn-select.active { background: rgba(230,0,0,0.15); border-color: var(--primary-red); color: white; }
+
+  .dtf-slider-wrap { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+  input[type="range"].dtf-ui-slider { flex: 1; accent-color: var(--primary-red); cursor: pointer; height: 3px; }
+  .dtf-val-badge { background: #000; color: var(--primary-red); padding: 3px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; min-width: 40px; text-align: center; border: 1px solid var(--dtf-border); }
+
+  .dtf-color-hidden { width: 0; height: 0; visibility: hidden; position: absolute;}
+
+  .dtf-workspace { flex: 1; display: flex; flex-direction: column; gap: 10px; overflow: hidden; position: relative;}
+  .dtf-top-tools { display: flex; justify-content: space-between; align-items: center; background: var(--bg-panel); padding: 10px 15px; border-radius: 8px; border: 1px solid var(--dtf-border); }
+  
+  .dtf-swatches { display: flex; gap: 8px; align-items: center; }
+  .dtf-swatch { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+  .dtf-swatch:hover, .dtf-swatch.active { border-color: white; transform: scale(1.15); }
+  
+  .dtf-paleta-mesa { width: 24px; height: 24px; padding: 0; border: 1px solid #666; border-radius: 4px; cursor: pointer; background: transparent; }
+  .dtf-paleta-mesa::-webkit-color-swatch-wrapper { padding: 0; }
+  .dtf-paleta-mesa::-webkit-color-swatch { border: none; border-radius: 3px; }
+
+  .dtf-upload-area { flex: 1; border: 2px dashed #444; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(20,20,20,0.8); cursor: pointer; transition: 0.3s; position: relative;}
+  .dtf-upload-area:hover { border-color: var(--primary-red); background: rgba(230,0,0,0.05); }
+  .dtf-upload-area input { position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10; }
+  .dtf-upload-icon { font-size: 35px; margin-bottom: 10px; color: var(--primary-red); }
+  .dtf-upload-text { font-size: 16px; font-weight: 700; margin-bottom: 5px; }
+
+  /* Visores */
+  .dtf-viewer-container { display: none; flex: 1; border-radius: 10px; border: 1px solid var(--dtf-border); position: relative; overflow: hidden; background: repeating-conic-gradient(#333 0% 25%, #222 0% 50%) 50% / 20px 20px; cursor: grab;}
+  .dtf-viewer-container:active { cursor: grabbing; }
+  .dtf-zoom-area { width: 100%; height: 100%; position: relative; transform-origin: center center; transition: transform 0.1s ease-out; }
+
+  .dtf-img-base { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+  .dtf-semi-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; z-index: 6; display: none; filter: drop-shadow(0 0 3px #ff00ff); }
+  .dtf-fabric-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #ffffff; clip-path: inset(0 50% 0 0); z-index: 2; pointer-events: none; }
+  
+  .dtf-slider-line { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background-color: var(--primary-red); z-index: 7; pointer-events: none; box-shadow: 0 0 10px rgba(0,0,0,0.8); }
+  .dtf-slider-line::after { content: "↔"; position: absolute; top: 50%; left: -14px; width: 28px; height: 28px; background: var(--primary-red); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; transform: translateY(-50%); box-shadow: 0 0 8px rgba(0,0,0,0.8);}
+  
+  .dtf-drag-slider { -webkit-appearance: none; appearance: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; outline: none; z-index: 10; margin: 0; pointer-events: none; }
+  .dtf-drag-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 40px; height: 60px; background: transparent; cursor: ew-resize; pointer-events: all; }
+
+  .dtf-status-badge { position: absolute; top: 12px; background: rgba(0,0,0,0.8); color: white; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: bold; z-index: 15; border: 1px solid var(--border-color); pointer-events: none;}
+  .dtf-badge-left { left: 12px; } .dtf-badge-right { right: 12px; background: rgba(230,0,0,0.8); border: none;}
+
+  .dtf-status-bar { position: absolute; top: 0; left: 0; width: 100%; background: rgba(0,0,0,0.85); border-bottom: 1px solid var(--border-color); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 15;}
+  .dtf-btn-lupa { position: absolute; bottom: 20px; right: 20px; background: rgba(0,0,0,0.8); border: 1px solid #555; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer; z-index: 15; font-size: 12px; font-weight: bold; transition: 0.2s;}
+  .dtf-btn-lupa:hover { background: #333; border-color: var(--primary-red);}
+
+  .dtf-loading { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:20; align-items:center; justify-content:center; flex-direction:column; border-radius: 10px; }
+  .dtf-spinner { border: 3px solid #333; border-top: 3px solid var(--primary-red); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px;}
 </style>
 </head>
 <body>
@@ -254,6 +343,13 @@
       <h1>IA STUDIO</h1>
     </div>
     <div class="topbar-right">
+      <!-- HEADER TOOLS EXCLUSIVO PARA SEMITONOS (Oculto por defecto) -->
+      <div id="dtfHeaderTools" style="display: none; gap: 10px;">
+          <button class="btn-action btn-secondary" onclick="resetDtfZoom()">100% Lupa</button>
+          <button class="btn-action btn-secondary" onclick="reiniciarHerramienta(true)">↻ Nueva</button>
+          <a id="dtfBtnDescargar" class="btn-action" style="background: transparent; border: 1px solid var(--border-color); color: white; text-decoration: none; display: flex; align-items: center;" onclick="alert('Procesa o repara una imagen primero para poder descargarla.')">📥 Descargar</a>
+          <button class="btn-action" id="dtfBtnProcesar" onclick="DTFSemitonos.procesar()">⚡ Procesar</button>
+      </div>
       <div class="lang-switch" id="appLangSwitch">
         <button data-lang="es">ES</button>
         <button data-lang="en">EN</button>
@@ -275,7 +371,10 @@
       <h2 class="tool-title" id="toolTitle"></h2>
       <p class="tool-desc" id="toolDesc"></p>
 
-      <div class="workspace-layout">
+      <!-- ============================================== -->
+      <!-- WORKSPACE GENÉRICO (Mantiene lo anterior) -->
+      <!-- ============================================== -->
+      <div class="workspace-layout" id="genericWorkspace">
         <div class="form-container">
           <form id="form"></form>
           
@@ -356,6 +455,186 @@
           </div>
         </div>
       </div>
+
+      <!-- ============================================== -->
+      <!-- WORKSPACE: DETECTOR DE SEMITRANSPARENCIAS      -->
+      <!-- ============================================== -->
+      <div class="workspace-layout" id="dtfDetectorWorkspace" style="display:none;">
+          <div class="dtf-sidebar">
+              <div class="dtf-section-box" style="border-left: 3px solid var(--primary-red);">
+                  <div class="dtf-section-title"><div class="dtf-step-num">1</div> MEDIDA FINAL (CM)</div>
+                  <p style="color:#aaa; font-size:11px; margin-bottom:12px; line-height: 1.4;"><strong>¡Paso Importante!</strong> Escribe de qué tamaño vas a imprimir este diseño.</p>
+                  <div class="dtf-dim-grid">
+                      <div class="dtf-input-group"><label class="dtf-label">ANCHO</label><input type="number" id="det_ancho" value="29.7" step="0.1" oninput="DTFDetector.calcProp('ancho')"></div>
+                      <div class="dtf-input-group"><label class="dtf-label">ALTO</label><input type="number" id="det_alto" value="42.0" step="0.1" oninput="DTFDetector.calcProp('alto')"></div>
+                  </div>
+              </div>
+
+              <div class="dtf-section-box">
+                  <div class="dtf-section-title"><div class="dtf-step-num">2</div> DETECCIÓN DE PELIGRO</div>
+                  <p style="color:#888; font-size:11px; margin-bottom:12px; line-height: 1.4;">Escanea la imagen buscando bordes borrosos, sombras grises o destellos. Las zonas peligrosas se pintarán de <strong>FUCSIA</strong> en la vista previa.</p>
+                  <button class="dtf-btn-scan" id="det_btnScan" onclick="DTFDetector.escanear()">🔍 Escanear Semitransparencias</button>
+              </div>
+
+              <div class="dtf-section-box" style="margin-top: auto; padding: 0; background: transparent; border: none;">
+                  <div class="dtf-section-title" style="margin-bottom: 8px;"><div class="dtf-step-num">3</div> FINALIZAR</div>
+                  <p style="color:#888; font-size:11px; margin-bottom:10px;">Limpiará la imagen para que la tinta base blanca imprima perfecto.</p>
+                  <button class="dtf-btn-reparar" id="det_btnReparar" onclick="DTFDetector.reparar()" disabled>🛡️ REPARAR Y DESCARGAR</button>
+              </div>
+          </div>
+
+          <div class="dtf-workspace">
+              <div class="dtf-upload-area" id="det_uploadArea">
+                  <input type="file" id="det_file" accept="image/png, image/webp" onchange="DTFDetector.preview(event)">
+                  <div style="font-size: 45px; margin-bottom: 15px; color: var(--primary-red);">☁️</div>
+                  <div style="font-size: 20px; font-weight: bold; color: white;">SUBIR PNG PARA ANALIZAR</div>
+                  <div style="color: #888; font-size: 13px; margin-top: 5px;">(Asegúrate de que la imagen no tenga fondo)</div>
+              </div>
+
+              <div class="dtf-viewer-container" id="det_viewerArea">
+                  <div class="dtf-status-bar">
+                      <span style="color:#aaa; font-size:12px; font-weight:bold;" id="det_statusText">VISTA PREVIA ORIGINAL</span>
+                      <span style="color:#fff; font-size:12px; background:#222; padding:4px 8px; border-radius:4px; border: 1px solid #444;" id="det_statusRes">Resolución...</span>
+                  </div>
+                  
+                  <button class="dtf-btn-lupa" onclick="resetDtfZoom()">100% Zoom</button>
+
+                  <div class="dtf-zoom-area" id="det_zoomArea">
+                      <img id="det_imgOriginal" class="dtf-img-base" src="" alt="Original">
+                      <canvas id="det_semiOverlayCanvas" class="dtf-img-base"></canvas>
+                  </div>
+
+                  <div class="dtf-loading" id="det_loadingOverlay">
+                      <div class="dtf-spinner"></div>
+                      <p style="color:white; font-weight:bold; font-size: 18px;">Reparando Píxeles...</p>
+                      <p style="color:#aaa; font-size: 12px; margin-top: 5px;">Redimensionando a 300DPI y extirpando transparencias peligrosas.</p>
+                  </div>
+              </div>
+          </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- WORKSPACE: SEMITONOS DTF PRO                   -->
+      <!-- ============================================== -->
+      <div class="workspace-layout" id="dtfSemitonosWorkspace" style="display:none;">
+          <div class="dtf-sidebar">
+              <div class="dtf-section-box">
+                  <div class="dtf-section-title">MEDIDAS DE IMPRESIÓN (CM)</div>
+                  <div class="dtf-dim-grid">
+                      <div class="dtf-input-group"><label class="dtf-label">ANCHO</label><input type="number" id="semi_ancho" value="29.7" step="0.1" oninput="DTFSemitonos.calcProp('ancho')"></div>
+                      <div class="dtf-input-group"><label class="dtf-label">ALTO</label><input type="number" id="semi_alto" value="42.0" step="0.1" oninput="DTFSemitonos.calcProp('alto')"></div>
+                  </div>
+              </div>
+
+              <div class="dtf-section-box">
+                  <div class="dtf-section-title">MEJORA Y MÁSCARA (RIP)</div>
+                  <div class="dtf-switch-row">
+                      <span>✨ Mejorar Calidad IA (x4)</span>
+                      <label class="dtf-switch"><input type="checkbox" id="semi_checkIA"><span class="dtf-slider-tg"></span></label>
+                  </div>
+                  <div class="dtf-switch-row">
+                      <span>✂️ Quitar Fondo Sólido</span>
+                      <label class="dtf-switch"><input type="checkbox" id="semi_checkBG"><span class="dtf-slider-tg"></span></label>
+                  </div>
+                  <div class="dtf-switch-row">
+                      <span>🔹 Contraer Bordes (Asfixia 1px)</span>
+                      <label class="dtf-switch"><input type="checkbox" id="semi_checkChoke" checked><span class="dtf-slider-tg"></span></label>
+                  </div>
+                  <div class="dtf-switch-row" style="margin-bottom: 0;">
+                      <span>🛡️ Fijar Semitransparencias</span>
+                      <label class="dtf-switch"><input type="checkbox" id="semi_checkSemi" checked><span class="dtf-slider-tg"></span></label>
+                  </div>
+                  <button class="dtf-btn-scan" id="semi_btnScan" onclick="DTFSemitonos.escanear()">🔍 Escanear y Mostrar Píxeles Rotos</button>
+              </div>
+
+              <div class="dtf-section-box">
+                  <div class="dtf-section-title">TRAMADO Y SATURACIÓN</div>
+                  <label class="dtf-label">COLOR A PERFORAR</label>
+                  <div class="dtf-btn-grid cols-3" id="semi_colorGroup">
+                      <button class="dtf-btn-select active" data-val="#000000" onclick="DTFSemitonos.selectBtn(this, 'semi_colorGroup')">⚫️ Negro</button>
+                      <button class="dtf-btn-select" data-val="#ffffff" onclick="DTFSemitonos.selectBtn(this, 'semi_colorGroup')">⚪️ Blanco</button>
+                      <button class="dtf-btn-select" id="semi_btnCustomColor" data-val="#ff0000" onclick="document.getElementById('semi_colorPickerRemove').click();">
+                          <input type="color" class="dtf-color-hidden" id="semi_colorPickerRemove" value="#ff0000" onchange="DTFSemitonos.updateCustomColor(this.value)"> 🎨 Otro
+                      </button>
+                  </div>
+
+                  <label class="dtf-label">SATURACIÓN</label>
+                  <div class="dtf-btn-grid cols-3" id="semi_satGroup">
+                      <button class="dtf-btn-select active" data-val="1.0" onclick="DTFSemitonos.selectBtn(this, 'semi_satGroup')">Normal</button>
+                      <button class="dtf-btn-select" data-val="1.5" onclick="DTFSemitonos.selectBtn(this, 'semi_satGroup')">Media</button>
+                      <button class="dtf-btn-select" data-val="2.0" onclick="DTFSemitonos.selectBtn(this, 'semi_satGroup')">Alta</button>
+                  </div>
+
+                  <label class="dtf-label">MODO DE LIMPIEZA</label>
+                  <div class="dtf-btn-grid cols-2" id="semi_modoGroup">
+                      <button class="dtf-btn-select" data-val="baja" onclick="DTFSemitonos.selectBtn(this, 'semi_modoGroup')">✨ Clásico (Suave)</button>
+                      <button class="dtf-btn-select active" data-val="global" onclick="DTFSemitonos.selectBtn(this, 'semi_modoGroup')">🌌 Tramado Total</button>
+                  </div>
+
+                  <label class="dtf-label" style="margin-top: 5px;">FORMA DEL ENTRAMADO</label>
+                  <div class="dtf-btn-grid cols-2" id="semi_tramaGroup">
+                      <button class="dtf-btn-select active" data-val="round" onclick="DTFSemitonos.selectBtn(this, 'semi_tramaGroup')">Puntos</button>
+                      <button class="dtf-btn-select" data-val="line" onclick="DTFSemitonos.selectBtn(this, 'semi_tramaGroup')">Líneas</button>
+                      <button class="dtf-btn-select" data-val="ellipse" onclick="DTFSemitonos.selectBtn(this, 'semi_tramaGroup')">Elipse</button>
+                      <button class="dtf-btn-select" data-val="roseta" onclick="DTFSemitonos.selectBtn(this, 'semi_tramaGroup')">Doble Trama</button>
+                  </div>
+              </div>
+
+              <div class="dtf-section-box">
+                  <div class="dtf-section-title">PARAMETROS MANUALES</div>
+                  <label class="dtf-label">TOLERANCIA (1-100) (Usar 20 en Suave)</label>
+                  <div class="dtf-slider-wrap"><input type="range" class="dtf-ui-slider" id="semi_tolSlider" min="1" max="100" value="20" oninput="DTFSemitonos.updateVal('semi_tolVal', this.value)"><span class="dtf-val-badge" id="semi_tolVal">20</span></div>
+
+                  <label class="dtf-label">LPI (GROSOR PIXEL)</label>
+                  <div class="dtf-slider-wrap"><input type="range" class="dtf-ui-slider" id="semi_pxSlider" min="5" max="20" value="10" oninput="DTFSemitonos.updateVal('semi_pxVal', this.value, 'px')"><span class="dtf-val-badge" id="semi_pxVal">10px</span></div>
+                  
+                  <label class="dtf-label">ÁNGULO</label>
+                  <div class="dtf-slider-wrap"><input type="range" class="dtf-ui-slider" id="semi_angSlider" min="0" max="90" value="22" oninput="DTFSemitonos.updateVal('semi_angVal', this.value, '°')"><span class="dtf-val-badge" id="semi_angVal">22°</span></div>
+              </div>
+          </div>
+
+          <div class="dtf-workspace">
+              <div class="dtf-top-tools">
+                  <span style="font-size: 12px; font-weight: bold; color: var(--text-muted);">MESA DE TRABAJO (TELA SIMULADA):</span>
+                  <div class="dtf-swatches">
+                      <div class="dtf-swatch bg-white active" style="background: #fff; border-color: #888;" onclick="DTFSemitonos.changeFabricBg('#ffffff', this)"></div>
+                      <div class="dtf-swatch bg-black" style="background: #000;" onclick="DTFSemitonos.changeFabricBg('#000000', this)"></div>
+                      <div class="dtf-swatch bg-red" style="background: #e60000;" onclick="DTFSemitonos.changeFabricBg('#e60000', this)"></div>
+                      <div class="dtf-swatch" style="background: #0044cc;" onclick="DTFSemitonos.changeFabricBg('#0044cc', this)"></div>
+                      <span style="color:#666; font-size:10px; margin-left:5px;">MÁS:</span>
+                      <input type="color" class="dtf-paleta-mesa" id="semi_fabricColorPicker" value="#ff00ff" onchange="DTFSemitonos.changeFabricBg(this.value, null)">
+                  </div>
+              </div>
+
+              <div class="dtf-upload-area" id="semi_uploadArea">
+                  <input type="file" id="semi_file" accept="image/png, image/jpeg, image/webp" onchange="DTFSemitonos.preview(event)">
+                  <div class="dtf-upload-icon">☁️</div>
+                  <div class="dtf-upload-text" style="color:var(--primary-red);">SUBIR DISEÑO A 300DPI</div>
+              </div>
+
+              <div class="dtf-viewer-container" id="semi_viewerArea">
+                  <div class="dtf-loading" id="semi_loadingOverlay">
+                      <div class="dtf-spinner"></div>
+                      <p style="color:white; font-weight:bold; font-size: 16px;">Aplicando Matriz de Puntos...</p>
+                      <p style="color:#aaa; font-size: 11px; margin-top: 5px;" id="semi_loadingHint">Esto tomará unos segundos.</p>
+                  </div>
+
+                  <div class="dtf-status-badge dtf-badge-left">TELA SIMULADA</div>
+                  <div class="dtf-status-badge dtf-badge-right">FONDO TRANSPARENTE</div>
+
+                  <div class="dtf-zoom-area" id="semi_zoomArea">
+                      <img id="semi_imgTransparente" class="dtf-img-base" src="" alt="Transparente">
+                      <div class="dtf-fabric-layer" id="semi_fabricLayer">
+                          <img id="semi_imgConTela" class="dtf-img-base" src="" alt="Semitono con Tela">
+                      </div>
+                      <canvas id="semi_semiOverlayCanvas"></canvas>
+                      <div class="dtf-slider-line" id="semi_sliderLine"></div>
+                      <input type="range" min="0" max="100" value="50" class="dtf-drag-slider" id="semi_compareSlider" oninput="DTFSemitonos.slideReveal(this.value)">
+                  </div>
+              </div>
+          </div>
+      </div>
+
     </div>
   </main>
 </div>
@@ -448,23 +727,43 @@ function openTool(slug) {
   toolTitle.innerHTML = `<i class="fa-solid ${icon} mr-3"></i> ${tl(model.label).split('|')[0].trim()}`; toolDesc.textContent = tl(model.desc).split('|')[0].trim();
   reiniciarHerramienta(true);
 
-  if (slug === 'master-color' && (urlResultMemoria || currentImageData)) {
-      setTimeout(() => {
-          mainResultImg.style.display = 'none'; editCanvas.style.display = 'block';
-          const img = new Image();
-          img.onload = () => {
-              let w = img.naturalWidth || img.width;
-              let h = img.naturalHeight || img.height;
-              if (Math.max(w, h) > 4096) {
-                  const sc = 4096 / Math.max(w, h);
-                  w = Math.round(w * sc);
-                  h = Math.round(h * sc);
-              }
-              editCanvas.width = w; editCanvas.height = h; editCanvas.getContext('2d', {willReadFrequently: true}).drawImage(img, 0, 0, w, h);
-              maskCanvas.width = w; maskCanvas.height = h; ctxMask = maskCanvas.getContext("2d"); ctxMask.clearRect(0, 0, maskCanvas.width, maskCanvas.height); maskCanvas.style.display = "block";
-          };
-          img.src = urlResultMemoria || URL.createObjectURL(currentImageData);
-      }, 100);
+  // MANEJO DE VISTAS PERSONALIZADAS PARA DTF PRO
+  const genWs = document.getElementById('genericWorkspace');
+  const detWs = document.getElementById('dtfDetectorWorkspace');
+  const semiWs = document.getElementById('dtfSemitonosWorkspace');
+  const dtfHeaderTools = document.getElementById('dtfHeaderTools');
+  
+  genWs.style.display = 'none'; detWs.style.display = 'none'; semiWs.style.display = 'none'; dtfHeaderTools.style.display = 'none';
+
+  if (slug === 'detector-dtf') {
+      detWs.style.display = 'flex';
+      if(window.innerWidth <= 900) detWs.style.flexDirection = 'column';
+  } else if (slug === 'semitonos-dtf') {
+      semiWs.style.display = 'flex';
+      if(window.innerWidth <= 900) semiWs.style.flexDirection = 'column';
+      dtfHeaderTools.style.display = 'flex';
+  } else {
+      genWs.style.display = 'flex';
+      if(window.innerWidth <= 900) genWs.style.flexDirection = 'column';
+      
+      if (slug === 'master-color' && (urlResultMemoria || currentImageData)) {
+          setTimeout(() => {
+              mainResultImg.style.display = 'none'; editCanvas.style.display = 'block';
+              const img = new Image();
+              img.onload = () => {
+                  let w = img.naturalWidth || img.width;
+                  let h = img.naturalHeight || img.height;
+                  if (Math.max(w, h) > 4096) {
+                      const sc = 4096 / Math.max(w, h);
+                      w = Math.round(w * sc);
+                      h = Math.round(h * sc);
+                  }
+                  editCanvas.width = w; editCanvas.height = h; editCanvas.getContext('2d', {willReadFrequently: true}).drawImage(img, 0, 0, w, h);
+                  maskCanvas.width = w; maskCanvas.height = h; ctxMask = maskCanvas.getContext("2d"); ctxMask.clearRect(0, 0, maskCanvas.width, maskCanvas.height); maskCanvas.style.display = "block";
+              };
+              img.src = urlResultMemoria || URL.createObjectURL(currentImageData);
+          }, 100);
+      }
   }
 }
 
@@ -477,12 +776,22 @@ function reiniciarHerramienta(keepTool = false) {
     statusLine.classList.remove("show", "error", "ok"); btnDownloadResult.style.display = "none"; btnRestart.style.display = "none"; magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; quickActionsBar.style.display = "none"; document.getElementById("masterColorPanel").style.display = "none";
     document.getElementById("downloadBtnText").innerText = t("download_btn"); document.getElementById('btnAntes').style.display = 'none'; document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block'; jsonViewer.style.display = "none";
     document.querySelectorAll('.dropzone').forEach(dz => { dz.classList.remove("has-file"); dz.querySelector('i').className = "fa-solid fa-cloud-arrow-up"; dz.querySelector('.dz-text').textContent = t("dropzone_text"); });
-    if (currentSlug && keepTool) renderForm(MODELS.find(m => m.slug === currentSlug)); resetearZoom();
+    
+    // Reseteos de las herramientas Custom DTF
+    DTFDetector.resetUI();
+    DTFSemitonos.resetUI();
+    
+    if (currentSlug && keepTool && document.getElementById('genericWorkspace').style.display !== 'none') {
+        renderForm(MODELS.find(m => m.slug === currentSlug)); 
+    }
+    resetearZoom();
 }
 
-document.getElementById("backBtn").addEventListener("click", () => { toolView.style.display = "none"; homeView.style.display = "block"; currentSlug = null; });
+document.getElementById("backBtn").addEventListener("click", () => { toolView.style.display = "none"; homeView.style.display = "block"; currentSlug = null; document.getElementById('dtfHeaderTools').style.display = 'none';});
 
 function renderForm(model) {
+  if(model.slug === 'detector-dtf' || model.slug === 'semitonos-dtf') return; // Usa UI custom
+  
   form.innerHTML = "";
   if (model.slug === 'master-color') { document.getElementById('masterColorPanel').style.display = 'block'; } else { document.getElementById('masterColorPanel').style.display = 'none'; }
 
@@ -648,432 +957,4 @@ document.getElementById('btnMcSelect').addEventListener('click', () => { isMcSel
 
 function applyMasterColorZone() {
     if(!mcSelection || mcSelection.w === 0 || mcSelection.h === 0) { alert("Por favor, activa 'Dibujar Zona' y dibuja un recuadro en la imagen con tu mouse."); return; }
-    const x = Math.max(0, Math.floor(mcSelection.x)); const y = Math.max(0, Math.floor(mcSelection.y)); const w = Math.min(editCanvas.width - x, Math.floor(mcSelection.w)); const h = Math.min(editCanvas.height - y, Math.floor(mcSelection.h)); if (w <= 0 || h <= 0) return;
-    const ctx = editCanvas.getContext('2d'); const id = ctx.getImageData(x, y, w, h); const d = id.data; const hex = document.getElementById('mcNewColor').value; const tol = parseInt(document.getElementById('mcTolerance').value); const tolSq = tol * tol; const rN = parseInt(hex.slice(1,3),16), gN = parseInt(hex.slice(3,5),16), bN = parseInt(hex.slice(5,7),16); const tR = mcTargetRGB[0], tG = mcTargetRGB[1], tB = mcTargetRGB[2];
-    for(let i=0; i<d.length; i+=4) { if(d[i+3] < 10) continue; const distSq = (d[i]-tR)*(d[i]-tR) + (d[i+1]-tG)*(d[i+1]-tG) + (d[i+2]-tB)*(d[i+2]-tB); if(distSq <= tolSq) { d[i]=rN; d[i+1]=gN; d[i+2]=bN; } }
-    ctx.putImageData(id, x, y); ctxMask.clearRect(0,0, maskCanvas.width, maskCanvas.height); mcSelection = null; document.getElementById('btnMcSelect').style.background = '#444'; isMcSelecting = false; maskCanvas.style.cursor = 'default';
-}
-
-function applyMasterColorGlobal() {
-    const ctx = editCanvas.getContext('2d'); const id = ctx.getImageData(0, 0, editCanvas.width, editCanvas.height); const d = id.data; const hex = document.getElementById('mcNewColor').value; const tol = parseInt(document.getElementById('mcTolerance').value); const tolSq = tol * tol; const rN = parseInt(hex.slice(1,3),16), gN = parseInt(hex.slice(3,5),16), bN = parseInt(hex.slice(5,7),16); const tR = mcTargetRGB[0], tG = mcTargetRGB[1], tB = mcTargetRGB[2];
-    for(let i=0; i<d.length; i+=4) { if(d[i+3] < 10) continue; const distSq = (d[i]-tR)*(d[i]-tR) + (d[i+1]-tG)*(d[i+1]-tG) + (d[i+2]-tB)*(d[i+2]-tB); if(distSq <= tolSq) { d[i]=rN; d[i+1]=gN; d[i+2]=bN; } } ctx.putImageData(id, 0, 0);
-}
-
-document.getElementById('btnConfirmGlow').addEventListener('click', () => {
-    document.getElementById('glowModal').style.display = 'none';
-    if(!urlResultMemoria) return;
-    statusLine.className = "status-line show"; statusText.innerHTML = "<i class='fa-solid fa-star fa-spin mr-2'></i> Aplicando resplandor...";
-    mainResultImg.classList.add("opacity-50", "blur-sm"); quickActionsBar.style.display = "none";
-    const glowColor = document.getElementById('modalGlowColor').value; const glowLevel = parseInt(document.getElementById('modalGlowSize').value);
-    const img = new Image(); img.crossOrigin = "Anonymous";
-    img.onload = () => {
-        let w = img.naturalWidth || img.width;
-        let h = img.naturalHeight || img.height;
-        if (Math.max(w, h) > 4096) {
-            const sc = 4096 / Math.max(w, h);
-            w = Math.round(w * sc);
-            h = Math.round(h * sc);
-        }
-        const canvas = document.createElement("canvas"); const ctx = canvas.getContext("2d"); const factor = glowLevel / 500; const pad = Math.floor(Math.max(w, h) * factor) + 10; 
-        canvas.width = w + pad * 2; canvas.height = h + pad * 2; ctx.shadowColor = glowColor; ctx.shadowBlur = Math.floor(pad * 0.8); ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
-        ctx.drawImage(img, pad, pad, w, h); ctx.drawImage(img, pad, pad, w, h); ctx.drawImage(img, pad, pad, w, h);
-        canvas.toBlob((blob) => {
-            if (!blob || blob.size === 0) {
-                alert("Error al generar la imagen con resplandor.");
-                mainResultImg.classList.remove("opacity-50", "blur-sm");
-                quickActionsBar.style.display = "block";
-                return;
-            }
-            processFinalUrl(URL.createObjectURL(blob), currentSlug, "png");
-            mainResultImg.classList.remove("opacity-50", "blur-sm");
-        }, "image/png");
-    };
-    img.onerror = () => { alert("Error al aplicar resplandor."); mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block"; };
-    img.src = urlResultMemoria;
-});
-
-function renderQuickActions(slug) {
-    const qaContainer = document.querySelector('.qa-buttons'); qaContainer.innerHTML = ''; const isEs = currentLang === 'es';
-    const actionsDict = {
-        "remove-bg": { slug: "remove-background", label: isEs ? "Quitar Fondo" : "Remove BG", icon: "fa-user-slash text-red-500", params: {} },
-        "extract-logo": { slug: "remove-background-graphic", label: isEs ? "Quitar Fondo (Arte)" : "Extract Logo", icon: "fa-shapes text-orange-500", params: {} },
-        "extract-dtf": { slug: "extract-print", label: isEs ? "👕 Extraer DTF" : "👕 Extract DTF", icon: "fa-shirt text-cyan-400", params: {extract_mode: "AUTO_BLACK"} },
-        "upscale-8x": { slug: "enhance", label: isEs ? "Escalar Máx (8x)" : "Upscale Max (8x)", icon: "fa-rocket text-purple-500", params: {zoom_factor: "8"} },
-        "upscale-faces": { slug: "enhance-pro", label: isEs ? "Mejorar Rostros" : "Enhance Faces", icon: "fa-user-check text-blue-500", params: {zoom_factor: "2"} },
-        "magic-eraser": { slug: "detect-objects", label: isEs ? "Borrador Mágico" : "Magic Eraser", icon: "fa-magic text-yellow-500", params: {erase_mode: "ultra"} },
-        "colorize": { slug: "colorize-pro", label: isEs ? "Colorear Foto" : "Colorize", icon: "fa-palette text-green-500", params: {} },
-        "restore": { slug: "restore-pro", label: isEs ? "Restaurar Daños" : "Restore Damage", icon: "fa-hammer text-orange-500", params: {} },
-        "light": { slug: "light-restore", label: isEs ? "Corregir Luz" : "Fix Light", icon: "fa-sun text-yellow-400", params: {} },
-        "gen-bg": { slug: "generate-background", label: isEs ? "Fondo con IA" : "AI Background", icon: "fa-image text-emerald-500", params: {prompt: "Fondo de estudio fotográfico profesional, iluminación perfecta, alta calidad"} },
-        "textile-crochet": { slug: "textile-styles", label: isEs ? "Estilo Crochet" : "Crochet Style", icon: "fa-cubes text-pink-500", params: {prompt: "Convert every single colored region of this image from top to bottom—including the top shapes, main subject, accessories, cups, glasses, bottom waves, splashes, and base details—into a uniform 3D amigurumi crochet texture made entirely of thick knitted yarn loops. Every surface must be made of yarn while keeping its exact original position, shape, and color."} },
-        "textile-embroidery": { slug: "textile-styles", label: isEs ? "Estilo Bordado" : "Embroidery Style", icon: "fa-cubes text-blue-400", params: {prompt: "Convert every single colored region of this image from top to bottom—including the top shapes, main subject, accessories, cups, glasses, bottom waves, splashes, and base details—into a uniform 3D embroidery texture made entirely of thick glossy thread stitches. Every surface must be stitched thread while keeping its exact original position, shape, and color."} },
-        "textile-patch": { slug: "textile-styles", label: isEs ? "Parche Textil" : "Patch Style", icon: "fa-tag text-purple-400", params: {prompt: "Convert the entire image from top to bottom—including all top shapes, main subject, accessories, and bottom wave or base details—into a 3D embroidered patch made of thick thread stitches with a tight stitched border along the outer silhouette. Keep every element in its exact original position and color."} },
-        "studio-glow": { slug: "studio-vignette", label: isEs ? "🌟 Resplandor" : "🌟 Outer Glow", icon: "fa-star text-yellow-400", params: {bg_color: "#ff0000"} }
-    };
-    let keys = [];
-
-    if (slug.includes("enhance") && !slug.includes("video")) { qaTitle.innerHTML = `<i class="fa-solid fa-check-circle text-ok mr-2"></i> Imagen Maximizada`; qaContainer.innerHTML = `<p style="color:var(--text-dim); font-size:0.85rem; margin:0;">La imagen está en su calidad máxima absoluta. ¡Lista para descargar o imprimir!</p>`; return; } 
-    else if (!slug.includes("video")) {
-        qaTitle.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Sugerencias de la IA`;
-        if (slug.includes("restore") || slug === "light-restore") { keys = ["colorize", "upscale-faces", "magic-eraser", "light"]; } 
-        else if (slug.includes("colorize")) { keys = ["restore", "upscale-faces", "magic-eraser"]; } 
-        else if (slug.includes("remove-background") || slug === "master-color" || slug === "extract-print") { keys = ["upscale-8x", "extract-logo", "studio-glow", "textile-crochet"]; } 
-        else if (slug.includes("generate") || slug.includes("fairy") || slug.includes("sticker")) { keys = ["remove-bg", "extract-logo", "upscale-8x"]; } 
-        else if (slug === "detect-objects" || slug === "remove-objects" || slug === "erase-text" || slug === "erase-wires") { keys = ["upscale-8x", "remove-bg", "light"]; } 
-        else { keys = ["upscale-8x", "remove-bg", "magic-eraser"]; }
-    }
-
-    keys.forEach(k => {
-        const act = actionsDict[k]; if (!act) return;
-        const btn = document.createElement('button'); btn.className = "btn-qa"; btn.innerHTML = `<i class="fa-solid ${act.icon} mb-1 block text-lg"></i> ${act.label}`;
-        if(act.slug === "studio-vignette") { btn.onclick = () => { document.getElementById('glowModal').style.display='flex'; }; } else { btn.onclick = () => ejecutarAccionRapida(act.slug, act.params); }
-        qaContainer.appendChild(btn);
-    });
-}
-
-async function optimizarImagenEnNavegador(fileOrBlob, slug, zoomFactor = "2") {
-    return new Promise((resolve) => {
-        if (!fileOrBlob) return resolve(fileOrBlob);
-        let maxDim = 2400;
-        if (slug && slug.includes("enhance")) {
-            const zf = String(zoomFactor).trim();
-            if (zf === "8") maxDim = 500;
-            else if (zf === "4") maxDim = 950;
-            else maxDim = 1500;
-        }
-        const img = new Image();
-        const objUrl = URL.createObjectURL(fileOrBlob);
-
-        img.onload = () => {
-            URL.revokeObjectURL(objUrl);
-            const w = img.naturalWidth || img.width;
-            const h = img.naturalHeight || img.height;
-
-            if (Math.max(w, h) <= maxDim) {
-                return resolve(fileOrBlob);
-            }
-
-            const scale = maxDim / Math.max(w, h);
-            const newW = Math.round(w * scale);
-            const newH = Math.round(h * scale);
-
-            const canvas = document.createElement("canvas");
-            canvas.width = newW;
-            canvas.height = newH;
-            const ctx = canvas.getContext("2d");
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = "high";
-            ctx.drawImage(img, 0, 0, newW, newH);
-
-            canvas.toBlob((resizedBlob) => {
-                if (resizedBlob && resizedBlob.size > 100) {
-                    resolve(new File([resizedBlob], "imagen_optimizada.png", { type: "image/png" }));
-                } else {
-                    resolve(fileOrBlob);
-                }
-            }, "image/png");
-        };
-        img.onerror = () => {
-            URL.revokeObjectURL(objUrl);
-            resolve(fileOrBlob);
-        };
-        img.src = objUrl;
-    });
-}
-
-form.addEventListener("submit", async (e) => {
-  e.preventDefault(); const model = MODELS.find(m => m.slug === currentSlug); const submitBtn = document.getElementById("btnMainSubmit"); submitBtn.disabled = true;
-
-  if (model.slug === "master-color") {
-      editCanvas.toBlob((blob) => {
-          if (!blob || blob.size === 0) {
-              alert("Sube una imagen primero.");
-              submitBtn.disabled = false;
-              return;
-          }
-          processFinalUrl(URL.createObjectURL(blob), currentSlug, "png");
-          submitBtn.disabled = false;
-      }, "image/png");
-      return;
-  }
-
-  if (model.slug === "studio-vignette") {
-      statusLine.className = "status-line show"; statusText.innerHTML = "<i class='fa-solid fa-star fa-spin mr-2'></i> Aplicando resplandor transparente..."; mainResultImg.classList.add("opacity-50", "blur-sm");
-      const colorEl = document.getElementById("field_bg_color"); const glowColor = colorEl ? colorEl.value : "#ff0000"; const sizeEl = document.getElementById("field_glow_size"); const glowLevel = sizeEl ? parseInt(sizeEl.value) : 30;
-      let imageToUse = urlResultMemoria; if (!imageToUse) { const fileInput = document.getElementById("field_input_image"); if (fileInput && fileInput.files[0]) { imageToUse = URL.createObjectURL(fileInput.files[0]); } }
-      if (!imageToUse) { alert("Por favor, sube una imagen transparente primero."); submitBtn.disabled = false; mainResultImg.classList.remove("opacity-50", "blur-sm"); statusLine.classList.remove("show"); return; }
-
-      const img = new Image(); img.crossOrigin = "Anonymous";
-      img.onload = () => {
-          let w = img.naturalWidth || img.width;
-          let h = img.naturalHeight || img.height;
-          if (Math.max(w, h) > 4096) {
-              const sc = 4096 / Math.max(w, h);
-              w = Math.round(w * sc);
-              h = Math.round(h * sc);
-          }
-          const canvas = document.createElement("canvas"); const ctx = canvas.getContext("2d"); const factor = glowLevel / 500; const pad = Math.floor(Math.max(w, h) * factor) + 10; 
-          canvas.width = w + pad * 2; canvas.height = h + pad * 2; ctx.shadowColor = glowColor; ctx.shadowBlur = Math.floor(pad * 0.8); ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
-          ctx.drawImage(img, pad, pad, w, h); ctx.drawImage(img, pad, pad, w, h); ctx.drawImage(img, pad, pad, w, h);
-          canvas.toBlob((blob) => {
-              if (!blob || blob.size === 0) {
-                  alert("Hubo un error generando el archivo PNG.");
-                  submitBtn.disabled = false;
-                  mainResultImg.classList.remove("opacity-50", "blur-sm");
-                  return;
-              }
-              processFinalUrl(URL.createObjectURL(blob), currentSlug, "png");
-              mainResultImg.classList.remove("opacity-50", "blur-sm");
-              submitBtn.disabled = false;
-          }, "image/png");
-      };
-      img.onerror = () => { alert("Hubo un error cargando la imagen para el resplandor."); submitBtn.disabled = false; mainResultImg.classList.remove("opacity-50", "blur-sm"); };
-      img.src = imageToUse; return; 
-  }
-
-  statusLine.className = "status-line show";
-  statusText.textContent = "Optimizando y enviando imagen...";
-  btnDownloadResult.style.display = "none"; btnRestart.style.display = "block"; quickActionsBar.style.display = "none"; magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; document.getElementById('btnAntes').style.display = 'none'; mainResultImg.classList.add("opacity-50", "blur-sm"); jsonViewer.style.display = "none";
-
-  const zoomEl = document.getElementById("field_zoom_factor");
-  const currentZoom = zoomEl && zoomEl.value ? zoomEl.value : "2";
-
-  const formData = new FormData(); let hasImage = false;
-  for (const field of model.fields) {
-      if (field.type === "mask" && isMaskTool) {
-          const tempCanvas = document.createElement("canvas"); tempCanvas.width = maskCanvas.width; tempCanvas.height = maskCanvas.height; const tCtx = tempCanvas.getContext("2d");
-          tCtx.fillStyle = "black"; tCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height); tCtx.drawImage(maskCanvas, 0, 0); tCtx.globalCompositeOperation = "source-in"; tCtx.fillStyle = "white"; tCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-          const blobMask = await new Promise(res => tempCanvas.toBlob(res, "image/png"));
-          const optMask = await optimizarImagenEnNavegador(blobMask, model.slug, currentZoom);
-          formData.append(field.name, optMask);
-      } else if (field.type === "image") {
-          const el = document.getElementById("field_" + field.name);
-          if (el && el.files[0]) {
-              const optFile = await optimizarImagenEnNavegador(el.files[0], model.slug, currentZoom);
-              formData.append(field.name, optFile);
-              hasImage = true;
-          } else if (urlResultMemoria && field.name === "input_image") {
-              const imgRes = await fetch(urlResultMemoria);
-              const imgBlob = await imgRes.blob();
-              const optFile = await optimizarImagenEnNavegador(imgBlob, model.slug, currentZoom);
-              formData.append(field.name, optFile);
-              hasImage = true;
-          } else if (currentImageData && field.name === "input_image") {
-              const optFile = await optimizarImagenEnNavegador(currentImageData, model.slug, currentZoom);
-              formData.append(field.name, optFile);
-              hasImage = true;
-          }
-      } else if (field.type === "checkbox") {
-          const el = document.getElementById("field_" + field.name);
-          if (el) formData.append(field.name, el.checked ? "true" : "false");
-      } else { const el = document.getElementById("field_" + field.name); if (el && el.value !== "") { formData.append(field.name, el.value); } }
-  }
-
-  if (!hasImage && (currentImageData || urlResultMemoria) && model.needs_image !== false) {
-      if (urlResultMemoria) {
-          const imgRes = await fetch(urlResultMemoria);
-          const imgBlob = await imgRes.blob();
-          const optFile = await optimizarImagenEnNavegador(imgBlob, model.slug, currentZoom);
-          formData.append("input_image", optFile);
-      } else {
-          const optFile = await optimizarImagenEnNavegador(currentImageData, model.slug, currentZoom);
-          formData.append("input_image", optFile);
-      }
-  }
-
-  statusText.textContent = model.slug === "extract-print" ? "Extrayendo, escalando en Ultra HD (4x) y limpiando fondo..." : t("processing");
-
-  setTimeout(async () => {
-      try {
-        const res = await fetch(`/run/${model.slug}`, { method: "POST", body: formData });
-        mainResultImg.classList.remove("opacity-50", "blur-sm"); maskCanvas.style.display = "none"; if(ctxMask) ctxMask.clearRect(0,0, maskCanvas.width, maskCanvas.height);
-        
-        const contentType = (res.headers.get("content-type") || "").toLowerCase();
-
-        if (res.ok && contentType.startsWith("image/")) {
-            const blob = await res.blob();
-            if (!blob || blob.size < 64) {
-                throw new Error("El servidor entregó un archivo vacío (0 B). Intenta procesar de nuevo.");
-            }
-            const localBlobUrl = URL.createObjectURL(blob);
-            processFinalUrl(localBlobUrl, currentSlug, "png");
-            submitBtn.disabled = false;
-        } else if (contentType.includes("application/json")) {
-            const data = await res.json();
-            if (data.error || !res.ok) { statusLine.className = "status-line show error"; statusText.textContent = t("error_prefix") + (data.message || data.detalle || t("generic_error")); submitBtn.disabled = false; } 
-            else if (data.is_video_task) {
-                statusText.innerHTML = "Procesando Video en la Nube (0%). Por favor espera...";
-                const polling = setInterval(async () => {
-                    try {
-                        let rTask = await fetch(`/check-task?task_id=${data.task_id}&endpoint=${data.endpoint}`); let taskData = await rTask.json();
-                        if (taskData.status === "COMPLETED") {
-                            clearInterval(polling); statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done");
-                            let vUrl = taskData.download_url || taskData.video_url || taskData.url; mainResultImg.style.display = "none"; const mainResultVideo = document.getElementById("mainResultVideo"); mainResultVideo.style.display = "block"; mainResultVideo.src = vUrl;
-                            btnDownloadResult.href = vUrl; btnDownloadResult.setAttribute("download", "JJ_Video_Magico.mp4"); btnDownloadResult.style.display = "block"; document.getElementById("downloadBtnText").innerText = "Descargar Video (MP4)"; btnDownloadResult.onclick = null;
-                            document.getElementById('tray').style.display = 'block'; document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block'; submitBtn.disabled = false;
-                        } else if (taskData.status === "FAILED") { clearInterval(polling); statusLine.className = "status-line show error"; statusText.innerHTML = "Error al renderizar el video."; submitBtn.disabled = false; } 
-                        else { statusText.innerHTML = "Generando Video (" + (taskData.progress || 0) + "%)... No cierres la ventana."; }
-                    } catch(e) { }
-                }, 4000); return;
-            } else if (model.slug === "detect-objects" && data.detected_objects) {
-                statusLine.classList.remove("show"); aiSessionId = data.session_id; aiObjects = data.detected_objects; aiSelected.clear(); magicTagsPanel.style.display = "block"; tagsContainer.innerHTML = ""; boxesContainer.innerHTML = ""; btnExecuteErase.style.display = "none";
-                const natW = mainResultImg.naturalWidth; const natH = mainResultImg.naturalHeight;
-                aiObjects.forEach((obj, i) => {
-                    const tag = document.createElement("span"); tag.className = "ai-tag"; tag.textContent = obj.object_description; tag.onclick = () => toggleAiObject(i, tag); tagsContainer.appendChild(tag);
-                    if(obj.box && natW) {
-                        const [xmin, ymin, xmax, ymax] = obj.box; const box = document.createElement('div'); box.id = `box_ai_${i}`; box.className = "ai-box";
-                        box.style.left = `${(xmin / natW) * 100}%`; box.style.top = `${(ymin / natH) * 100}%`; box.style.width = `${((xmax - xmin) / natW) * 100}%`; box.style.height = `${((ymax - ymin) / natH) * 100}%`; boxesContainer.appendChild(box);
-                    }
-                });
-                tray.style.display = "block"; renderQuickActions(currentSlug); quickActionsBar.style.display = "block"; document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block'; submitBtn.disabled = false;
-            } else {
-                statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + t("done"); jsonViewer.value = JSON.stringify(data, null, 2); jsonViewer.style.display = "block"; document.getElementById('imgContainer').style.display = 'none'; submitBtn.disabled = false;
-            }
-        } else {
-            throw new Error(`Error del servidor (HTTP ${res.status}). Intenta nuevamente.`);
-        }
-      } catch (err) { statusLine.className = "status-line show error"; statusText.textContent = t("conn_error") + err.message; mainResultImg.classList.remove("opacity-50", "blur-sm"); submitBtn.disabled = false; }
-  }, 300);
-});
-
-let pendingQuickAction = null; let pendingExtraParams = null;
-function closePromptModal() { document.getElementById('promptModal').style.display = 'none'; pendingQuickAction = null; }
-function showPromptModal(targetSlug, extraParams) { document.getElementById('modalPromptText').value = extraParams.prompt || ""; document.getElementById('promptModal').style.display = 'flex'; pendingQuickAction = targetSlug; pendingExtraParams = extraParams; }
-document.getElementById('btnConfirmPrompt').addEventListener('click', () => {
-    const val = document.getElementById('modalPromptText').value.trim(); if(!val) { alert(currentLang === 'es' ? "Debes escribir una descripción." : "Prompt cannot be empty."); return; }
-    pendingExtraParams.prompt = val; const slug = pendingQuickAction; const params = pendingExtraParams; closePromptModal(); proceedWithQuickAction(slug, params);
-});
-
-async function ejecutarAccionRapida(targetSlug, extraParams = {}) {
-    if(!urlResultMemoria && !currentImageData) return alert("Primero debes cargar o generar una imagen.");
-    if (targetSlug.includes("enhance")) { const msg = currentLang === 'es' ? "⚠️ REGLA DE ORO DE DISEÑO:\n\nSi escalas la imagen a tamaño gigante ahora, ya no podrás quitarle el fondo o borrar objetos después por el límite de memoria de la IA.\n\nSiempre debes QUITAR EL FONDO PRIMERO y ESCALAR AL FINAL.\n\n¿Deseas proceder a escalar la imagen de todos modos?" : "⚠️ DESIGN GOLDEN RULE:\n\nAlways REMOVE BACKGROUND FIRST and UPSCALE LAST.\n\nProceed anyway?"; if (!confirm(msg)) return; }
-    if (targetSlug === "generate-background") { showPromptModal(targetSlug, extraParams); return; }
-    proceedWithQuickAction(targetSlug, extraParams);
-}
-
-async function proceedWithQuickAction(targetSlug, extraParams) {
-    urlOriginalMemoria = urlResultMemoria; let useOriginal = false; if(extraParams.useOriginal) { useOriginal = true; delete extraParams.useOriginal; }
-    statusLine.className = "status-line show"; statusText.textContent = t("processing"); mainResultImg.classList.add("opacity-50", "blur-sm"); magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; quickActionsBar.style.display = "none"; jsonViewer.style.display = "none"; document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block';
-    try {
-        const targetModel = MODELS.find(m => m.slug === targetSlug); const formData = new FormData(); const imgField = targetModel.fields.find(f => f.type === "image").name;
-        const quickZoom = extraParams.zoom_factor || "2";
-        if (useOriginal && currentImageData) {
-            const optFile = await optimizarImagenEnNavegador(currentImageData, targetSlug, quickZoom);
-            formData.append(imgField, optFile);
-        } else {
-            const imgRes = await fetch(urlResultMemoria);
-            const imgBlob = await imgRes.blob();
-            const optFile = await optimizarImagenEnNavegador(imgBlob, targetSlug, quickZoom);
-            formData.append(imgField, optFile);
-        }
-        for(const [k, v] of Object.entries(extraParams)) formData.append(k, v);
-        targetModel.fields.forEach(f => { if(f.name !== imgField && !extraParams[f.name]) { if(f.default !== undefined) formData.append(f.name, f.default); else if(f.type === "select" && f.options) formData.append(f.name, f.options[0].value); } });
-        const res = await fetch(`/run/${targetSlug}`, { method: "POST", body: formData }); mainResultImg.classList.remove("opacity-50", "blur-sm");
-        const contentType = (res.headers.get("content-type") || "").toLowerCase();
-        if (res.ok && contentType.startsWith("image/")) {
-            const blobFinal = await res.blob();
-            if (!blobFinal || blobFinal.size < 64) throw new Error("Imagen recibida en 0 bytes.");
-            processFinalUrl(URL.createObjectURL(blobFinal), targetSlug, "png");
-        } else if (contentType.includes("application/json")) {
-            const data = await res.json();
-            throw new Error(data.message || "Error al procesar la sugerencia.");
-        } else {
-            throw new Error(`Error del servidor (HTTP ${res.status}).`);
-        }
-    } catch(err) { statusLine.className = "status-line show error"; statusText.textContent = "Error: " + err.message; mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block"; }
-}
-
-async function processFinalUrl(url, slugToUse = currentSlug, ext = "png") {
-    let displayUrl = url; let downloadUrl = url;
-    if(url.startsWith("http")) { displayUrl = "/proxy-image?url=" + encodeURIComponent(url); downloadUrl = "/proxy-image?url=" + encodeURIComponent(url) + "&dl=1"; }
-    urlResultMemoria = displayUrl; 
-    const mainResultVideo = document.getElementById("mainResultVideo"); if(mainResultVideo) { mainResultVideo.style.display = "none"; mainResultVideo.src = ""; }
-    
-    if (currentSlug === 'master-color') { mainResultImg.style.display = 'none'; } else { mainResultImg.style.display = "block"; mainResultImg.src = displayUrl; }
-    
-    statusLine.className = "status-line show ok"; statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> " + (currentSlug === 'master-color' ? "Cambios Guardados." : t("done"));
-    btnDownloadResult.href = downloadUrl; btnDownloadResult.setAttribute("download", `JJ_Studio_Diseno.png`); btnDownloadResult.style.display = "block";
-    
-    document.getElementById("downloadBtnText").innerText = t("download_btn"); renderQuickActions(slugToUse); quickActionsBar.style.display = "block";
-    
-    btnDownloadResult.onclick = null; document.getElementById('tray').style.display = 'block';
-    if (currentSlug !== 'master-color') document.getElementById('btnAntes').style.display = 'block'; else document.getElementById('btnAntes').style.display = 'none';
-    document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block'; jsonViewer.style.display = "none";
-    resetearZoom();
-}
-
-let escalaImg = 1, estaArrastrando = false, panX = 0, panY = 0, startX, startY;
-const contVisor = document.getElementById('visorContenedor'); const contZoom = document.getElementById('viewerWrapper'); const lblZoom = document.getElementById('lblZoom');
-
-function actualizarTransform() { contZoom.style.transform = `translate(${panX}px, ${panY}px) scale(${escalaImg})`; lblZoom.innerText = Math.round(escalaImg * 100) + '%'; }
-function resetearZoom() { escalaImg = 1; panX = 0; panY = 0; actualizarTransform(); }
-
-contVisor.addEventListener('wheel', (e) => {
-    if ((!mainResultImg.src && !document.getElementById("mainResultVideo").src && editCanvas.style.display !== 'block') || jsonViewer.style.display === "block") return; e.preventDefault();
-    if (e.deltaY < 0) escalaImg += 0.15; else escalaImg -= 0.15;
-    escalaImg = Math.max(0.5, Math.min(escalaImg, 8)); if(escalaImg === 1) { panX = 0; panY = 0; } actualizarTransform();
-});
-contVisor.addEventListener('mousedown', (e) => { 
-    if (e.target.id === 'maskCanvas' || e.target.id === 'editCanvas') return;
-    if (e.button !== 0 || (!mainResultImg.src && !document.getElementById("mainResultVideo").src && editCanvas.style.display !== 'block') || jsonViewer.style.display === "block") return; 
-    estaArrastrando = true; startX = e.clientX - panX; startY = e.clientY - panY; 
-});
-window.addEventListener('mousemove', (e) => { if (!estaArrastrando) return; panX = e.clientX - startX; panY = e.clientY - startY; actualizarTransform(); });
-window.addEventListener('mouseup', () => { estaArrastrando = false; });
-
-function mostrar(original) { 
-    if(!urlOriginalMemoria) return;
-    mainResultImg.style.display = "block";
-    mainResultImg.src = original ? urlOriginalMemoria : urlResultMemoria;
-    document.getElementById('boxesContainer').style.opacity = original ? '0' : '1'; 
-}
-
-function toggleAiObject(index, tagEl) {
-    const box = document.getElementById(`box_ai_${index}`);
-    if (aiSelected.has(index)) { aiSelected.delete(index); tagEl.classList.remove("selected"); if(box) box.classList.remove("selected"); } 
-    else { aiSelected.add(index); tagEl.classList.add("selected"); if(box) box.classList.add("selected"); }
-    btnExecuteErase.style.display = aiSelected.size > 0 ? "inline-block" : "none";
-}
-
-btnExecuteErase.addEventListener("click", async () => {
-    btnExecuteErase.disabled = true; btnExecuteErase.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Procesando...`;
-    mainResultImg.classList.add("opacity-50", "blur-sm"); quickActionsBar.style.display = "none"; const formData = new FormData(); 
-    let imageToUse = urlResultMemoria ? urlResultMemoria : currentImageData;
-    if (typeof imageToUse === "string") {
-        if (imageToUse.startsWith("blob:") || imageToUse.startsWith("/proxy-image")) {
-            const blobReq = await fetch(imageToUse);
-            const blobData = await blobReq.blob();
-            const optFile = await optimizarImagenEnNavegador(blobData, "remove-objects");
-            formData.append("input_image", optFile);
-        } else {
-            formData.append("input_image", imageToUse);
-        }
-    } else {
-        const optFile = await optimizarImagenEnNavegador(imageToUse, "remove-objects");
-        formData.append("input_image", optFile);
-    }
-    
-    formData.append("original_session_id", aiSessionId); formData.append("erase_mode", "ultra");
-    const objectsToErase = []; aiSelected.forEach(i => objectsToErase.push(aiObjects[i])); formData.append("mask_objects", JSON.stringify(objectsToErase));
-    
-    try {
-        const res = await fetch(`/run/execute-magic-erase`, { method: "POST", body: formData }); mainResultImg.classList.remove("opacity-50", "blur-sm");
-        const contentType = (res.headers.get("content-type") || "").toLowerCase();
-        if (res.ok && contentType.startsWith("image/")) {
-            const blob = await res.blob();
-            if (!blob || blob.size < 64) throw new Error("Imagen recibida en 0 bytes.");
-            processFinalUrl(URL.createObjectURL(blob), currentSlug, "png");
-        } else {
-            const json = await res.json();
-            throw new Error(json.message || json.detalle || "Parámetros incorrectos");
-        }
-        magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = "";
-    } catch(err) { alert("Error al borrar: " + err.message); mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block"; } 
-    finally { btnExecuteErase.disabled = false; btnExecuteErase.innerHTML = `<i class="fa-solid fa-eraser mr-2"></i> ` + t("magic_btn_apply"); }
-});
-
-document.querySelectorAll(".lang-switch button").forEach(btn => { btn.classList.toggle("active", btn.dataset.lang === currentLang); });
-applyStaticText(); checkSession();
-</script>
-</body>
-</html>
+    const x = Math.max(0, Math.floor(mcSelection.x)); const y = Math.max(0, Math.floor(mcSelection.y)); const w = Math.min(editCanvas.width - x, Math.floor(mcSelection.w)); const h = Math.min(editCanvas.height
