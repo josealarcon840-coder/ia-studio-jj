@@ -369,9 +369,9 @@
               </div>
               <div class="section-box-dtf">
                   <div class="section-title-dtf">PARAMETROS MANUALES</div>
-                  <div class="slider-wrap-dtf"><label style="width:110px;">TOLERANCIA (1-100)</label><input type="range" class="ui-slider-dtf" id="semi_tol" min="1" max="100" value="20"><span class="val-badge-dtf" id="semi_tol_val">20</span></div>
-                  <div class="slider-wrap-dtf"><label style="width:110px;">LPI (GROSOR PX)</label><input type="range" class="ui-slider-dtf" id="semi_px" min="5" max="20" value="10"><span class="val-badge-dtf" id="semi_px_val">10px</span></div>
-                  <div class="slider-wrap-dtf"><label style="width:110px;">ÁNGULO</label><input type="range" class="ui-slider-dtf" id="semi_ang" min="0" max="90" value="22"><span class="val-badge-dtf" id="semi_ang_val">22°</span></div>
+                  <div class="slider-wrap-dtf"><label style="width:110px;">TOLERANCIA (1-100)</label><input type="range" class="ui-slider-dtf" id="semi_tol" min="1" max="100" value="20"><span class="val-badge-dtf" id="semi_tolValSemi">20</span></div>
+                  <div class="slider-wrap-dtf"><label style="width:110px;">LPI (GROSOR PX)</label><input type="range" class="ui-slider-dtf" id="semi_px" min="5" max="20" value="10"><span class="val-badge-dtf" id="semi_pxValSemi">10px</span></div>
+                  <div class="slider-wrap-dtf"><label style="width:110px;">ÁNGULO</label><input type="range" class="ui-slider-dtf" id="semi_ang" min="0" max="90" value="22"><span class="val-badge-dtf" id="semi_angValSemi">22°</span></div>
               </div>
               <button type="button" class="btn-primary" id="btnDtfRunSemi">
                   <i class="fa-solid fa-bolt mr-2"></i> Procesar Semitonos
@@ -450,12 +450,12 @@
           <div class="top-tools-dtf" id="dtfTopTools">
               <span style="font-size: 12px; font-weight: bold; color: #888;">MESA DE TRABAJO (TELA SIMULADA):</span>
               <div class="swatches-dtf">
-                  <div class="swatch-dtf active" style="background: #fff; border-color: #888;" onclick="changeFabricBg('#ffffff', this)"></div>
-                  <div class="swatch-dtf" style="background: #000;" onclick="changeFabricBg('#000000', this)"></div>
-                  <div class="swatch-dtf" style="background: #e60000;" onclick="changeFabricBg('#e60000', this)"></div>
-                  <div class="swatch-dtf" style="background: #0044cc;" onclick="changeFabricBg('#0044cc', this)"></div>
+                  <div class="swatch-dtf active" style="background: #fff; border-color: #888;" onclick="changeFabricBgSemi('#ffffff', this)"></div>
+                  <div class="swatch-dtf" style="background: #000;" onclick="changeFabricBgSemi('#000000', this)"></div>
+                  <div class="swatch-dtf" style="background: #e60000;" onclick="changeFabricBgSemi('#e60000', this)"></div>
+                  <div class="swatch-dtf" style="background: #0044cc;" onclick="changeFabricBgSemi('#0044cc', this)"></div>
                   <span style="color:#666; font-size:10px; margin-left:5px;">MÁS:</span>
-                  <input type="color" class="paleta-mesa-dtf" id="fabricColorPicker" value="#ff00ff" onchange="changeFabricBg(this.value, null)">
+                  <input type="color" class="paleta-mesa-dtf" id="fabricColorPicker" value="#ff00ff" onchange="changeFabricBgSemi(this.value, null)">
               </div>
           </div>
 
@@ -490,12 +490,12 @@
                       
                       <!-- Elementos Inyectados para Visor Semitonos/Detector -->
                       <img id="det_imgOriginal" class="img-base" src="" style="display:none;">
-                      <canvas id="det_semiOverlayCanvas"></canvas>
+                      <canvas id="det_semiOverlayCanvas" class="img-base" style="display:none; filter: drop-shadow(0 0 5px #ff00ff); z-index:6;"></canvas>
                       
-                      <div class="fabric-layer" id="fabricLayer">
-                          <img id="imgConTela" class="img-base" src="">
+                      <div class="fabric-layer" id="fabricLayerSemi">
+                          <img id="imgConTelaSemi" class="img-base" src="">
                       </div>
-                      <div class="slider-line-dtf" id="sliderLine"></div>
+                      <div class="slider-line-dtf" id="sliderLineSemi"></div>
                       <input type="range" min="0" max="100" value="50" class="drag-slider-dtf" id="dtfDragSlider">
 
                       <video id="mainResultVideo" controls loop style="display: none; max-width: 90vw; max-height: 70vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.8);"></video>
@@ -629,10 +629,10 @@ function openTool(slug) {
   if(panelDet) panelDet.style.display = "none";
   if(topTools) topTools.style.display = "none";
 
-  if (slug === "semitonos-dtf") {
+  if (slug === "dtf-semitonos") {
       if(panelSemi) panelSemi.style.display = "block";
       if(topTools) topTools.style.display = "flex";
-  } else if (slug === "detector-dtf") {
+  } else if (slug === "dtf-detector") {
       if(panelDet) panelDet.style.display = "block";
   } else {
       form.style.display = "block";
@@ -675,9 +675,9 @@ function reiniciarHerramienta(keepTool = false) {
     if(document.getElementById('det_dz_text')) document.getElementById('det_dz_text').textContent = "Sube tu diseño para Analizar";
     
     if(document.getElementById('det_imgOriginal')) document.getElementById('det_imgOriginal').style.display = 'none';
-    if(document.getElementById('fabricLayer')) document.getElementById('fabricLayer').style.display = 'none';
+    if(document.getElementById('fabricLayerSemi')) document.getElementById('fabricLayerSemi').style.display = 'none';
     if(document.getElementById('det_semiOverlayCanvas')) document.getElementById('det_semiOverlayCanvas').style.display = 'none';
-    if(document.getElementById('sliderLine')) document.getElementById('sliderLine').style.display = 'none';
+    if(document.getElementById('sliderLineSemi')) document.getElementById('sliderLineSemi').style.display = 'none';
     if(document.getElementById('dtfDragSlider')) document.getElementById('dtfDragSlider').style.display = 'none';
     if(document.getElementById('badgeLeft')) document.getElementById('badgeLeft').style.display = 'none';
     if(document.getElementById('badgeRight')) document.getElementById('badgeRight').style.display = 'none';
@@ -936,6 +936,56 @@ function renderQuickActions(slug) {
         const btn = document.createElement('button'); btn.className = "btn-qa"; btn.innerHTML = `<i class="fa-solid ${act.icon} mb-1 block text-lg"></i> ${act.label}`;
         if(act.slug === "studio-vignette") { btn.onclick = () => { document.getElementById('glowModal').style.display='flex'; }; } else { btn.onclick = () => ejecutarAccionRapida(act.slug, act.params); }
         qaContainer.appendChild(btn);
+    });
+}
+
+async function optimizarImagenEnNavegador(fileOrBlob, slug, zoomFactor = "2") {
+    return new Promise((resolve) => {
+        if (!fileOrBlob) return resolve(fileOrBlob);
+        let maxDim = 2400;
+        if (slug && slug.includes("enhance")) {
+            const zf = String(zoomFactor).trim();
+            if (zf === "8") maxDim = 500;
+            else if (zf === "4") maxDim = 950;
+            else maxDim = 1500;
+        }
+        const img = new Image();
+        const objUrl = URL.createObjectURL(fileOrBlob);
+
+        img.onload = () => {
+            URL.revokeObjectURL(objUrl);
+            const w = img.naturalWidth || img.width;
+            const h = img.naturalHeight || img.height;
+
+            if (Math.max(w, h) <= maxDim) {
+                return resolve(fileOrBlob);
+            }
+
+            const scale = maxDim / Math.max(w, h);
+            const newW = Math.round(w * scale);
+            const newH = Math.round(h * scale);
+
+            const canvas = document.createElement("canvas");
+            canvas.width = newW;
+            canvas.height = newH;
+            const ctx = canvas.getContext("2d");
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = "high";
+            ctx.drawImage(img, 0, 0, newW, newH);
+
+            canvas.toBlob((resizedBlob) => {
+                if (resizedBlob && resizedBlob.size > 100) {
+                    resolve(new File([resizedBlob], "imagen_optimizada.png", { type: "image/png" }));
+                } else {
+                    resolve(fileOrBlob);
+                }
+            }, "image/png");
+        };
+        img.onerror = () => {
+            URL.revokeObjectURL(objUrl);
+            resolve(fileOrBlob);
+        };
+        img.src = objUrl;
     });
 }
 
@@ -1229,13 +1279,17 @@ btnExecuteErase.addEventListener("click", async () => {
     } catch(err) { alert("Error al borrar: " + err.message); mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block"; } 
     finally { btnExecuteErase.disabled = false; btnExecuteErase.innerHTML = `<i class="fa-solid fa-eraser mr-2"></i> ` + t("magic_btn_apply"); }
 });
-   // ==========================================================
+
+// ==========================================================
 // CÓDIGO INYECTADO: LÓGICA DEL PANEL DTF (SEMITONOS Y ESCÁNER)
 // ==========================================================
 let dtfFileActual = null;
+let dtfAspectRatio = 1;
+let urlResultSemiMemoria = null;
 
-function changeFabricBg(colorCode, swatchElement) {
-    const fabricLayer = document.getElementById('fabricLayer');
+// --- FUNCIONES DE TELA Y MÁSCARAS ---
+function changeFabricBgSemi(colorCode, swatchElement) {
+    const fabricLayer = document.getElementById('fabricLayerSemi');
     if(fabricLayer) fabricLayer.style.backgroundColor = colorCode;
     if(swatchElement){
         const swatches = document.querySelectorAll('.swatch-dtf');
@@ -1244,6 +1298,19 @@ function changeFabricBg(colorCode, swatchElement) {
     }
 }
 
+function slideRevealSemi(val) {
+    const rightCrop = 100 - val;
+    let fl = document.getElementById('fabricLayerSemi');
+    let sl = document.getElementById('sliderLineSemi');
+    if(fl) fl.style.clipPath = `inset(0 ${rightCrop}% 0 0)`;
+    if(sl) sl.style.left = `${val}%`;
+}
+
+if(document.querySelector('.drag-slider-dtf')) {
+    document.querySelector('.drag-slider-dtf').addEventListener('input', function() { slideRevealSemi(this.value); });
+}
+
+// --- SETUP DE GRUPOS DE BOTONES Y SLIDERS ---
 function setupDtfGroup(groupId) {
     const btns = document.querySelectorAll(`#${groupId} .btn-select-dtf`);
     btns.forEach(btn => {
@@ -1255,62 +1322,43 @@ function setupDtfGroup(groupId) {
     });
 }
 
-setupDtfGroup("colorGroup"); setupDtfGroup("satGroup"); setupDtfGroup("modoGroup"); setupDtfGroup("tramaGroup");
 setupDtfGroup("semi_colorGroup"); setupDtfGroup("semi_satGroup"); setupDtfGroup("semi_modoGroup"); setupDtfGroup("semi_tramaGroup");
 
-if(document.getElementById("colorPickerRemove")) {
-    document.getElementById("colorPickerRemove").addEventListener("change", function() {
-        const btn = document.getElementById("btnCustomColor");
-        if(btn) { btn.setAttribute("data-val", this.value); document.querySelectorAll("#colorGroup .btn-select-dtf").forEach(b => b.classList.remove("active")); btn.classList.add("active"); }
-    });
-}
-if(document.getElementById("semi_colorPicker")) {
-    document.getElementById("semi_colorPicker").addEventListener("change", function() {
-        const btn = document.getElementById("semi_btnCustomColor");
+if(document.getElementById("semi_colorPickerRemoveSemi")) {
+    document.getElementById("semi_colorPickerRemoveSemi").addEventListener("change", function() {
+        const btn = document.getElementById("btnCustomColorSemi");
         if(btn) { btn.setAttribute("data-val", this.value); document.querySelectorAll("#semi_colorGroup .btn-select-dtf").forEach(b => b.classList.remove("active")); btn.classList.add("active"); }
     });
 }
 
-["tolSlider", "pxSlider", "angSlider", "semi_tol", "semi_px", "semi_ang"].forEach(id => {
+["semi_tol", "semi_px", "semi_ang"].forEach(id => {
     let el = document.getElementById(id);
     if(el) {
         el.addEventListener("input", function() {
             let val = this.value;
             if(id.includes("px")) val += "px";
             if(id.includes("ang")) val += "°";
-            let valId = id.replace("Slider", "Val");
-            if (id.startsWith("semi_") && !id.includes("Slider")) valId = id + "_val";
+            let valId = id + "ValSemi";
             if(document.getElementById(valId)) document.getElementById(valId).innerText = val;
         });
     }
 });
 
-let dtfAspectRatio = 1;
-["anchoInput", "semi_ancho", "det_ancho"].forEach(id => {
+["semi_ancho", "det_ancho"].forEach(id => {
     let el = document.getElementById(id);
     if(el) { el.addEventListener("input", function() { if(this.value > 0) { let pairedId = id.replace("ancho", "alto"); if(document.getElementById(pairedId)) document.getElementById(pairedId).value = (this.value / dtfAspectRatio).toFixed(1); } }); }
 });
-["altoInput", "semi_alto", "det_alto"].forEach(id => {
+["semi_alto", "det_alto"].forEach(id => {
     let el = document.getElementById(id);
     if(el) { el.addEventListener("input", function() { if(this.value > 0) { let pairedId = id.replace("alto", "ancho"); if(document.getElementById(pairedId)) document.getElementById(pairedId).value = (this.value * dtfAspectRatio).toFixed(1); } }); }
 });
 
-function slideRevealDtf(val) {
-    const rightCrop = 100 - val;
-    let fl = document.getElementById('fabricLayer');
-    let sl = document.getElementById('sliderLine');
-    if(fl) fl.style.clipPath = `inset(0 ${rightCrop}% 0 0)`;
-    if(sl) sl.style.left = `${val}%`;
-}
-if(document.getElementById('dtfDragSlider')) {
-    document.getElementById('dtfDragSlider').addEventListener('input', function() { slideRevealDtf(this.value); });
-}
-
+// --- CARGA DE ARCHIVOS ---
 function handleDtfFileUpload(e, mode) {
     const f = e.target.files[0]; if(!f) return;
     dtfFileActual = f;
     
-    let textId = mode === 'semi' ? 'semi_dz_text' : (mode === 'det' ? 'det_dz_text' : 'dtf_dz_text');
+    let textId = mode === 'semi' ? 'semi_dz_text' : 'det_dz_text';
     let elText = document.getElementById(textId);
     if(elText) elText.textContent = f.name;
     
@@ -1320,50 +1368,47 @@ function handleDtfFileUpload(e, mode) {
     const img = new Image();
     img.onload = () => {
         dtfAspectRatio = img.width / img.height;
-        let pAncho = mode === 'semi' ? 'semi_ancho' : (mode === 'det' ? 'det_ancho' : 'anchoInput');
-        let pAlto = mode === 'semi' ? 'semi_alto' : (mode === 'det' ? 'det_alto' : 'altoInput');
+        let pAncho = mode === 'semi' ? 'semi_ancho' : 'det_ancho';
+        let pAlto = mode === 'semi' ? 'semi_alto' : 'det_alto';
         if(document.getElementById(pAncho)) document.getElementById(pAncho).value = "29.7";
         if(document.getElementById(pAlto)) document.getElementById(pAlto).value = (29.7 / dtfAspectRatio).toFixed(1);
+        if(mode === 'det') {
+            let resDet = document.getElementById('statusResDet');
+            if(resDet) resDet.innerText = `Resolución: ${img.width}x${img.height}px`;
+        }
     };
     img.src = url;
 
-    tray.style.display = "block";
-    btnRestart.style.display = "block";
-    mainResultImg.style.display = "none";
-    
-    let detImgOriginal = document.getElementById('det_imgOriginal');
-    if(detImgOriginal) { detImgOriginal.src = url; detImgOriginal.style.display = 'block'; detImgOriginal.style.opacity = "1"; }
-    let imgConTela = document.getElementById('imgConTela');
-    if(imgConTela) imgConTela.src = url;
-    
-    if(mode === 'semi') {
-        if(document.getElementById('fabricLayer')) document.getElementById('fabricLayer').style.display = 'block';
-        if(document.getElementById('det_semiOverlayCanvas')) document.getElementById('det_semiOverlayCanvas').style.display = 'none';
-        if(document.getElementById('sliderLine')) document.getElementById('sliderLine').style.display = 'block';
-        if(document.getElementById('dtfDragSlider')) { document.getElementById('dtfDragSlider').style.display = 'block'; document.getElementById('dtfDragSlider').value = 50; slideRevealDtf(50); }
-        if(document.getElementById('badgeLeft')) document.getElementById('badgeLeft').style.display = 'block';
-        if(document.getElementById('badgeRight')) document.getElementById('badgeRight').style.display = 'block';
-    } else {
-        if(document.getElementById('fabricLayer')) document.getElementById('fabricLayer').style.display = 'none';
-        if(document.getElementById('det_semiOverlayCanvas')) document.getElementById('det_semiOverlayCanvas').style.display = 'none';
-        if(document.getElementById('sliderLine')) document.getElementById('sliderLine').style.display = 'none';
-        if(document.getElementById('dtfDragSlider')) document.getElementById('dtfDragSlider').style.display = 'none';
-        if(document.getElementById('badgeLeft')) document.getElementById('badgeLeft').style.display = 'none';
-        if(document.getElementById('badgeRight')) document.getElementById('badgeRight').style.display = 'none';
-        if(document.getElementById('btnDetReparar')) document.getElementById('btnDetReparar').disabled = false;
-    }
+    document.getElementById('trayDtfSemitonos').style.display = mode === 'semi' ? 'flex' : 'none';
+    document.getElementById('trayDtfDetector').style.display = mode === 'det' ? 'flex' : 'none';
+    document.getElementById('btnRestart').style.display = 'block';
 
-    resetearZoom();
-    document.getElementById('imgContainer').style.display = 'inline-block';
-    document.getElementById('btnCentrar').style.display = 'block';
-    document.getElementById('btnZoomLabel').style.display = 'block';
+    if(mode === 'semi') {
+        document.getElementById('uploadAreaSemi').style.display = 'none';
+        document.getElementById('viewerAreaSemi').style.display = 'flex';
+        document.getElementById('imgTransparenteSemi').src = url;
+        document.getElementById('imgConTelaSemi').src = url;
+        slideRevealSemi(50);
+        let slider = document.querySelector('.drag-slider-dtf');
+        if(slider) slider.value = 50;
+        if(document.getElementById('semiOverlayCanvasSemi')) document.getElementById('semiOverlayCanvasSemi').style.display = 'none';
+        resetZoomSemi();
+    } else if(mode === 'det') {
+        document.getElementById('uploadAreaDet').style.display = 'none';
+        document.getElementById('viewerAreaDet').style.display = 'flex';
+        document.getElementById('imgOriginalDet').src = url;
+        document.getElementById('btnDetReparar').disabled = false;
+        document.getElementById('statusTextDet').innerHTML = "VISTA PREVIA ORIGINAL";
+        if(document.getElementById('semiOverlayCanvasDet')) document.getElementById('semiOverlayCanvasDet').style.display = 'none';
+        resetZoomDet();
+    }
 }
 
-if(document.getElementById("dtf_file_input")) document.getElementById("dtf_file_input").addEventListener("change", (e) => handleDtfFileUpload(e, 'gen'));
 if(document.getElementById("semi_file_input")) document.getElementById("semi_file_input").addEventListener("change", (e) => handleDtfFileUpload(e, 'semi'));
 if(document.getElementById("det_file_input")) document.getElementById("det_file_input").addEventListener("change", (e) => handleDtfFileUpload(e, 'det'));
 
-function scanTransparenciesBtnClick(btnId, checkSemiId) {
+// --- ESCANER (AMBOS) ---
+function scanTransparenciesBtnClick(btnId, mode) {
     if(!dtfFileActual) return alert("Sube un diseño primero.");
     const btn = document.getElementById(btnId);
     if(!btn) return;
@@ -1376,9 +1421,10 @@ function scanTransparenciesBtnClick(btnId, checkSemiId) {
         img.onload = () => {
             const cvs = document.createElement("canvas");
             cvs.width = img.width; cvs.height = img.height;
-            const ctx = cvs.getContext("2d"); ctx.drawImage(img, 0, 0);
+            const ctx = cvs.getContext("2d", {willReadFrequently:true}); ctx.drawImage(img, 0, 0);
             
-            const overlay = document.getElementById('det_semiOverlayCanvas') || document.getElementById('semiOverlayCanvas');
+            const overlayId = mode === 'semi' ? 'semiOverlayCanvasSemi' : 'det_semiOverlayCanvas';
+            const overlay = document.getElementById(overlayId);
             if(!overlay) return;
             overlay.width = img.width; overlay.height = img.height;
             const oCtx = overlay.getContext("2d");
@@ -1397,13 +1443,16 @@ function scanTransparenciesBtnClick(btnId, checkSemiId) {
                 if (hasSemi) {
                     oCtx.putImageData(oData, 0, 0);
                     overlay.style.display = "block";
-                    if(document.getElementById('fabricLayer')) document.getElementById('fabricLayer').style.display = "none";
-                    if(document.getElementById('sliderLine')) document.getElementById('sliderLine').style.display = "none";
-                    if(document.getElementById('dtfDragSlider')) document.getElementById('dtfDragSlider').style.display = "none";
-                    alert("⚠️ ALERTA DTF: ¡Se detectaron píxeles peligrosos!\nLas zonas marcadas en FUCSIA son bordes borrosos o sombras. El sistema activó 'Fijar Semitransparencias' automáticamente.");
-                    if(document.getElementById(checkSemiId)) document.getElementById(checkSemiId).checked = true;
+                    if(mode === 'semi') {
+                        alert("⚠️ ALERTA DTF: ¡Zonas borrosas!\n'Fijar Semitransparencias' se activó automáticamente para proteger la base blanca.");
+                        document.getElementById('checkSemiSemi').checked = true;
+                    } else {
+                        document.getElementById('statusTextDet').innerHTML="⚠️ <span style='color:#ff00ff'>ZONAS PELIGROSAS DETECTADAS</span>"; 
+                        alert("⚠️ ALERTA DTF: ¡Píxeles borrosos detectados!\nLas zonas fucsias son peligrosas. Dale a REPARAR Y DESCARGAR.");
+                    }
                 } else {
                     overlay.style.display = "none";
+                    if(mode === 'det') document.getElementById('statusTextDet').innerHTML="✅ <span style='color:#00cc44'>DISEÑO 100% SÓLIDO</span>";
                     alert("✅ ESCANEO LIMPIO: Tu diseño tiene colores sólidos perfectos.");
                 }
             } catch(e) {}
@@ -1413,17 +1462,16 @@ function scanTransparenciesBtnClick(btnId, checkSemiId) {
     }, 100);
 }
 
-if(document.getElementById("btnScan")) document.getElementById("btnScan").addEventListener("click", () => scanTransparenciesBtnClick("btnScan", "checkSemi"));
-if(document.getElementById("btnDetScan")) document.getElementById("btnDetScan").addEventListener("click", () => scanTransparenciesBtnClick("btnDetScan", "checkSemi"));
+if(document.getElementById("btnScanSemi")) document.getElementById("btnScanSemi").addEventListener("click", () => scanTransparenciesBtnClick("btnScanSemi", "semi"));
+if(document.getElementById("btnDetScan")) document.getElementById("btnDetScan").addEventListener("click", () => scanTransparenciesBtnClick("btnDetScan", "det"));
 
+// --- REPARAR (DETECTOR) ---
 if(document.getElementById("btnDetReparar")) {
     document.getElementById("btnDetReparar").addEventListener("click", async () => {
         if(!dtfFileActual) return;
-        document.getElementById('dtf_loadingOverlay').style.display = 'flex';
-        document.getElementById('dtf_loading_title').innerText = "Reparando Píxeles...";
-        document.getElementById('dtf_loading_desc').innerText = "Redimensionando a 300DPI y extirpando transparencias.";
+        document.getElementById('loadingOverlayDet').style.display = 'flex';
         if(document.getElementById('det_semiOverlayCanvas')) document.getElementById('det_semiOverlayCanvas').style.display = 'none'; 
-        resetearZoom();
+        resetZoomDet();
 
         const formData = new FormData();
         formData.append("imagen", dtfFileActual);
@@ -1437,77 +1485,60 @@ if(document.getElementById("btnDetReparar")) {
             const blob = await response.blob();
             const urlFinal = URL.createObjectURL(blob);
             
-            if(document.getElementById('det_imgOriginal')) document.getElementById('det_imgOriginal').src = urlFinal;
-            statusLine.className = "status-line show ok";
-            statusText.innerHTML = "🛡️ <span style='color:#00cc44'>IMAGEN REPARADA A 300DPI LISTA PARA DTF</span>";
+            if(document.getElementById('imgOriginalDet')) document.getElementById('imgOriginalDet').src = urlFinal;
+            if(document.getElementById('statusTextDet')) document.getElementById('statusTextDet').innerHTML = "🛡️ <span style='color:#00cc44'>IMAGEN REPARADA A 300DPI</span>";
             
-            urlResultMemoria = urlFinal;
-            if(btnDownloadResult) {
-                btnDownloadResult.href = urlFinal; 
-                btnDownloadResult.setAttribute("download", `DTF_Limpio_${Date.now()}.png`); 
-                btnDownloadResult.style.display = "block";
-            }
+            const a = document.createElement("a");
+            a.href = urlFinal; 
+            a.download = `DTF_Limpio_${Date.now()}.png`; 
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
         } catch (error) {
             alert("❌ Falló la conexión con el servidor al reparar.");
         } finally {
-            document.getElementById('dtf_loadingOverlay').style.display = 'none';
+            document.getElementById('loadingOverlayDet').style.display = 'none';
         }
     });
 }
 
-function bindProcessBtn(btnId, isSemiPanel) {
-    let btn = document.getElementById(btnId);
-    if(!btn) return;
-    btn.addEventListener("click", async () => {
+// --- PROCESAR SEMITONOS ---
+if(document.getElementById("btnDtfRunSemi")) {
+    document.getElementById("btnDtfRunSemi").addEventListener("click", async () => {
         if(!dtfFileActual) return alert("Sube un diseño primero.");
+        let btn = document.getElementById("btnDtfRunSemi");
         btn.disabled = true;
         
-        let pfx = isSemiPanel ? "semi_" : "";
-        let cGrp = isSemiPanel ? "#semi_colorGroup" : "#colorGroup";
-        let sGrp = isSemiPanel ? "#semi_satGroup" : "#satGroup";
-        let mGrp = isSemiPanel ? "#semi_modoGroup" : "#modoGroup";
-        let tGrp = isSemiPanel ? "#semi_tramaGroup" : "#tramaGroup";
-
-        document.getElementById('dtf_loadingOverlay').style.display = 'flex';
-        document.getElementById('dtf_loading_title').innerText = "Aplicando Matriz de Puntos...";
+        document.getElementById('loadingOverlaySemi').style.display = 'flex';
+        let checkIA = document.getElementById('checkIASemi');
+        document.getElementById('loadingHintSemi').innerText = (checkIA && checkIA.checked) ? "Mejorando calidad con IA y calculando puntos..." : "Calculando matriz de puntos...";
         
-        let checkIA = document.getElementById(pfx+'checkIA');
-        document.getElementById('dtf_loading_desc').innerText = (checkIA && checkIA.checked) ? "Mejorando calidad con IA y calculando puntos..." : "Calculando matriz de puntos...";
-        
-        let imgOrig = document.getElementById('det_imgOriginal');
-        if(imgOrig) imgOrig.style.opacity = "0.5"; 
+        let imgTransparenteSemi = document.getElementById('imgTransparenteSemi');
+        let imgConTelaSemi = document.getElementById('imgConTelaSemi');
 
         try {
             const fd = new FormData();
             fd.append("imagen", dtfFileActual);
             
-            let activeColor = document.querySelector(`${cGrp} .active`);
+            let activeColor = document.querySelector(`#semi_colorGroup .active`);
             if(activeColor) fd.append("color", activeColor.getAttribute("data-val"));
             
-            let activeSat = document.querySelector(`${sGrp} .active`);
+            let activeSat = document.querySelector(`#semi_satGroup .active`);
             if(activeSat) fd.append("sat", activeSat.getAttribute("data-val"));
             
-            let activeModo = document.querySelector(`${mGrp} .active`);
+            let activeModo = document.querySelector(`#semi_modoGroup .active`);
             if(activeModo) fd.append("limpieza", activeModo.getAttribute("data-val"));
             
-            let activeTrama = document.querySelector(`${tGrp} .active`);
+            let activeTrama = document.querySelector(`#semi_tramaGroup .active`);
             if(activeTrama) fd.append("trama", activeTrama.getAttribute("data-val"));
             
-            const getVal = (id1, id2, def) => {
-                let el1 = document.getElementById(id1); if(el1) return el1.value;
-                let el2 = document.getElementById(id2); if(el2) return el2.value;
-                return def;
-            };
-
-            fd.append("tolerancia", getVal(pfx+"tol", "tolSlider", 20));
-            fd.append("px", getVal(pfx+"px", "pxSlider", 10));
-            fd.append("angulo", getVal(pfx+"ang", "angSlider", 22));
-            fd.append("ancho", getVal(pfx+"ancho", "anchoInput", 29.7));
-            fd.append("alto", getVal(pfx+"alto", "altoInput", 42.0));
+            fd.append("tolerancia", document.getElementById("semi_tol") ? document.getElementById("semi_tol").value : 20);
+            fd.append("px", document.getElementById("semi_px") ? document.getElementById("semi_px").value : 10);
+            fd.append("angulo", document.getElementById("semi_ang") ? document.getElementById("semi_ang").value : 22);
+            fd.append("ancho", document.getElementById("semi_ancho") ? document.getElementById("semi_ancho").value : 29.7);
+            fd.append("alto", document.getElementById("semi_alto") ? document.getElementById("semi_alto").value : 42.0);
             
-            let checkBg = document.getElementById(pfx+"checkBG");
-            let checkChoke = document.getElementById(pfx+"checkChoke");
-            let checkSemi = document.getElementById(pfx+"checkSemi");
+            let checkBg = document.getElementById("checkBGSemi");
+            let checkChoke = document.getElementById("checkChokeSemi");
+            let checkSemi = document.getElementById("checkSemiSemi");
             
             fd.append("usar_ia", (checkIA && checkIA.checked) ? "true" : "false");
             fd.append("quitar_fondo", (checkBg && checkBg.checked) ? "true" : "false");
@@ -1516,45 +1547,31 @@ function bindProcessBtn(btnId, isSemiPanel) {
 
             const res = await fetch("/api/procesar", { method: "POST", body: fd });
             
-            if(imgOrig) imgOrig.style.opacity = "1"; 
             if (!res.ok) throw new Error("Error en servidor al procesar semitonos");
             
             const blob = await res.blob();
             const urlFinal = URL.createObjectURL(blob);
             
-            if(imgOrig) imgOrig.src = urlFinal;
-            let imgConTela = document.getElementById('imgConTela');
-            if(imgConTela) imgConTela.src = urlFinal;
+            if(imgTransparenteSemi) imgTransparenteSemi.src = urlFinal;
+            if(imgConTelaSemi) imgConTelaSemi.src = urlFinal;
+            if(document.getElementById('semiOverlayCanvasSemi')) document.getElementById('semiOverlayCanvasSemi').style.display = 'none';
             
-            if(document.getElementById('det_semiOverlayCanvas')) document.getElementById('det_semiOverlayCanvas').style.display = 'none';
-            if(document.getElementById('semiOverlayCanvas')) document.getElementById('semiOverlayCanvas').style.display = 'none';
-            
-            urlResultMemoria = urlFinal;
-            if(btnDownloadResult) {
-                btnDownloadResult.href = urlFinal; 
-                btnDownloadResult.setAttribute("download", `DTF_Semitonos_${Date.now()}.png`); 
-                btnDownloadResult.style.display = "block";
-            }
-            
-            if(statusLine) statusLine.className = "status-line show ok";
-            if(statusText) statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> Semitono generado correctamente.";
+            urlResultSemiMemoria = urlFinal;
+            if(document.getElementById('btnDownloadSemi')) document.getElementById('btnDownloadSemi').style.display = 'inline-block';
 
         } catch(err) {
-            if(imgOrig) imgOrig.style.opacity = "1"; 
-            if(statusLine) statusLine.className = "status-line show error";
-            if(statusText) statusText.textContent = "Error: " + err.message;
+            alert("❌ Error procesando semitonos: Asegúrate de subir una imagen sin fondo o activar la IA.");
         } finally {
-            document.getElementById('dtf_loadingOverlay').style.display = 'none';
+            document.getElementById('loadingOverlaySemi').style.display = 'none';
             btn.disabled = false;
         }
     });
 }
 
-bindProcessBtn("btnDtfRunSemi", true);
-if(document.getElementById("btnDtfRun")) bindProcessBtn("btnDtfRun", false);
-
-document.querySelectorAll(".lang-switch button").forEach(btn => { btn.classList.toggle("active", btn.dataset.lang === currentLang); });
-applyStaticText(); checkSession();
+function descargarSemi() {
+    if(!urlResultSemiMemoria) return;
+    const a = document.createElement("a"); a.href = urlResultSemiMemoria; a.download = `DTF_Semitono_${Date.now()}.png`; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
 </script>
 </body>
-</html> 
+</html>    
