@@ -77,7 +77,7 @@
 
   .workspace-layout { display: flex; flex-direction: row; gap: 30px; align-items: flex-start;}
   .form-container { flex: 1; min-width: 350px; max-width: 400px; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); position: sticky; top: 90px;}
-  .canvas-container { flex: 2; display: flex; flex-direction: column; width: 100%;}
+  .canvas-container { flex: 2; display: flex; flex-direction: column; width: 100%; position: relative;}
 
   .field { margin-bottom: 22px; }
   .field label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; color: #ccc; text-transform: uppercase; letter-spacing: 0.5px;}
@@ -160,7 +160,7 @@
       .canvas-container { width: 100%; }
   }
 
-  /* --- CLASES INYECTADAS PARA LOS PANELES DTF (SEMITONOS Y DETECTOR) --- */
+  /* --- ESTILOS INYECTADOS PARA EL PANEL DE SEMITONOS DTF --- */
   .section-box-dtf { background-color: var(--bg-section); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 15px; }
   .section-title-dtf { font-size: 13px; font-weight: 700; color: var(--text-main); letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
   .section-title-dtf::before { content: ""; display: block; width: 3px; height: 12px; background-color: var(--primary-red); border-radius: 2px; }
@@ -193,6 +193,14 @@
   .val-badge-dtf { background: #000; color: var(--primary-red); padding: 3px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; min-width: 40px; text-align: center; border: 1px solid var(--border-color); }
   .color-hidden { width: 0; height: 0; visibility: hidden; position: absolute;}
   
+  .top-tools-dtf { display:none; justify-content:space-between; align-items:center; background:var(--panel); padding:10px 15px; border-radius:8px; border:1px solid var(--border-color); margin-bottom:10px;}
+  .swatches-dtf { display:flex; gap:8px; align-items:center;}
+  .swatch-dtf { width:22px; height:22px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition:0.2s; box-shadow:0 2px 5px rgba(0,0,0,0.5);}
+  .swatch-dtf:hover, .swatch-dtf.active { border-color:white; transform:scale(1.15);}
+  .paleta-mesa-dtf { width:24px; height:24px; padding:0; border:1px solid #666; border-radius:4px; cursor:pointer; background:transparent;}
+  .paleta-mesa-dtf::-webkit-color-swatch-wrapper { padding:0;}
+  .paleta-mesa-dtf::-webkit-color-swatch { border:none; border-radius:3px;}
+
   /* Overlays VISOR DTF */
   .img-base { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
   #det_semiOverlayCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; z-index: 6; display: none; filter: drop-shadow(0 0 5px #ff00ff); }
@@ -207,7 +215,7 @@
 </style>
 </head>
 <body>
-<div class="custom-modal-overlay" id="promptModal">
+  <div class="custom-modal-overlay" id="promptModal">
     <div class="custom-modal">
         <h3><i class="fa-solid fa-image mr-2 text-red-500"></i> Fondo con IA</h3>
         <p style="font-size: 0.9rem; color: var(--text-dim); margin-bottom: 20px; text-align: left; line-height: 1.4;">
@@ -304,12 +312,10 @@
 
       <div class="workspace-layout">
         <div class="form-container" style="position: relative;">
-          <!-- FORMULARIO ORIGINAL -->
+          <!-- FORMULARIO ORIGINAL (Oculto en modo DTF) -->
           <form id="form"></form>
-
-          <!-- ========================================================== -->
-          <!-- PANEL INYECTADO: SEMITONOS DTF PRO -->
-          <!-- ========================================================== -->
+          
+          <!-- PANEL INYECTADO: SÚPER PANEL DTF STUDIO PRO (Oculto por defecto) -->
           <div id="panel-semitonos" style="display:none; background-color: var(--bg-panel); border-radius: 10px;">
               <div class="dropzone" onclick="document.getElementById('semi_file_input').click()" style="margin-bottom:15px;">
                   <i class="fa-solid fa-braille"></i>
@@ -370,9 +376,7 @@
               </button>
           </div>
 
-          <!-- ========================================================== -->
           <!-- PANEL INYECTADO: ESCANER DE SEMITRANSPARENCIAS -->
-          <!-- ========================================================== -->
           <div id="panel-detector" style="display:none; background-color: var(--bg-panel); border-radius: 10px;">
               <div class="dropzone" onclick="document.getElementById('det_file_input').click()" style="margin-bottom:15px; border-color:#ff00ff; background:rgba(255,0,255,0.05);">
                   <i class="fa-solid fa-magnifying-glass-chart" style="color:#ff00ff;"></i>
@@ -439,6 +443,20 @@
         </div>
 
         <div class="canvas-container" id="tray" style="display:none;">
+          
+          <!-- MESA DE TRABAJO (TELA SIMULADA) -->
+          <div class="top-tools-dtf" id="dtfTopTools">
+              <span style="font-size: 12px; font-weight: bold; color: #888;">MESA DE TRABAJO (TELA SIMULADA):</span>
+              <div class="swatches-dtf">
+                  <div class="swatch-dtf active" style="background: #fff; border-color: #888;" onclick="changeFabricBg('#ffffff', this)"></div>
+                  <div class="swatch-dtf" style="background: #000;" onclick="changeFabricBg('#000000', this)"></div>
+                  <div class="swatch-dtf" style="background: #e60000;" onclick="changeFabricBg('#e60000', this)"></div>
+                  <div class="swatch-dtf" style="background: #0044cc;" onclick="changeFabricBg('#0044cc', this)"></div>
+                  <span style="color:#666; font-size:10px; margin-left:5px;">MÁS:</span>
+                  <input type="color" class="paleta-mesa-dtf" id="fabricColorPicker" value="#ff00ff" onchange="changeFabricBg(this.value, null)">
+              </div>
+          </div>
+
           <div class="viewer-container checkerboard" id="visorContenedor">
               
               <button id="btnAntes" class="btn-visor" style="top:20px; right:20px; display:none;" onmousedown="mostrar(true)" onmouseup="mostrar(false)" onmouseleave="mostrar(false)">
@@ -584,6 +602,7 @@ function buildHome(models) {
     categories[cat].forEach(m => {
       const card = document.createElement("button"); card.type = "button"; card.className = "tool-card"; const icon = m.icon ? m.icon : "fa-wand-magic-sparkles";
       card.innerHTML = `<i class="fa-solid ${icon}"></i><h3>${tl(m.label).split('|')[0].trim()}</h3><p>${tl(m.desc).split('|')[0].trim()}</p>`;
+      
       card.addEventListener("click", function() { openTool(m.slug); });
       grid.appendChild(card);
     });
@@ -601,13 +620,16 @@ function openTool(slug) {
   // LOGICA PARA MOSTRAR/OCULTAR EL SUPER PANEL DTF
   const panelSemi = document.getElementById("panel-semitonos");
   const panelDet = document.getElementById("panel-detector");
+  const topTools = document.getElementById("dtfTopTools");
   
   form.style.display = "none";
   if(panelSemi) panelSemi.style.display = "none";
   if(panelDet) panelDet.style.display = "none";
+  if(topTools) topTools.style.display = "none";
 
   if (slug === "semitonos-dtf") {
       if(panelSemi) panelSemi.style.display = "block";
+      if(topTools) topTools.style.display = "flex";
   } else if (slug === "detector-dtf") {
       if(panelDet) panelDet.style.display = "block";
   } else {
@@ -644,6 +666,7 @@ function reiniciarHerramienta(keepTool = false) {
     document.getElementById("downloadBtnText").innerText = t("download_btn"); document.getElementById('btnAntes').style.display = 'none'; document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block'; jsonViewer.style.display = "none";
     document.querySelectorAll('.dropzone').forEach(dz => { dz.classList.remove("has-file"); dz.querySelector('i').className = "fa-solid fa-cloud-arrow-up"; dz.querySelector('.dz-text').textContent = t("dropzone_text"); });
     
+    // Limpiar Visores DTF
     if(document.getElementById('semi_file_input')) document.getElementById('semi_file_input').value = '';
     if(document.getElementById('det_file_input')) document.getElementById('det_file_input').value = '';
     if(document.getElementById('semi_dz_text')) document.getElementById('semi_dz_text').textContent = "Sube tu diseño para Semitonos";
@@ -667,7 +690,7 @@ document.getElementById("backBtn").addEventListener("click", () => { toolView.st
 function renderForm(model) {
   form.innerHTML = "";
   if (model.slug === 'master-color') { document.getElementById('masterColorPanel').style.display = 'block'; } else { document.getElementById('masterColorPanel').style.display = 'none'; }
-  if (!model.fields || model.fields.length === 0) return; 
+  if (!model.fields || model.fields.length === 0) return; // DTF Tools no renderizan form estándar
 
   model.fields.forEach(field => {
     const wrap = document.createElement("div"); wrap.className = "field";
@@ -774,8 +797,7 @@ function renderForm(model) {
   const submitBtn = document.createElement("button"); submitBtn.type = "submit"; submitBtn.className = "btn-primary"; submitBtn.id = "btnMainSubmit";
   submitBtn.innerHTML = model.slug === 'master-color' ? `<i class="fa-solid fa-floppy-disk mr-2"></i> GUARDAR CAMBIOS` : `<i class="fa-solid fa-bolt mr-2"></i> ${t("run_btn")}`; form.appendChild(submitBtn);
 }
-
-function getCanvasMouseCoords(e, canvasElem) {
+ function getCanvasMouseCoords(e, canvasElem) {
     const rect = canvasElem.getBoundingClientRect(); const scaleX = canvasElem.width / rect.width; const scaleY = canvasElem.height / rect.height;
     let clientX = e.clientX, clientY = e.clientY; if(e.touches && e.touches.length > 0) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
     return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
@@ -1254,8 +1276,20 @@ btnExecuteErase.addEventListener("click", async () => {
     } catch(err) { alert("Error al borrar: " + err.message); mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block"; } 
     finally { btnExecuteErase.disabled = false; btnExecuteErase.innerHTML = `<i class="fa-solid fa-eraser mr-2"></i> ` + t("magic_btn_apply"); }
 });
-// LOGICA INYECTADA DE LA HERRAMIENTA SEMITONOS Y DETECTOR
+  // ==========================================================
+// CÓDIGO INYECTADO: LÓGICA DEL PANEL DTF (SEMITONOS Y ESCÁNER)
+// ==========================================================
 let dtfFileActual = null;
+
+function changeFabricBg(colorCode, swatchElement) {
+    const fabricLayer = document.getElementById('fabricLayer');
+    if(fabricLayer) fabricLayer.style.backgroundColor = colorCode;
+    if(swatchElement){
+        const swatches = document.querySelectorAll('.swatch-dtf');
+        swatches.forEach(s => s.classList.remove('active'));
+        swatchElement.classList.add('active');
+    }
+}
 
 function setupDtfGroup(groupId) {
     const btns = document.querySelectorAll(`#${groupId} .btn-select-dtf`);
@@ -1267,29 +1301,20 @@ function setupDtfGroup(groupId) {
         });
     });
 }
-setupDtfGroup("colorGroup");
-setupDtfGroup("satGroup");
-setupDtfGroup("modoGroup");
-setupDtfGroup("tramaGroup");
-setupDtfGroup("semi_colorGroup");
-setupDtfGroup("semi_satGroup");
-setupDtfGroup("semi_modoGroup");
-setupDtfGroup("semi_tramaGroup");
+
+setupDtfGroup("colorGroup"); setupDtfGroup("satGroup"); setupDtfGroup("modoGroup"); setupDtfGroup("tramaGroup");
+setupDtfGroup("semi_colorGroup"); setupDtfGroup("semi_satGroup"); setupDtfGroup("semi_modoGroup"); setupDtfGroup("semi_tramaGroup");
 
 if(document.getElementById("colorPickerRemove")) {
     document.getElementById("colorPickerRemove").addEventListener("change", function() {
         const btn = document.getElementById("btnCustomColor");
-        btn.setAttribute("data-val", this.value);
-        document.querySelectorAll("#colorGroup .btn-select-dtf").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
+        if(btn) { btn.setAttribute("data-val", this.value); document.querySelectorAll("#colorGroup .btn-select-dtf").forEach(b => b.classList.remove("active")); btn.classList.add("active"); }
     });
 }
 if(document.getElementById("semi_colorPicker")) {
     document.getElementById("semi_colorPicker").addEventListener("change", function() {
         const btn = document.getElementById("semi_btnCustomColor");
-        btn.setAttribute("data-val", this.value);
-        document.querySelectorAll("#semi_colorGroup .btn-select-dtf").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
+        if(btn) { btn.setAttribute("data-val", this.value); document.querySelectorAll("#semi_colorGroup .btn-select-dtf").forEach(b => b.classList.remove("active")); btn.classList.add("active"); }
     });
 }
 
@@ -1300,7 +1325,9 @@ if(document.getElementById("semi_colorPicker")) {
             let val = this.value;
             if(id.includes("px")) val += "px";
             if(id.includes("ang")) val += "°";
-            document.getElementById(id + "_val").innerText = val;
+            let valId = id.replace("Slider", "Val");
+            if (id.startsWith("semi_") && !id.includes("Slider")) valId = id + "_val";
+            if(document.getElementById(valId)) document.getElementById(valId).innerText = val;
         });
     }
 });
@@ -1308,25 +1335,11 @@ if(document.getElementById("semi_colorPicker")) {
 let dtfAspectRatio = 1;
 ["anchoInput", "semi_ancho", "det_ancho"].forEach(id => {
     let el = document.getElementById(id);
-    if(el) {
-        el.addEventListener("input", function() {
-            if(this.value > 0) {
-                let pairedId = id.replace("ancho", "alto");
-                document.getElementById(pairedId).value = (this.value / dtfAspectRatio).toFixed(1);
-            }
-        });
-    }
+    if(el) { el.addEventListener("input", function() { if(this.value > 0) { let pairedId = id.replace("ancho", "alto"); if(document.getElementById(pairedId)) document.getElementById(pairedId).value = (this.value / dtfAspectRatio).toFixed(1); } }); }
 });
 ["altoInput", "semi_alto", "det_alto"].forEach(id => {
     let el = document.getElementById(id);
-    if(el) {
-        el.addEventListener("input", function() {
-            if(this.value > 0) {
-                let pairedId = id.replace("alto", "ancho");
-                document.getElementById(pairedId).value = (this.value * dtfAspectRatio).toFixed(1);
-            }
-        });
-    }
+    if(el) { el.addEventListener("input", function() { if(this.value > 0) { let pairedId = id.replace("alto", "ancho"); if(document.getElementById(pairedId)) document.getElementById(pairedId).value = (this.value * dtfAspectRatio).toFixed(1); } }); }
 });
 
 function slideRevealDtf(val) {
@@ -1337,9 +1350,7 @@ function slideRevealDtf(val) {
     if(sl) sl.style.left = `${val}%`;
 }
 if(document.getElementById('dtfDragSlider')) {
-    document.getElementById('dtfDragSlider').addEventListener('input', function() {
-        slideRevealDtf(this.value);
-    });
+    document.getElementById('dtfDragSlider').addEventListener('input', function() { slideRevealDtf(this.value); });
 }
 
 function handleDtfFileUpload(e, mode) {
@@ -1351,8 +1362,7 @@ function handleDtfFileUpload(e, mode) {
     if(elText) elText.textContent = f.name;
     
     const url = URL.createObjectURL(f);
-    urlOriginalMemoria = url;
-    urlResultMemoria = url;
+    urlOriginalMemoria = url; urlResultMemoria = url;
     
     const img = new Image();
     img.onload = () => {
@@ -1366,14 +1376,10 @@ function handleDtfFileUpload(e, mode) {
 
     tray.style.display = "block";
     btnRestart.style.display = "block";
-    
     mainResultImg.style.display = "none";
     
     let detImgOriginal = document.getElementById('det_imgOriginal');
-    if(detImgOriginal) {
-        detImgOriginal.src = url;
-        detImgOriginal.style.display = 'block';
-    }
+    if(detImgOriginal) { detImgOriginal.src = url; detImgOriginal.style.display = 'block'; }
     let imgConTela = document.getElementById('imgConTela');
     if(imgConTela) imgConTela.src = url;
     
@@ -1381,11 +1387,7 @@ function handleDtfFileUpload(e, mode) {
         if(document.getElementById('fabricLayer')) document.getElementById('fabricLayer').style.display = 'block';
         if(document.getElementById('det_semiOverlayCanvas')) document.getElementById('det_semiOverlayCanvas').style.display = 'none';
         if(document.getElementById('sliderLine')) document.getElementById('sliderLine').style.display = 'block';
-        if(document.getElementById('dtfDragSlider')) {
-            document.getElementById('dtfDragSlider').style.display = 'block';
-            document.getElementById('dtfDragSlider').value = 50;
-            slideRevealDtf(50);
-        }
+        if(document.getElementById('dtfDragSlider')) { document.getElementById('dtfDragSlider').style.display = 'block'; document.getElementById('dtfDragSlider').value = 50; slideRevealDtf(50); }
         if(document.getElementById('badgeLeft')) document.getElementById('badgeLeft').style.display = 'block';
         if(document.getElementById('badgeRight')) document.getElementById('badgeRight').style.display = 'block';
     } else {
@@ -1513,25 +1515,31 @@ function bindProcessBtn(btnId, isSemiPanel) {
 
         document.getElementById('dtf_loadingOverlay').style.display = 'flex';
         document.getElementById('dtf_loading_title').innerText = "Aplicando Matriz de Puntos...";
-        document.getElementById('dtf_loading_desc').innerText = document.getElementById(pfx+'checkIA').checked ? "Mejorando calidad con IA y calculando puntos..." : "Calculando matriz de puntos...";
+        document.getElementById('dtf_loading_desc').innerText = document.getElementById(pfx+'checkIA') && document.getElementById(pfx+'checkIA').checked ? "Mejorando calidad con IA y calculando puntos..." : "Calculando matriz de puntos...";
         if(document.getElementById('det_imgOriginal')) document.getElementById('det_imgOriginal').style.opacity = "0.5";
 
         try {
             const fd = new FormData();
             fd.append("imagen", dtfFileActual);
-            fd.append("color", document.querySelector(`${cGrp} .active`).getAttribute("data-val"));
-            fd.append("sat", document.querySelector(`${sGrp} .active`).getAttribute("data-val"));
-            fd.append("limpieza", document.querySelector(`${mGrp} .active`).getAttribute("data-val"));
-            fd.append("trama", document.querySelector(`${tGrp} .active`).getAttribute("data-val"));
-            fd.append("tolerancia", document.getElementById(pfx+"tolSlider") ? document.getElementById(pfx+"tolSlider").value : document.getElementById("tolSlider").value);
-            fd.append("px", document.getElementById(pfx+"pxSlider") ? document.getElementById(pfx+"pxSlider").value : document.getElementById("pxSlider").value);
-            fd.append("angulo", document.getElementById(pfx+"angSlider") ? document.getElementById(pfx+"angSlider").value : document.getElementById("angSlider").value);
-            fd.append("ancho", document.getElementById(pfx+"ancho") ? document.getElementById(pfx+"ancho").value : document.getElementById("anchoInput").value);
-            fd.append("alto", document.getElementById(pfx+"alto") ? document.getElementById(pfx+"alto").value : document.getElementById("altoInput").value);
-            fd.append("usar_ia", document.getElementById(pfx+"checkIA").checked ? "true" : "false");
-            fd.append("quitar_fondo", document.getElementById(pfx+"checkBG").checked ? "true" : "false");
-            fd.append("choke", document.getElementById(pfx+"checkChoke").checked ? "true" : "false");
-            fd.append("fix_semi", document.getElementById(pfx+"checkSemi").checked ? "true" : "false");
+            let activeColor = document.querySelector(`${cGrp} .active`);
+            if(activeColor) fd.append("color", activeColor.getAttribute("data-val"));
+            let activeSat = document.querySelector(`${sGrp} .active`);
+            if(activeSat) fd.append("sat", activeSat.getAttribute("data-val"));
+            let activeModo = document.querySelector(`${mGrp} .active`);
+            if(activeModo) fd.append("limpieza", activeModo.getAttribute("data-val"));
+            let activeTrama = document.querySelector(`${tGrp} .active`);
+            if(activeTrama) fd.append("trama", activeTrama.getAttribute("data-val"));
+            
+            fd.append("tolerancia", document.getElementById(pfx+"tol") ? document.getElementById(pfx+"tol").value : (document.getElementById("tolSlider") ? document.getElementById("tolSlider").value : 20));
+            fd.append("px", document.getElementById(pfx+"px") ? document.getElementById(pfx+"px").value : (document.getElementById("pxSlider") ? document.getElementById("pxSlider").value : 10));
+            fd.append("angulo", document.getElementById(pfx+"ang") ? document.getElementById(pfx+"ang").value : (document.getElementById("angSlider") ? document.getElementById("angSlider").value : 22));
+            fd.append("ancho", document.getElementById(pfx+"ancho") ? document.getElementById(pfx+"ancho").value : (document.getElementById("anchoInput") ? document.getElementById("anchoInput").value : 29.7));
+            fd.append("alto", document.getElementById(pfx+"alto") ? document.getElementById(pfx+"alto").value : (document.getElementById("altoInput") ? document.getElementById("altoInput").value : 42.0));
+            
+            if(document.getElementById(pfx+"checkIA")) fd.append("usar_ia", document.getElementById(pfx+"checkIA").checked ? "true" : "false");
+            if(document.getElementById(pfx+"checkBG")) fd.append("quitar_fondo", document.getElementById(pfx+"checkBG").checked ? "true" : "false");
+            if(document.getElementById(pfx+"checkChoke")) fd.append("choke", document.getElementById(pfx+"checkChoke").checked ? "true" : "false");
+            if(document.getElementById(pfx+"checkSemi")) fd.append("fix_semi", document.getElementById(pfx+"checkSemi").checked ? "true" : "false");
 
             const res = await fetch("/api/procesar", { method: "POST", body: fd });
             
@@ -1572,4 +1580,4 @@ document.querySelectorAll(".lang-switch button").forEach(btn => { btn.classList.
 applyStaticText(); checkSession();
 </script>
 </body>
-</html>    
+</html>
