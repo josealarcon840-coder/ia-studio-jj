@@ -496,11 +496,32 @@ def download_from_cdn_with_retry(url_img, retries=3):
 
 @app.route("/")
 def index():
-    respuesta = render_template("index.html")
-    response = app.make_response(respuesta)
-    # Esta es la magia que le dice a Chrome en Android: "Confía en la ventanita de Telegram"
-    response.headers['Cross-Origin-Opener-Policy'] = 'same-origin-allow-popups'
-    return response
+    html = render_template("index.html")
+    # Si el servidor ya aprobó el login VIP (?tg_login=ok), inyectamos el pase directo
+    if request.args.get("tg_login") == "ok":
+        nombre = request.args.get("name", "VIP")
+        script_acceso = f"""
+        <script>
+            sessionStorage.setItem("jj_session_perm", "active");
+            sessionStorage.setItem("jj_user_name", {jsonify(nombre).get_data(as_text=True)});
+            window.history.replaceState({{}}, document.title, "/");
+        </script>
+        """
+        html = html.replace("<head>", "<head>" + script_acceso, 1)
+    elif request.args.get("tg_error"):
+        err_msg = request.args.get("tg_error")
+        script_err = f"""
+        <script>
+            window.addEventListener("DOMContentLoaded", function() {{
+                var ge = document.getElementById("gateError");
+                if (ge) {{ ge.textContent = {jsonify(err_msg).get_data(as_text=True)}; ge.classList.add("show"); }}
+                window.history.replaceState({{}}, document.title, "/");
+            }});
+        </script>
+        """
+        html = html.replace("<head>", "<head>" + script_err, 1)
+    return html
+
 
 
 @app.route("/models")
