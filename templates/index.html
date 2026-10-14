@@ -77,7 +77,7 @@
 
   .workspace-layout { display: flex; flex-direction: row; gap: 30px; align-items: flex-start;}
   .form-container { flex: 1; min-width: 350px; max-width: 400px; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); position: sticky; top: 90px;}
-  .canvas-container { flex: 2; display: flex; flex-direction: column; width: 100%; position: relative;}
+  .canvas-container { flex: 2; display: flex; flex-direction: column; width: 100%;}
 
   .field { margin-bottom: 22px; }
   .field label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; color: #ccc; text-transform: uppercase; letter-spacing: 0.5px;}
@@ -160,7 +160,7 @@
       .canvas-container { width: 100%; }
   }
 
-  /* --- ESTILOS INYECTADOS PARA EL PANEL DE SEMITONOS DTF --- */
+  /* --- CLASES INYECTADAS PARA LOS PANELES DTF (SEMITONOS Y DETECTOR) --- */
   .section-box-dtf { background-color: var(--bg-section); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 15px; }
   .section-title-dtf { font-size: 13px; font-weight: 700; color: var(--text-main); letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
   .section-title-dtf::before { content: ""; display: block; width: 3px; height: 12px; background-color: var(--primary-red); border-radius: 2px; }
@@ -212,10 +212,12 @@
   #dtf_loadingOverlay { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:20; align-items:center; justify-content:center; flex-direction:column; border-radius: 12px;}
   .spinner-dtf { border: 4px solid #333; border-top: 4px solid var(--primary-red); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 15px;}
   @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  .status-badge { display:none; position:absolute; top:12px; background:rgba(0,0,0,0.8); color:white; padding:4px 10px; border-radius:4px; font-size:10px; font-weight:bold; z-index:15; border:1px solid var(--border-color); pointer-events:none;}
+  .badge-left { left:12px; } .badge-right { right:12px; background:rgba(230,0,0,0.8); border:none;}
 </style>
 </head>
 <body>
-  <div class="custom-modal-overlay" id="promptModal">
+ <div class="custom-modal-overlay" id="promptModal">
     <div class="custom-modal">
         <h3><i class="fa-solid fa-image mr-2 text-red-500"></i> Fondo con IA</h3>
         <p style="font-size: 0.9rem; color: var(--text-dim); margin-bottom: 20px; text-align: left; line-height: 1.4;">
@@ -315,7 +317,7 @@
           <!-- FORMULARIO ORIGINAL (Oculto en modo DTF) -->
           <form id="form"></form>
           
-          <!-- PANEL INYECTADO: SÚPER PANEL DTF STUDIO PRO (Oculto por defecto) -->
+          <!-- PANEL INYECTADO: SEMITONOS DTF PRO -->
           <div id="panel-semitonos" style="display:none; background-color: var(--bg-panel); border-radius: 10px;">
               <div class="dropzone" onclick="document.getElementById('semi_file_input').click()" style="margin-bottom:15px;">
                   <i class="fa-solid fa-braille"></i>
@@ -513,7 +515,7 @@
     </div>
   </main>
 </div>
-<script>
+  <script>
 const UI = {
   es: {
     gate_sub: "Inicia sesión con Telegram para verificar tu acceso.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Ingresar", gate_error: "No tienes acceso. ¡Asegúrate de estar en el grupo VIP!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "¿Cerrar sesión?", home_title: "Panel Premium", home_sub: "Selecciona una herramienta para comenzar.", back: "Volver", run_btn: "Procesar con IA", restart_btn: "Subir Otra Imagen", processing: "La IA está procesando...", processing_task: "Tarea asíncrona, espere...", processing_pct: (p) => `Trabajando... (${p}%)`, done: "¡Completado exitosamente!", error_prefix: "Error: ", generic_error: "Fallo de conexión.", task_failed: "La tarea ha fallado.", conn_error: "Error de red: ", conn_error_task: "Error al consultar la tarea.", dropzone_text: "Haz clic o arrastra una imagen", loading_options: "Descargando de internet...", select_placeholder: "Selecciona...", load_error: "Error de red", magic_tags_title: "✨ Toca las etiquetas para borrar:", magic_btn_apply: "Borrar Seleccionados", download_btn: "Descargar Diseño (Calidad HD)"
@@ -617,7 +619,7 @@ function openTool(slug) {
   toolTitle.innerHTML = `<i class="fa-solid ${icon} mr-3"></i> ${tl(model.label).split('|')[0].trim()}`; toolDesc.textContent = tl(model.desc).split('|')[0].trim();
   reiniciarHerramienta(true);
 
-  // LOGICA PARA MOSTRAR/OCULTAR EL SUPER PANEL DTF
+  // MOSTRAR/OCULTAR EL SUPER PANEL DTF
   const panelSemi = document.getElementById("panel-semitonos");
   const panelDet = document.getElementById("panel-detector");
   const topTools = document.getElementById("dtfTopTools");
@@ -797,7 +799,8 @@ function renderForm(model) {
   const submitBtn = document.createElement("button"); submitBtn.type = "submit"; submitBtn.className = "btn-primary"; submitBtn.id = "btnMainSubmit";
   submitBtn.innerHTML = model.slug === 'master-color' ? `<i class="fa-solid fa-floppy-disk mr-2"></i> GUARDAR CAMBIOS` : `<i class="fa-solid fa-bolt mr-2"></i> ${t("run_btn")}`; form.appendChild(submitBtn);
 }
- function getCanvasMouseCoords(e, canvasElem) {
+
+function getCanvasMouseCoords(e, canvasElem) {
     const rect = canvasElem.getBoundingClientRect(); const scaleX = canvasElem.width / rect.width; const scaleY = canvasElem.height / rect.height;
     let clientX = e.clientX, clientY = e.clientY; if(e.touches && e.touches.length > 0) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
     return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
@@ -933,56 +936,6 @@ function renderQuickActions(slug) {
         const btn = document.createElement('button'); btn.className = "btn-qa"; btn.innerHTML = `<i class="fa-solid ${act.icon} mb-1 block text-lg"></i> ${act.label}`;
         if(act.slug === "studio-vignette") { btn.onclick = () => { document.getElementById('glowModal').style.display='flex'; }; } else { btn.onclick = () => ejecutarAccionRapida(act.slug, act.params); }
         qaContainer.appendChild(btn);
-    });
-}
-
-async function optimizarImagenEnNavegador(fileOrBlob, slug, zoomFactor = "2") {
-    return new Promise((resolve) => {
-        if (!fileOrBlob) return resolve(fileOrBlob);
-        let maxDim = 2400;
-        if (slug && slug.includes("enhance")) {
-            const zf = String(zoomFactor).trim();
-            if (zf === "8") maxDim = 500;
-            else if (zf === "4") maxDim = 950;
-            else maxDim = 1500;
-        }
-        const img = new Image();
-        const objUrl = URL.createObjectURL(fileOrBlob);
-
-        img.onload = () => {
-            URL.revokeObjectURL(objUrl);
-            const w = img.naturalWidth || img.width;
-            const h = img.naturalHeight || img.height;
-
-            if (Math.max(w, h) <= maxDim) {
-                return resolve(fileOrBlob);
-            }
-
-            const scale = maxDim / Math.max(w, h);
-            const newW = Math.round(w * scale);
-            const newH = Math.round(h * scale);
-
-            const canvas = document.createElement("canvas");
-            canvas.width = newW;
-            canvas.height = newH;
-            const ctx = canvas.getContext("2d");
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = "high";
-            ctx.drawImage(img, 0, 0, newW, newH);
-
-            canvas.toBlob((resizedBlob) => {
-                if (resizedBlob && resizedBlob.size > 100) {
-                    resolve(new File([resizedBlob], "imagen_optimizada.png", { type: "image/png" }));
-                } else {
-                    resolve(fileOrBlob);
-                }
-            }, "image/png");
-        };
-        img.onerror = () => {
-            URL.revokeObjectURL(objUrl);
-            resolve(fileOrBlob);
-        };
-        img.src = objUrl;
     });
 }
 
@@ -1276,7 +1229,7 @@ btnExecuteErase.addEventListener("click", async () => {
     } catch(err) { alert("Error al borrar: " + err.message); mainResultImg.classList.remove("opacity-50", "blur-sm"); quickActionsBar.style.display = "block"; } 
     finally { btnExecuteErase.disabled = false; btnExecuteErase.innerHTML = `<i class="fa-solid fa-eraser mr-2"></i> ` + t("magic_btn_apply"); }
 });
-  // ==========================================================
+   // ==========================================================
 // CÓDIGO INYECTADO: LÓGICA DEL PANEL DTF (SEMITONOS Y ESCÁNER)
 // ==========================================================
 let dtfFileActual = null;
@@ -1379,12 +1332,7 @@ function handleDtfFileUpload(e, mode) {
     mainResultImg.style.display = "none";
     
     let detImgOriginal = document.getElementById('det_imgOriginal');
-    if(detImgOriginal) { 
-        detImgOriginal.src = url; 
-        detImgOriginal.style.display = 'block'; 
-        detImgOriginal.style.opacity = "1"; // <- Garantiza que nunca se quede oscuro al subir
-    }
-    
+    if(detImgOriginal) { detImgOriginal.src = url; detImgOriginal.style.display = 'block'; detImgOriginal.style.opacity = "1"; }
     let imgConTela = document.getElementById('imgConTela');
     if(imgConTela) imgConTela.src = url;
     
@@ -1527,7 +1475,7 @@ function bindProcessBtn(btnId, isSemiPanel) {
         document.getElementById('dtf_loading_desc').innerText = (checkIA && checkIA.checked) ? "Mejorando calidad con IA y calculando puntos..." : "Calculando matriz de puntos...";
         
         let imgOrig = document.getElementById('det_imgOriginal');
-        if(imgOrig) imgOrig.style.opacity = "0.5"; // Hace la imagen oscura durante la carga
+        if(imgOrig) imgOrig.style.opacity = "0.5"; 
 
         try {
             const fd = new FormData();
@@ -1568,7 +1516,7 @@ function bindProcessBtn(btnId, isSemiPanel) {
 
             const res = await fetch("/api/procesar", { method: "POST", body: fd });
             
-            if(imgOrig) imgOrig.style.opacity = "1"; // Le quita lo oscuro al terminar
+            if(imgOrig) imgOrig.style.opacity = "1"; 
             if (!res.ok) throw new Error("Error en servidor al procesar semitonos");
             
             const blob = await res.blob();
@@ -1592,7 +1540,7 @@ function bindProcessBtn(btnId, isSemiPanel) {
             if(statusText) statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> Semitono generado correctamente.";
 
         } catch(err) {
-            if(imgOrig) imgOrig.style.opacity = "1"; // Recupera la luz si hay error
+            if(imgOrig) imgOrig.style.opacity = "1"; 
             if(statusLine) statusLine.className = "status-line show error";
             if(statusText) statusText.textContent = "Error: " + err.message;
         } finally {
@@ -1609,4 +1557,4 @@ document.querySelectorAll(".lang-switch button").forEach(btn => { btn.classList.
 applyStaticText(); checkSession();
 </script>
 </body>
-</html>
+</html> 
