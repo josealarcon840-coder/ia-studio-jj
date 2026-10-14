@@ -1,6 +1,6 @@
 Flask
-flask-cors
-Pillow
-numpy
 requests
+Pillow
 gunicorn
+numpy
+flask-cors
