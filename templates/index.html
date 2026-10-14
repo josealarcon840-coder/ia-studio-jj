@@ -1379,7 +1379,12 @@ function handleDtfFileUpload(e, mode) {
     mainResultImg.style.display = "none";
     
     let detImgOriginal = document.getElementById('det_imgOriginal');
-    if(detImgOriginal) { detImgOriginal.src = url; detImgOriginal.style.display = 'block'; }
+    if(detImgOriginal) { 
+        detImgOriginal.src = url; 
+        detImgOriginal.style.display = 'block'; 
+        detImgOriginal.style.opacity = "1"; // <- Garantiza que nunca se quede oscuro al subir
+    }
+    
     let imgConTela = document.getElementById('imgConTela');
     if(imgConTela) imgConTela.src = url;
     
@@ -1489,9 +1494,11 @@ if(document.getElementById("btnDetReparar")) {
             statusText.innerHTML = "🛡️ <span style='color:#00cc44'>IMAGEN REPARADA A 300DPI LISTA PARA DTF</span>";
             
             urlResultMemoria = urlFinal;
-            btnDownloadResult.href = urlFinal; 
-            btnDownloadResult.setAttribute("download", `DTF_Limpio_${Date.now()}.png`); 
-            btnDownloadResult.style.display = "block";
+            if(btnDownloadResult) {
+                btnDownloadResult.href = urlFinal; 
+                btnDownloadResult.setAttribute("download", `DTF_Limpio_${Date.now()}.png`); 
+                btnDownloadResult.style.display = "block";
+            }
         } catch (error) {
             alert("❌ Falló la conexión con el servidor al reparar.");
         } finally {
@@ -1515,57 +1522,79 @@ function bindProcessBtn(btnId, isSemiPanel) {
 
         document.getElementById('dtf_loadingOverlay').style.display = 'flex';
         document.getElementById('dtf_loading_title').innerText = "Aplicando Matriz de Puntos...";
-        document.getElementById('dtf_loading_desc').innerText = document.getElementById(pfx+'checkIA') && document.getElementById(pfx+'checkIA').checked ? "Mejorando calidad con IA y calculando puntos..." : "Calculando matriz de puntos...";
-        if(document.getElementById('det_imgOriginal')) document.getElementById('det_imgOriginal').style.opacity = "0.5";
+        
+        let checkIA = document.getElementById(pfx+'checkIA');
+        document.getElementById('dtf_loading_desc').innerText = (checkIA && checkIA.checked) ? "Mejorando calidad con IA y calculando puntos..." : "Calculando matriz de puntos...";
+        
+        let imgOrig = document.getElementById('det_imgOriginal');
+        if(imgOrig) imgOrig.style.opacity = "0.5"; // Hace la imagen oscura durante la carga
 
         try {
             const fd = new FormData();
             fd.append("imagen", dtfFileActual);
+            
             let activeColor = document.querySelector(`${cGrp} .active`);
             if(activeColor) fd.append("color", activeColor.getAttribute("data-val"));
+            
             let activeSat = document.querySelector(`${sGrp} .active`);
             if(activeSat) fd.append("sat", activeSat.getAttribute("data-val"));
+            
             let activeModo = document.querySelector(`${mGrp} .active`);
             if(activeModo) fd.append("limpieza", activeModo.getAttribute("data-val"));
+            
             let activeTrama = document.querySelector(`${tGrp} .active`);
             if(activeTrama) fd.append("trama", activeTrama.getAttribute("data-val"));
             
-            fd.append("tolerancia", document.getElementById(pfx+"tol") ? document.getElementById(pfx+"tol").value : (document.getElementById("tolSlider") ? document.getElementById("tolSlider").value : 20));
-            fd.append("px", document.getElementById(pfx+"px") ? document.getElementById(pfx+"px").value : (document.getElementById("pxSlider") ? document.getElementById("pxSlider").value : 10));
-            fd.append("angulo", document.getElementById(pfx+"ang") ? document.getElementById(pfx+"ang").value : (document.getElementById("angSlider") ? document.getElementById("angSlider").value : 22));
-            fd.append("ancho", document.getElementById(pfx+"ancho") ? document.getElementById(pfx+"ancho").value : (document.getElementById("anchoInput") ? document.getElementById("anchoInput").value : 29.7));
-            fd.append("alto", document.getElementById(pfx+"alto") ? document.getElementById(pfx+"alto").value : (document.getElementById("altoInput") ? document.getElementById("altoInput").value : 42.0));
+            const getVal = (id1, id2, def) => {
+                let el1 = document.getElementById(id1); if(el1) return el1.value;
+                let el2 = document.getElementById(id2); if(el2) return el2.value;
+                return def;
+            };
+
+            fd.append("tolerancia", getVal(pfx+"tol", "tolSlider", 20));
+            fd.append("px", getVal(pfx+"px", "pxSlider", 10));
+            fd.append("angulo", getVal(pfx+"ang", "angSlider", 22));
+            fd.append("ancho", getVal(pfx+"ancho", "anchoInput", 29.7));
+            fd.append("alto", getVal(pfx+"alto", "altoInput", 42.0));
             
-            if(document.getElementById(pfx+"checkIA")) fd.append("usar_ia", document.getElementById(pfx+"checkIA").checked ? "true" : "false");
-            if(document.getElementById(pfx+"checkBG")) fd.append("quitar_fondo", document.getElementById(pfx+"checkBG").checked ? "true" : "false");
-            if(document.getElementById(pfx+"checkChoke")) fd.append("choke", document.getElementById(pfx+"checkChoke").checked ? "true" : "false");
-            if(document.getElementById(pfx+"checkSemi")) fd.append("fix_semi", document.getElementById(pfx+"checkSemi").checked ? "true" : "false");
+            let checkBg = document.getElementById(pfx+"checkBG");
+            let checkChoke = document.getElementById(pfx+"checkChoke");
+            let checkSemi = document.getElementById(pfx+"checkSemi");
+            
+            fd.append("usar_ia", (checkIA && checkIA.checked) ? "true" : "false");
+            fd.append("quitar_fondo", (checkBg && checkBg.checked) ? "true" : "false");
+            fd.append("choke", (checkChoke && checkChoke.checked) ? "true" : "false");
+            fd.append("fix_semi", (checkSemi && checkSemi.checked) ? "true" : "false");
 
             const res = await fetch("/api/procesar", { method: "POST", body: fd });
             
-            if(document.getElementById('det_imgOriginal')) document.getElementById('det_imgOriginal').style.opacity = "1";
+            if(imgOrig) imgOrig.style.opacity = "1"; // Le quita lo oscuro al terminar
             if (!res.ok) throw new Error("Error en servidor al procesar semitonos");
             
             const blob = await res.blob();
             const urlFinal = URL.createObjectURL(blob);
             
-            if(document.getElementById('det_imgOriginal')) document.getElementById('det_imgOriginal').src = urlFinal;
-            if(document.getElementById('imgConTela')) document.getElementById('imgConTela').src = urlFinal;
+            if(imgOrig) imgOrig.src = urlFinal;
+            let imgConTela = document.getElementById('imgConTela');
+            if(imgConTela) imgConTela.src = urlFinal;
+            
             if(document.getElementById('det_semiOverlayCanvas')) document.getElementById('det_semiOverlayCanvas').style.display = 'none';
             if(document.getElementById('semiOverlayCanvas')) document.getElementById('semiOverlayCanvas').style.display = 'none';
             
             urlResultMemoria = urlFinal;
-            btnDownloadResult.href = urlFinal; 
-            btnDownloadResult.setAttribute("download", `DTF_Semitonos_${Date.now()}.png`); 
-            btnDownloadResult.style.display = "block";
+            if(btnDownloadResult) {
+                btnDownloadResult.href = urlFinal; 
+                btnDownloadResult.setAttribute("download", `DTF_Semitonos_${Date.now()}.png`); 
+                btnDownloadResult.style.display = "block";
+            }
             
-            statusLine.className = "status-line show ok";
-            statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> Semitono generado correctamente.";
+            if(statusLine) statusLine.className = "status-line show ok";
+            if(statusText) statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> Semitono generado correctamente.";
 
         } catch(err) {
-            if(document.getElementById('det_imgOriginal')) document.getElementById('det_imgOriginal').style.opacity = "1";
-            statusLine.className = "status-line show error";
-            statusText.textContent = "Error: " + err.message;
+            if(imgOrig) imgOrig.style.opacity = "1"; // Recupera la luz si hay error
+            if(statusLine) statusLine.className = "status-line show error";
+            if(statusText) statusText.textContent = "Error: " + err.message;
         } finally {
             document.getElementById('dtf_loadingOverlay').style.display = 'none';
             btn.disabled = false;
