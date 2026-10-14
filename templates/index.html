@@ -13,12 +13,9 @@
     --border: #3a141480; --red: #d81e2c; --red-bright: #ff2d3a; --red-dim: #7a0d14;
     --text: #f5eeee; --text-dim: #b99; --text-faint: #7a5c5c; --ok: #00ffcc; --danger: #ff5252;
     --font-display: "Anton", sans-serif; --font-body: "Inter", sans-serif;
-    --bg-deep: #050505; --bg-panel: #111111; --bg-section: #1a1a1a;
-    --primary-red: #e60000; --primary-hover: #ff1a1a;
-    --text-main: #ffffff; --text-muted: #888888; --border-color: #2a2a2a;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-body); }
-  body { background: linear-gradient(135deg, #1f0000 0%, var(--bg-deep) 100%); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; overflow-y: auto; line-height: 1.5; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 15% 0%, var(--bg-a) 0%, var(--bg-b) 55%); color: var(--text); font-family: var(--font-body); line-height: 1.5; }
   ::selection { background: var(--red); color: #fff; }
   button { font-family: inherit; color: inherit; cursor: pointer; }
 
@@ -53,7 +50,7 @@
   .logout-btn { background: #222; border: 1px solid var(--border); color: var(--text-dim); padding: 7px 13px; border-radius: 7px; font-size: 0.78rem; transition: 0.2s ease; }
   .logout-btn:hover { border-color: var(--red); background: var(--red-dim); color: #fff;}
 
-  main { padding: 32px 28px 70px; max-width: 1200px; margin: 0 auto; width: 100%; }
+  main { padding: 32px 28px 70px; max-width: 1200px; margin: 0 auto; }
 
   .home-title { font-family: var(--font-display); font-size: 2.2rem; text-transform: uppercase; letter-spacing: 0.02em; margin: 0 0 4px; color: var(--text); }
   .home-sub { color: var(--text-dim); font-size: 1rem; margin: 0 0 30px; }
@@ -112,7 +109,7 @@
   .checkerboard { background-image: linear-gradient(45deg, #111 25%, transparent 25%), linear-gradient(-45deg, #111 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #111 75%), linear-gradient(-45deg, transparent 75%, #111 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
   .viewer-container { width: 100%; min-height: 450px; height: 100%; border-radius: 16px; border: 1px solid #333; overflow: hidden; position: relative; background: #080808; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); cursor: grab; }
   .viewer-container:active { cursor: grabbing; }
-  #viewerWrapper { transform-origin: center center; transition: transform 0.1s ease-out; position: relative; display: inline-block; width: 100%; height: 100%;}
+  #viewerWrapper { transform-origin: center center; transition: transform 0.1s ease-out; position: relative; display: inline-block;}
   #mainResultImg { display: block; max-width: 90vw; max-height: 70vh; border-radius: 8px;}
 
   .btn-visor { position: absolute; z-index: 200; background: rgba(0,0,0,0.8); color: #fff; border: 1px solid #555; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-family: sans-serif; font-size: 0.8rem; cursor: pointer; transition: 0.2s;}
@@ -142,10 +139,24 @@
 
   #jsonViewer { background: #000; color: var(--ok); border: 1px solid #333; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; width: 100%; height: 250px; overflow-y: auto; text-align: left; resize: none; margin-top: 15px; display: none; }
 
-  .custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-  .custom-modal { background: var(--panel); border: 1px solid var(--red-bright); border-radius: 12px; width: 90%; max-width: 450px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); text-align: center; }
+  .custom-modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8); z-index: 9999;
+      display: none; align-items: center; justify-content: center;
+      backdrop-filter: blur(5px);
+  }
+  .custom-modal {
+      background: var(--panel); border: 1px solid var(--red-bright);
+      border-radius: 12px; width: 90%; max-width: 450px;
+      padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+      text-align: center;
+  }
   .custom-modal h3 { margin-top: 0; color: #fff; margin-bottom: 10px;}
-  .custom-modal textarea { width: 100%; height: 100px; background: #050505; border: 1px solid #444; color: #fff; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-family: var(--font-body); font-size: 0.95rem; resize: none; }
+  .custom-modal textarea {
+      width: 100%; height: 100px; background: #050505; border: 1px solid #444;
+      color: #fff; padding: 15px; border-radius: 8px; margin-bottom: 20px;
+      font-family: var(--font-body); font-size: 0.95rem; resize: none;
+  }
   .custom-modal textarea:focus { border-color: var(--ok); outline: none; box-shadow: 0 0 10px rgba(0,255,204,0.2);}
   .custom-modal-btns { display: flex; gap: 10px; justify-content: flex-end;}
   .custom-modal-btns button { padding: 12px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; text-transform: uppercase; font-size: 0.85rem;}
@@ -155,69 +166,15 @@
   .btn-confirm:hover { filter: brightness(1.2);}
 
   @media (max-width: 900px) {
-      .workspace-layout { flex-direction: column; }
-      .form-container { max-width: 100%; position: relative; top: 0; }
-      .canvas-container { width: 100%; }
+    .workspace-layout { flex-direction: column; }
+    .form-container { max-width: 100%; position: relative; top: 0; }
+    .canvas-container { width: 100%; }
   }
-
-  /* --- CLASES INYECTADAS PARA LOS PANELES DTF (SEMITONOS Y DETECTOR) --- */
-  .section-box-dtf { background-color: var(--bg-section); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 15px; }
-  .section-title-dtf { font-size: 13px; font-weight: 700; color: var(--text-main); letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
-  .section-title-dtf::before { content: ""; display: block; width: 3px; height: 12px; background-color: var(--primary-red); border-radius: 2px; }
-  .step-num { background: var(--primary-red); color: white; width: 20px; height: 20px; display: flex; justify-content: center; align-items: center; border-radius: 50%; font-size: 11px; font-weight: bold; }
-  .lbl-dtf { color: var(--text-muted); font-size: 10px; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; display: block; }
-  .switch-row-dtf { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-  .switch-row-dtf span { font-size: 12px; font-weight: 600; color: #ddd; }
-  .switch-dtf { position: relative; display: inline-block; width: 34px; height: 18px; }
-  .switch-dtf input { opacity: 0; width: 0; height: 0; }
-  .slider-tg-dtf { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 20px; }
-  .slider-tg-dtf:before { position: absolute; content: ""; height: 12px; width: 12px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
-  .switch-dtf input:checked + .slider-tg-dtf { background-color: var(--primary-red); }
-  .switch-dtf input:checked + .slider-tg-dtf:before { transform: translateX(16px); }
-  .btn-scan-dtf { background: #222; border: 1px solid #ff00ff; color: #ff00ff; padding: 12px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; transition: 0.3s;}
-  .btn-scan-dtf:hover { background: #333; box-shadow: 0 0 15px rgba(255,0,255,0.4); text-shadow: 0 0 5px #ff00ff;}
-  .btn-reparar { background: var(--primary-red); color: white; border: none; padding: 15px; border-radius: 6px; font-size: 15px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; transition: 0.3s; margin-top: auto;}
-  .btn-reparar:hover:not(:disabled) { background: var(--primary-hover); box-shadow: 0 0 20px rgba(230,0,0,0.5); transform: translateY(-2px);}
-  .btn-reparar:disabled { background: #333; color: #666; cursor: not-allowed; box-shadow: none; transform: none;}
-  .dim-grid-dtf { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-  .input-group-dtf input { background: #000; border: 1px solid var(--border-color); color: white; padding: 10px; border-radius: 6px; font-weight: bold; font-size: 16px; text-align: center; width: 100%; transition: 0.3s;}
-  .input-group-dtf input:focus { border-color: var(--primary-red); outline: none; box-shadow: 0 0 10px rgba(230,0,0,0.3);}
-  .btn-grid-dtf { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
-  .btn-grid-dtf.cols-3 { grid-template-columns: repeat(3, 1fr); }
-  .btn-select-dtf { background: #0a0a0a; border: 1px solid var(--border-color); color: var(--text-muted); padding: 6px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 5px;}
-  .btn-select-dtf:hover { border-color: #555; }
-  .btn-select-dtf.active { background: rgba(230,0,0,0.15); border-color: var(--primary-red); color: white; }
-  .slider-wrap-dtf { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-  .slider-wrap-dtf label { color: var(--text-muted); font-size: 10px; font-weight: 600; text-transform: uppercase; margin-bottom: 0; width: 120px; }
-  input[type="range"].ui-slider-dtf { flex: 1; accent-color: var(--primary-red); cursor: pointer; height: 3px; }
-  .val-badge-dtf { background: #000; color: var(--primary-red); padding: 3px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; min-width: 40px; text-align: center; border: 1px solid var(--border-color); }
-  .color-hidden { width: 0; height: 0; visibility: hidden; position: absolute;}
-  
-  .top-tools-dtf { display:none; justify-content:space-between; align-items:center; background:var(--panel); padding:10px 15px; border-radius:8px; border:1px solid var(--border-color); margin-bottom:10px;}
-  .swatches-dtf { display:flex; gap:8px; align-items:center;}
-  .swatch-dtf { width:22px; height:22px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition:0.2s; box-shadow:0 2px 5px rgba(0,0,0,0.5);}
-  .swatch-dtf:hover, .swatch-dtf.active { border-color:white; transform:scale(1.15);}
-  .paleta-mesa-dtf { width:24px; height:24px; padding:0; border:1px solid #666; border-radius:4px; cursor:pointer; background:transparent;}
-  .paleta-mesa-dtf::-webkit-color-swatch-wrapper { padding:0;}
-  .paleta-mesa-dtf::-webkit-color-swatch { border:none; border-radius:3px;}
-
-  /* Overlays VISOR DTF */
-  .img-base { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
-  #det_semiOverlayCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; z-index: 6; display: none; filter: drop-shadow(0 0 5px #ff00ff); }
-  .fabric-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #ffffff; clip-path: inset(0 50% 0 0); z-index: 2; pointer-events: none; display: none;}
-  .slider-line-dtf { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background-color: var(--primary-red); z-index: 7; pointer-events: none; box-shadow: 0 0 10px rgba(0,0,0,0.8); display: none;}
-  .slider-line-dtf::after { content: "↔"; position: absolute; top: 50%; left: -14px; width: 28px; height: 28px; background: var(--primary-red); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; transform: translateY(-50%); box-shadow: 0 0 8px rgba(0,0,0,0.8);}
-  .drag-slider-dtf { -webkit-appearance: none; appearance: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; outline: none; z-index: 10; margin: 0; pointer-events: none; display: none;}
-  .drag-slider-dtf::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 40px; height: 60px; background: transparent; cursor: ew-resize; pointer-events: all; }
-  #dtf_loadingOverlay { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:20; align-items:center; justify-content:center; flex-direction:column; border-radius: 12px;}
-  .spinner-dtf { border: 4px solid #333; border-top: 4px solid var(--primary-red); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 15px;}
-  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-  .status-badge { display:none; position:absolute; top:12px; background:rgba(0,0,0,0.8); color:white; padding:4px 10px; border-radius:4px; font-size:10px; font-weight:bold; z-index:15; border:1px solid var(--border-color); pointer-events:none;}
-  .badge-left { left:12px; } .badge-right { right:12px; background:rgba(230,0,0,0.8); border:none;}
 </style>
 </head>
 <body>
- <div class="custom-modal-overlay" id="promptModal">
+
+<div class="custom-modal-overlay" id="promptModal">
     <div class="custom-modal">
         <h3><i class="fa-solid fa-image mr-2 text-red-500"></i> Fondo con IA</h3>
         <p style="font-size: 0.9rem; color: var(--text-dim); margin-bottom: 20px; text-align: left; line-height: 1.4;">
@@ -237,14 +194,17 @@
         <p style="font-size: 0.9rem; color: var(--text-dim); margin-bottom: 20px; text-align: left; line-height: 1.4;">
             Ajusta el color y grosor del resplandor:
         </p>
+        
         <div style="background:#050505; padding:15px; border-radius:8px; margin-bottom:15px; border: 1px solid #444; display:flex; align-items:center; justify-content:space-between;">
             <label style="font-size:0.85rem; font-weight:bold; color:#ccc;">Color del Resplandor:</label>
             <input type="color" id="modalGlowColor" value="#ff0000" style="width:45px; height:45px; padding:0; border:none; background:none; cursor:pointer;">
         </div>
+
         <div style="background:#050505; padding:15px; border-radius:8px; margin-bottom:20px; border: 1px solid #444; text-align:left;">
             <div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:bold; margin-bottom:10px; color:#ccc;"><span>Grosor:</span><span id="modalGlowVal">30</span></div>
             <input type="range" id="modalGlowSize" min="1" max="100" value="30" style="width:100%; accent-color:var(--red-bright);" oninput="document.getElementById('modalGlowVal').innerText=this.value">
         </div>
+
         <div class="custom-modal-btns">
             <button class="btn-cancel" onclick="document.getElementById('glowModal').style.display='none'">Cancelar</button>
             <button class="btn-confirm" id="btnConfirmGlow"><i class="fa-solid fa-wand-sparkles mr-2"></i> Aplicar</button>
@@ -262,16 +222,19 @@
   <div class="gate-card">
     <div class="brand-mark"><i class="fa-solid fa-crown"></i><span>J&J</span></div>
     <h1>Comunidad J&J</h1>
+    
     <p class="sub" data-i18n="gate_sub">Inicia sesión con Telegram para acceder.</p>
+    
     <div style="margin-top:20px; margin-bottom: 20px; display:flex; justify-content:center;">
         <script async src="https://telegram.org/js/telegram-widget.js?22" 
                 data-telegram-login="acceso_paginabot" 
                 data-size="large" 
                 data-onauth="onTelegramAuth(user)" 
-                data-auth-url="https://ia-studio-jj.onrender.com/login-telegram"
                 data-request-access="write"></script>
     </div>
+
     <p class="gate-error" id="gateError" data-i18n="gate_error"></p>
+    
     <div class="gate-links">
       <p>¿AÚN NO ESTÁS EN EL GRUPO VIP?</p>
       <a href="https://wa.me/51904503246" target="_blank" class="wa-link wa-subscribe">
@@ -313,97 +276,8 @@
       <p class="tool-desc" id="toolDesc"></p>
 
       <div class="workspace-layout">
-        <div class="form-container" style="position: relative;">
-          <!-- FORMULARIO ORIGINAL (Oculto en modo DTF) -->
+        <div class="form-container">
           <form id="form"></form>
-          
-          <!-- PANEL INYECTADO: SEMITONOS DTF PRO -->
-          <div id="panel-semitonos" style="display:none; background-color: var(--bg-panel); border-radius: 10px;">
-              <div class="dropzone" onclick="document.getElementById('semi_file_input').click()" style="margin-bottom:15px;">
-                  <i class="fa-solid fa-braille"></i>
-                  <div class="dz-text" id="semi_dz_text">Sube tu diseño para Semitonos</div>
-                  <input type="file" id="semi_file_input" accept="image/png, image/jpeg, image/webp" style="display:none">
-              </div>
-              <div class="section-box-dtf">
-                  <div class="section-title-dtf">MEDIDAS DE IMPRESIÓN (CM)</div>
-                  <div class="dtf-dim-grid">
-                      <div class="dtf-input-group"><label class="lbl-dtf">ANCHO</label><input type="number" id="semi_ancho" value="29.7" step="0.1"></div>
-                      <div class="dtf-input-group"><label class="lbl-dtf">ALTO</label><input type="number" id="semi_alto" value="42.0" step="0.1"></div>
-                  </div>
-              </div>
-              <div class="section-box-dtf">
-                  <div class="section-title-dtf">MEJORA Y MÁSCARA (RIP)</div>
-                  <div class="switch-row-dtf"><span>✨ Mejor Calidad IA (x4)</span><label class="switch-dtf"><input type="checkbox" id="semi_checkIA"><span class="slider-tg-dtf"></span></label></div>
-                  <div class="switch-row-dtf"><span>✂️ Quitar Fondo Sólido</span><label class="switch-dtf"><input type="checkbox" id="semi_checkBG"><span class="slider-tg-dtf"></span></label></div>
-                  <div class="switch-row-dtf"><span>🔹 Contraer Bordes (Asfixia)</span><label class="switch-dtf"><input type="checkbox" id="semi_checkChoke" checked><span class="slider-tg-dtf"></span></label></div>
-                  <div class="switch-row-dtf" style="margin-bottom: 0;"><span>🛡️ Fijar Semitransparencias</span><label class="switch-dtf"><input type="checkbox" id="semi_checkSemi" checked><span class="slider-tg-dtf"></span></label></div>
-              </div>
-              <div class="section-box-dtf">
-                  <div class="section-title-dtf">TRAMADO Y SATURACIÓN</div>
-                  <label class="lbl-dtf">COLOR A PERFORAR</label>
-                  <div class="btn-grid-dtf cols-3" id="semi_colorGroup">
-                      <button type="button" class="btn-select-dtf active" data-val="#000000">⚫️ Negro</button>
-                      <button type="button" class="btn-select-dtf" data-val="#ffffff">⚪️ Blanco</button>
-                      <button type="button" class="btn-select-dtf" id="semi_btnCustomColor" data-val="#ff0000" onclick="document.getElementById('semi_colorPicker').click();">
-                          <input type="color" class="color-hidden" id="semi_colorPicker" value="#ff0000"> 🎨 Otro
-                      </button>
-                  </div>
-                  <label class="lbl-dtf" style="margin-top: 10px;">SATURACIÓN</label>
-                  <div class="btn-grid-dtf cols-3" id="semi_satGroup">
-                      <button type="button" class="btn-select-dtf active" data-val="1.0">Normal</button>
-                      <button type="button" class="btn-select-dtf" data-val="1.5">Media</button>
-                      <button type="button" class="btn-select-dtf" data-val="2.0">Alta</button>
-                  </div>
-                  <label class="lbl-dtf" style="margin-top: 10px;">MODO DE LIMPIEZA</label>
-                  <div class="btn-grid-dtf cols-2" id="semi_modoGroup">
-                      <button type="button" class="btn-select-dtf" data-val="baja">✨ Clásico (Suave)</button>
-                      <button type="button" class="btn-select-dtf active" data-val="global">🌌 Tramado Total</button>
-                  </div>
-                  <label class="lbl-dtf" style="margin-top: 10px;">FORMA DEL ENTRAMADO</label>
-                  <div class="btn-grid-dtf cols-2" id="semi_tramaGroup">
-                      <button type="button" class="btn-select-dtf active" data-val="round">Puntos</button>
-                      <button type="button" class="btn-select-dtf" data-val="line">Líneas</button>
-                      <button type="button" class="btn-select-dtf" data-val="ellipse">Elipse</button>
-                      <button type="button" class="btn-select-dtf" data-val="roseta">Doble Trama</button>
-                  </div>
-              </div>
-              <div class="section-box-dtf">
-                  <div class="section-title-dtf">PARAMETROS MANUALES</div>
-                  <div class="slider-wrap-dtf"><label style="width:110px;">TOLERANCIA (1-100)</label><input type="range" class="ui-slider-dtf" id="semi_tol" min="1" max="100" value="20"><span class="val-badge-dtf" id="semi_tolValSemi">20</span></div>
-                  <div class="slider-wrap-dtf"><label style="width:110px;">LPI (GROSOR PX)</label><input type="range" class="ui-slider-dtf" id="semi_px" min="5" max="20" value="10"><span class="val-badge-dtf" id="semi_pxValSemi">10px</span></div>
-                  <div class="slider-wrap-dtf"><label style="width:110px;">ÁNGULO</label><input type="range" class="ui-slider-dtf" id="semi_ang" min="0" max="90" value="22"><span class="val-badge-dtf" id="semi_angValSemi">22°</span></div>
-              </div>
-              <button type="button" class="btn-primary" id="btnDtfRunSemi">
-                  <i class="fa-solid fa-bolt mr-2"></i> Procesar Semitonos
-              </button>
-          </div>
-
-          <!-- PANEL INYECTADO: ESCANER DE SEMITRANSPARENCIAS -->
-          <div id="panel-detector" style="display:none; background-color: var(--bg-panel); border-radius: 10px;">
-              <div class="dropzone" onclick="document.getElementById('det_file_input').click()" style="margin-bottom:15px; border-color:#ff00ff; background:rgba(255,0,255,0.05);">
-                  <i class="fa-solid fa-magnifying-glass-chart" style="color:#ff00ff;"></i>
-                  <div class="dz-text" id="det_dz_text" style="color:#fff;">Sube tu diseño para Analizar</div>
-                  <input type="file" id="det_file_input" accept="image/png, image/webp" style="display:none">
-              </div>
-              <div class="section-box-dtf" style="border-left: 3px solid var(--primary-red);">
-                  <div class="section-title-dtf"><div class="step-num">1</div> MEDIDA FINAL (CM)</div>
-                  <p style="color:#aaa; font-size:11px; margin-bottom:12px; line-height: 1.4;">Escribe el tamaño exacto de impresión. Generaremos tu archivo seguro a 300 DPI.</p>
-                  <div class="dim-grid-dtf">
-                      <div class="dtf-input-group"><label class="lbl-dtf">ANCHO</label><input type="number" id="det_ancho" value="29.7" step="0.1"></div>
-                      <div class="dtf-input-group"><label class="lbl-dtf">ALTO</label><input type="number" id="det_alto" value="42.0" step="0.1"></div>
-                  </div>
-              </div>
-              <div class="section-box-dtf">
-                  <div class="section-title-dtf"><div class="step-num">2</div> DETECCIÓN DE PELIGRO</div>
-                  <p style="color:#888; font-size:11px; margin-bottom:12px; line-height: 1.4;">Escanea la imagen buscando bordes borrosos y sombras. Se pintarán de <strong>FUCSIA</strong> en la vista.</p>
-                  <button type="button" class="btn-scan-dtf" id="btnDetScan">🔍 Escanear Semitransparencias</button>
-              </div>
-              <div class="section-box-dtf" style="margin-top: auto; padding: 0; background: transparent; border: none;">
-                  <div class="section-title-dtf" style="margin-bottom: 8px;"><div class="step-num">3</div> FINALIZAR</div>
-                  <p style="color:#888; font-size:11px; margin-bottom:10px;">Este botón limpiará la imagen para que la tinta base blanca imprima perfecto.</p>
-                  <button type="button" class="btn-reparar" id="btnDetReparar" disabled>🛡️ REPARAR Y DESCARGAR</button>
-              </div>
-          </div>
           
           <button type="button" id="btnRestart" class="btn-primary btn-restart" style="display:none;" onclick="reiniciarHerramienta(true)">
              <i class="fa-solid fa-rotate-left mr-2"></i> <span data-i18n="restart_btn">Subir Otra Imagen</span>
@@ -420,17 +294,21 @@
           <div id="masterColorPanel" style="display:none; background: #000; border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-top: 15px;">
               <h4 style="margin: 0 0 10px; font-size: 1rem; color: var(--ok); text-transform: uppercase; font-weight: 800; text-align: center;"><i class="fa-solid fa-fill-drip mr-2"></i> Master Color</h4>
               <p style="font-size:0.75rem; color:#888; text-align:center; margin-bottom:15px;">1. Copia un color con el gotero.<br>2. Selecciona una zona o reemplázalo en todo.</p>
+
               <div style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:10px; border-radius:6px; margin-bottom:10px;">
                   <button type="button" id="btnEyedropper" class="btn-qa" style="min-width: unset; padding: 10px; margin:0;"><i class="fa-solid fa-eye-dropper"></i> Gotero</button>
                   <div id="mcOldColor" style="width:30px; height:30px; background:#fff; border: 1px solid #555; border-radius:4px;"></div>
                   <span style="color:var(--ok); font-weight:bold;">➜</span>
                   <input type="color" id="mcNewColor" value="#ff0000" style="width:35px; height:35px; padding:0; border:none; background:none; cursor:pointer;">
               </div>
+
               <div style="background:#111; padding:10px; border-radius:6px; margin-bottom:10px;">
                   <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; margin-bottom:5px; color:#ccc;"><span>Tolerancia de Color:</span><span id="mcTolVal">40</span></div>
                   <input type="range" id="mcTolerance" min="1" max="150" value="40" style="width:100%; accent-color:var(--red-bright);" oninput="document.getElementById('mcTolVal').innerText=this.value">
               </div>
+
               <button type="button" id="btnMcSelect" class="btn-qa" style="width:100%; margin-bottom:10px; background:#444;"><i class="fa-solid fa-vector-square mr-2"></i> Dibujar Zona</button>
+              
               <div style="display:flex; gap:10px;">
                   <button type="button" onclick="applyMasterColorZone()" class="btn-primary" style="margin-top:0; flex:1; padding: 10px; font-size: 0.75rem;"><i class="fa-solid fa-square-check block mb-1 text-lg"></i> En Zona</button>
                   <button type="button" onclick="applyMasterColorGlobal()" class="btn-primary" style="margin-top:0; flex:1; padding: 10px; font-size: 0.75rem;"><i class="fa-solid fa-globe block mb-1 text-lg"></i> En Todo</button>
@@ -445,20 +323,6 @@
         </div>
 
         <div class="canvas-container" id="tray" style="display:none;">
-          
-          <!-- MESA DE TRABAJO (TELA SIMULADA) -->
-          <div class="top-tools-dtf" id="dtfTopTools">
-              <span style="font-size: 12px; font-weight: bold; color: #888;">MESA DE TRABAJO (TELA SIMULADA):</span>
-              <div class="swatches-dtf">
-                  <div class="swatch-dtf active" style="background: #fff; border-color: #888;" onclick="changeFabricBgSemi('#ffffff', this)"></div>
-                  <div class="swatch-dtf" style="background: #000;" onclick="changeFabricBgSemi('#000000', this)"></div>
-                  <div class="swatch-dtf" style="background: #e60000;" onclick="changeFabricBgSemi('#e60000', this)"></div>
-                  <div class="swatch-dtf" style="background: #0044cc;" onclick="changeFabricBgSemi('#0044cc', this)"></div>
-                  <span style="color:#666; font-size:10px; margin-left:5px;">MÁS:</span>
-                  <input type="color" class="paleta-mesa-dtf" id="fabricColorPicker" value="#ff00ff" onchange="changeFabricBgSemi(this.value, null)">
-              </div>
-          </div>
-
           <div class="viewer-container checkerboard" id="visorContenedor">
               
               <button id="btnAntes" class="btn-visor" style="top:20px; right:20px; display:none;" onmousedown="mostrar(true)" onmouseup="mostrar(false)" onmouseleave="mostrar(false)">
@@ -473,31 +337,11 @@
                   Zoom: <span id="lblZoom">100%</span>
               </span>
 
-              <div class="status-badge badge-left" id="badgeLeft">TELA SIMULADA</div>
-              <div class="status-badge badge-right" id="badgeRight">FONDO TRANSPARENTE</div>
-
-              <div id="dtf_loadingOverlay">
-                  <div class="spinner-dtf"></div>
-                  <p style="color:white; font-weight:bold; font-size: 16px;" id="dtf_loading_title">Procesando...</p>
-                  <p style="color:#aaa; font-size: 11px; margin-top: 5px;" id="dtf_loading_desc">Esto tomará unos segundos.</p>
-              </div>
-
               <div id="viewerWrapper">
-                  <div id="imgContainer" style="position:relative; display:inline-block; line-height:0; width:100%; height:100%;">
+                  <div id="imgContainer" style="position:relative; display:inline-block; line-height:0;">
                       <img id="mainResultImg" src="" alt="Resultado" style="display:block; max-width: 90vw; max-height: 70vh; border-radius: 8px;">
                       <canvas id="editCanvas" style="display:none; max-width: 90vw; max-height: 70vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.8); margin: 0 auto;"></canvas>
                       <canvas id="maskCanvas" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; z-index:10; opacity:0.6; cursor:crosshair; touch-action:none; border-radius: 8px;"></canvas>
-                      
-                      <!-- Elementos Inyectados para Visor Semitonos/Detector -->
-                      <img id="det_imgOriginal" class="img-base" src="" style="display:none;">
-                      <canvas id="det_semiOverlayCanvas" class="img-base" style="display:none; filter: drop-shadow(0 0 5px #ff00ff); z-index:6;"></canvas>
-                      
-                      <div class="fabric-layer" id="fabricLayerSemi">
-                          <img id="imgConTelaSemi" class="img-base" src="">
-                      </div>
-                      <div class="slider-line-dtf" id="sliderLineSemi"></div>
-                      <input type="range" min="0" max="100" value="50" class="drag-slider-dtf" id="dtfDragSlider">
-
                       <video id="mainResultVideo" controls loop style="display: none; max-width: 90vw; max-height: 70vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.8);"></video>
                       <div id="boxesContainer" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
                   </div>
@@ -515,7 +359,8 @@
     </div>
   </main>
 </div>
-  <script>
+
+<script>
 const UI = {
   es: {
     gate_sub: "Inicia sesión con Telegram para verificar tu acceso.", gate_btn: "<i class='fa-solid fa-unlock-keyhole mr-2'></i> Ingresar", gate_error: "No tienes acceso. ¡Asegúrate de estar en el grupo VIP!", logout: "<i class='fa-solid fa-right-from-bracket'></i>", logout_confirm: "¿Cerrar sesión?", home_title: "Panel Premium", home_sub: "Selecciona una herramienta para comenzar.", back: "Volver", run_btn: "Procesar con IA", restart_btn: "Subir Otra Imagen", processing: "La IA está procesando...", processing_task: "Tarea asíncrona, espere...", processing_pct: (p) => `Trabajando... (${p}%)`, done: "¡Completado exitosamente!", error_prefix: "Error: ", generic_error: "Fallo de conexión.", task_failed: "La tarea ha fallado.", conn_error: "Error de red: ", conn_error_task: "Error al consultar la tarea.", dropzone_text: "Haz clic o arrastra una imagen", loading_options: "Descargando de internet...", select_placeholder: "Selecciona...", load_error: "Error de red", magic_tags_title: "✨ Toca las etiquetas para borrar:", magic_btn_apply: "Borrar Seleccionados", download_btn: "Descargar Diseño (Calidad HD)"
@@ -541,22 +386,8 @@ const gate = document.getElementById("gate"); const appEl = document.getElementB
 
 function checkSession() {
   const perm = sessionStorage.getItem("jj_session_perm"); const name = sessionStorage.getItem("jj_user_name");
-  if (perm === "active") { showApp(name); return true; }
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get("tg_login") === "ok") {
-    sessionStorage.setItem("jj_session_perm", "active");
-    sessionStorage.setItem("jj_user_name", urlParams.get("name") || "VIP");
-    window.history.replaceState({}, document.title, "/");
-    showApp(urlParams.get("name") || "VIP");
-    return true;
-  } else if (urlParams.get("tg_error")) {
-    gateError.textContent = urlParams.get("tg_error");
-    gateError.classList.add("show");
-    window.history.replaceState({}, document.title, "/");
-  }
-  return false;
+  if (perm === "active") { showApp(name); return true; } return false;
 }
-
 function showApp(name) { gate.style.display = "none"; appEl.style.display = "block"; userLabel.textContent = name ? name.toUpperCase() : ""; loadModels(); }
 
 async function onTelegramAuth(user) {
@@ -604,9 +435,7 @@ function buildHome(models) {
     categories[cat].forEach(m => {
       const card = document.createElement("button"); card.type = "button"; card.className = "tool-card"; const icon = m.icon ? m.icon : "fa-wand-magic-sparkles";
       card.innerHTML = `<i class="fa-solid ${icon}"></i><h3>${tl(m.label).split('|')[0].trim()}</h3><p>${tl(m.desc).split('|')[0].trim()}</p>`;
-      
-      card.addEventListener("click", function() { openTool(m.slug); });
-      grid.appendChild(card);
+      card.addEventListener("click", () => openTool(m.slug)); grid.appendChild(card);
     });
     catContainer.appendChild(grid);
   });
@@ -618,25 +447,6 @@ function openTool(slug) {
   const icon = model.icon ? model.icon : "fa-wand-magic-sparkles";
   toolTitle.innerHTML = `<i class="fa-solid ${icon} mr-3"></i> ${tl(model.label).split('|')[0].trim()}`; toolDesc.textContent = tl(model.desc).split('|')[0].trim();
   reiniciarHerramienta(true);
-
-  // MOSTRAR/OCULTAR EL SUPER PANEL DTF
-  const panelSemi = document.getElementById("panel-semitonos");
-  const panelDet = document.getElementById("panel-detector");
-  const topTools = document.getElementById("dtfTopTools");
-  
-  form.style.display = "none";
-  if(panelSemi) panelSemi.style.display = "none";
-  if(panelDet) panelDet.style.display = "none";
-  if(topTools) topTools.style.display = "none";
-
-  if (slug === "dtf-semitonos") {
-      if(panelSemi) panelSemi.style.display = "block";
-      if(topTools) topTools.style.display = "flex";
-  } else if (slug === "dtf-detector") {
-      if(panelDet) panelDet.style.display = "block";
-  } else {
-      form.style.display = "block";
-  }
 
   if (slug === 'master-color' && (urlResultMemoria || currentImageData)) {
       setTimeout(() => {
@@ -667,23 +477,6 @@ function reiniciarHerramienta(keepTool = false) {
     statusLine.classList.remove("show", "error", "ok"); btnDownloadResult.style.display = "none"; btnRestart.style.display = "none"; magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; quickActionsBar.style.display = "none"; document.getElementById("masterColorPanel").style.display = "none";
     document.getElementById("downloadBtnText").innerText = t("download_btn"); document.getElementById('btnAntes').style.display = 'none'; document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block'; jsonViewer.style.display = "none";
     document.querySelectorAll('.dropzone').forEach(dz => { dz.classList.remove("has-file"); dz.querySelector('i').className = "fa-solid fa-cloud-arrow-up"; dz.querySelector('.dz-text').textContent = t("dropzone_text"); });
-    
-    // Limpiar Visores DTF
-    if(document.getElementById('semi_file_input')) document.getElementById('semi_file_input').value = '';
-    if(document.getElementById('det_file_input')) document.getElementById('det_file_input').value = '';
-    if(document.getElementById('semi_dz_text')) document.getElementById('semi_dz_text').textContent = "Sube tu diseño para Semitonos";
-    if(document.getElementById('det_dz_text')) document.getElementById('det_dz_text').textContent = "Sube tu diseño para Analizar";
-    
-    if(document.getElementById('det_imgOriginal')) document.getElementById('det_imgOriginal').style.display = 'none';
-    if(document.getElementById('fabricLayerSemi')) document.getElementById('fabricLayerSemi').style.display = 'none';
-    if(document.getElementById('det_semiOverlayCanvas')) document.getElementById('det_semiOverlayCanvas').style.display = 'none';
-    if(document.getElementById('sliderLineSemi')) document.getElementById('sliderLineSemi').style.display = 'none';
-    if(document.getElementById('dtfDragSlider')) document.getElementById('dtfDragSlider').style.display = 'none';
-    if(document.getElementById('badgeLeft')) document.getElementById('badgeLeft').style.display = 'none';
-    if(document.getElementById('badgeRight')) document.getElementById('badgeRight').style.display = 'none';
-    if(document.getElementById('btnDetReparar')) document.getElementById('btnDetReparar').disabled = true;
-    dtfFileActual = null;
-
     if (currentSlug && keepTool) renderForm(MODELS.find(m => m.slug === currentSlug)); resetearZoom();
 }
 
@@ -692,7 +485,6 @@ document.getElementById("backBtn").addEventListener("click", () => { toolView.st
 function renderForm(model) {
   form.innerHTML = "";
   if (model.slug === 'master-color') { document.getElementById('masterColorPanel').style.display = 'block'; } else { document.getElementById('masterColorPanel').style.display = 'none'; }
-  if (!model.fields || model.fields.length === 0) return; // DTF Tools no renderizan form estándar
 
   model.fields.forEach(field => {
     const wrap = document.createElement("div"); wrap.className = "field";
@@ -1280,298 +1072,8 @@ btnExecuteErase.addEventListener("click", async () => {
     finally { btnExecuteErase.disabled = false; btnExecuteErase.innerHTML = `<i class="fa-solid fa-eraser mr-2"></i> ` + t("magic_btn_apply"); }
 });
 
-// ==========================================================
-// CÓDIGO INYECTADO: LÓGICA DEL PANEL DTF (SEMITONOS Y ESCÁNER)
-// ==========================================================
-let dtfFileActual = null;
-let dtfAspectRatio = 1;
-let urlResultSemiMemoria = null;
-
-// --- FUNCIONES DE TELA Y MÁSCARAS ---
-function changeFabricBgSemi(colorCode, swatchElement) {
-    const fabricLayer = document.getElementById('fabricLayerSemi');
-    if(fabricLayer) fabricLayer.style.backgroundColor = colorCode;
-    if(swatchElement){
-        const swatches = document.querySelectorAll('.swatch-dtf');
-        swatches.forEach(s => s.classList.remove('active'));
-        swatchElement.classList.add('active');
-    }
-}
-
-function slideRevealSemi(val) {
-    const rightCrop = 100 - val;
-    let fl = document.getElementById('fabricLayerSemi');
-    let sl = document.getElementById('sliderLineSemi');
-    if(fl) fl.style.clipPath = `inset(0 ${rightCrop}% 0 0)`;
-    if(sl) sl.style.left = `${val}%`;
-}
-
-if(document.querySelector('.drag-slider-dtf')) {
-    document.querySelector('.drag-slider-dtf').addEventListener('input', function() { slideRevealSemi(this.value); });
-}
-
-// --- SETUP DE GRUPOS DE BOTONES Y SLIDERS ---
-function setupDtfGroup(groupId) {
-    const btns = document.querySelectorAll(`#${groupId} .btn-select-dtf`);
-    btns.forEach(btn => {
-        if (btn.id === "btnCustomColor" || btn.id === "semi_btnCustomColor") return;
-        btn.addEventListener("click", () => {
-            btns.forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-        });
-    });
-}
-
-setupDtfGroup("semi_colorGroup"); setupDtfGroup("semi_satGroup"); setupDtfGroup("semi_modoGroup"); setupDtfGroup("semi_tramaGroup");
-
-if(document.getElementById("semi_colorPickerRemoveSemi")) {
-    document.getElementById("semi_colorPickerRemoveSemi").addEventListener("change", function() {
-        const btn = document.getElementById("btnCustomColorSemi");
-        if(btn) { btn.setAttribute("data-val", this.value); document.querySelectorAll("#semi_colorGroup .btn-select-dtf").forEach(b => b.classList.remove("active")); btn.classList.add("active"); }
-    });
-}
-
-["semi_tol", "semi_px", "semi_ang"].forEach(id => {
-    let el = document.getElementById(id);
-    if(el) {
-        el.addEventListener("input", function() {
-            let val = this.value;
-            if(id.includes("px")) val += "px";
-            if(id.includes("ang")) val += "°";
-            let valId = id + "ValSemi";
-            if(document.getElementById(valId)) document.getElementById(valId).innerText = val;
-        });
-    }
-});
-
-["semi_ancho", "det_ancho"].forEach(id => {
-    let el = document.getElementById(id);
-    if(el) { el.addEventListener("input", function() { if(this.value > 0) { let pairedId = id.replace("ancho", "alto"); if(document.getElementById(pairedId)) document.getElementById(pairedId).value = (this.value / dtfAspectRatio).toFixed(1); } }); }
-});
-["semi_alto", "det_alto"].forEach(id => {
-    let el = document.getElementById(id);
-    if(el) { el.addEventListener("input", function() { if(this.value > 0) { let pairedId = id.replace("alto", "ancho"); if(document.getElementById(pairedId)) document.getElementById(pairedId).value = (this.value * dtfAspectRatio).toFixed(1); } }); }
-});
-
-// --- CARGA DE ARCHIVOS ---
-function handleDtfFileUpload(e, mode) {
-    const f = e.target.files[0]; if(!f) return;
-    dtfFileActual = f;
-    
-    let textId = mode === 'semi' ? 'semi_dz_text' : 'det_dz_text';
-    let elText = document.getElementById(textId);
-    if(elText) elText.textContent = f.name;
-    
-    const url = URL.createObjectURL(f);
-    urlOriginalMemoria = url; urlResultMemoria = url;
-    
-    const img = new Image();
-    img.onload = () => {
-        dtfAspectRatio = img.width / img.height;
-        let pAncho = mode === 'semi' ? 'semi_ancho' : 'det_ancho';
-        let pAlto = mode === 'semi' ? 'semi_alto' : 'det_alto';
-        if(document.getElementById(pAncho)) document.getElementById(pAncho).value = "29.7";
-        if(document.getElementById(pAlto)) document.getElementById(pAlto).value = (29.7 / dtfAspectRatio).toFixed(1);
-        if(mode === 'det') {
-            let resDet = document.getElementById('statusResDet');
-            if(resDet) resDet.innerText = `Resolución: ${img.width}x${img.height}px`;
-        }
-    };
-    img.src = url;
-
-    document.getElementById('trayDtfSemitonos').style.display = mode === 'semi' ? 'flex' : 'none';
-    document.getElementById('trayDtfDetector').style.display = mode === 'det' ? 'flex' : 'none';
-    document.getElementById('btnRestart').style.display = 'block';
-
-    if(mode === 'semi') {
-        document.getElementById('uploadAreaSemi').style.display = 'none';
-        document.getElementById('viewerAreaSemi').style.display = 'flex';
-        document.getElementById('imgTransparenteSemi').src = url;
-        document.getElementById('imgConTelaSemi').src = url;
-        slideRevealSemi(50);
-        let slider = document.querySelector('.drag-slider-dtf');
-        if(slider) slider.value = 50;
-        if(document.getElementById('semiOverlayCanvasSemi')) document.getElementById('semiOverlayCanvasSemi').style.display = 'none';
-        resetZoomSemi();
-    } else if(mode === 'det') {
-        document.getElementById('uploadAreaDet').style.display = 'none';
-        document.getElementById('viewerAreaDet').style.display = 'flex';
-        document.getElementById('imgOriginalDet').src = url;
-        document.getElementById('btnDetReparar').disabled = false;
-        document.getElementById('statusTextDet').innerHTML = "VISTA PREVIA ORIGINAL";
-        if(document.getElementById('semiOverlayCanvasDet')) document.getElementById('semiOverlayCanvasDet').style.display = 'none';
-        resetZoomDet();
-    }
-}
-
-if(document.getElementById("semi_file_input")) document.getElementById("semi_file_input").addEventListener("change", (e) => handleDtfFileUpload(e, 'semi'));
-if(document.getElementById("det_file_input")) document.getElementById("det_file_input").addEventListener("change", (e) => handleDtfFileUpload(e, 'det'));
-
-// --- ESCANER (AMBOS) ---
-function scanTransparenciesBtnClick(btnId, mode) {
-    if(!dtfFileActual) return alert("Sube un diseño primero.");
-    const btn = document.getElementById(btnId);
-    if(!btn) return;
-    const prevText = btn.innerHTML;
-    btn.innerHTML = "⏳ Escaneando...";
-    btn.disabled = true;
-
-    setTimeout(() => {
-        const img = new Image();
-        img.onload = () => {
-            const cvs = document.createElement("canvas");
-            cvs.width = img.width; cvs.height = img.height;
-            const ctx = cvs.getContext("2d", {willReadFrequently:true}); ctx.drawImage(img, 0, 0);
-            
-            const overlayId = mode === 'semi' ? 'semiOverlayCanvasSemi' : 'det_semiOverlayCanvas';
-            const overlay = document.getElementById(overlayId);
-            if(!overlay) return;
-            overlay.width = img.width; overlay.height = img.height;
-            const oCtx = overlay.getContext("2d");
-            const oData = oCtx.createImageData(img.width, img.height);
-            
-            try {
-                const idata = ctx.getImageData(0,0,img.width,img.height).data;
-                let hasSemi = false;
-                for (let i = 3; i < idata.length; i += 4) {
-                    const alpha = idata[i];
-                    if (alpha > 10 && alpha < 245) {
-                        oData.data[i-3] = 255; oData.data[i-2] = 0; oData.data[i-1] = 255; oData.data[i] = 255;
-                        hasSemi = true;
-                    }
-                }
-                if (hasSemi) {
-                    oCtx.putImageData(oData, 0, 0);
-                    overlay.style.display = "block";
-                    if(mode === 'semi') {
-                        alert("⚠️ ALERTA DTF: ¡Zonas borrosas!\n'Fijar Semitransparencias' se activó automáticamente para proteger la base blanca.");
-                        document.getElementById('checkSemiSemi').checked = true;
-                    } else {
-                        document.getElementById('statusTextDet').innerHTML="⚠️ <span style='color:#ff00ff'>ZONAS PELIGROSAS DETECTADAS</span>"; 
-                        alert("⚠️ ALERTA DTF: ¡Píxeles borrosos detectados!\nLas zonas fucsias son peligrosas. Dale a REPARAR Y DESCARGAR.");
-                    }
-                } else {
-                    overlay.style.display = "none";
-                    if(mode === 'det') document.getElementById('statusTextDet').innerHTML="✅ <span style='color:#00cc44'>DISEÑO 100% SÓLIDO</span>";
-                    alert("✅ ESCANEO LIMPIO: Tu diseño tiene colores sólidos perfectos.");
-                }
-            } catch(e) {}
-            btn.innerHTML = prevText; btn.disabled = false;
-        };
-        img.src = urlOriginalMemoria;
-    }, 100);
-}
-
-if(document.getElementById("btnScanSemi")) document.getElementById("btnScanSemi").addEventListener("click", () => scanTransparenciesBtnClick("btnScanSemi", "semi"));
-if(document.getElementById("btnDetScan")) document.getElementById("btnDetScan").addEventListener("click", () => scanTransparenciesBtnClick("btnDetScan", "det"));
-
-// --- REPARAR (DETECTOR) ---
-if(document.getElementById("btnDetReparar")) {
-    document.getElementById("btnDetReparar").addEventListener("click", async () => {
-        if(!dtfFileActual) return;
-        document.getElementById('loadingOverlayDet').style.display = 'flex';
-        if(document.getElementById('det_semiOverlayCanvas')) document.getElementById('det_semiOverlayCanvas').style.display = 'none'; 
-        resetZoomDet();
-
-        const formData = new FormData();
-        formData.append("imagen", dtfFileActual);
-        formData.append("ancho", document.getElementById('det_ancho') ? document.getElementById('det_ancho').value : 29.7);
-        formData.append("alto", document.getElementById('det_alto') ? document.getElementById('det_alto').value : 42.0);
-
-        try {
-            const response = await fetch("/api/reparar", { method: "POST", body: formData });
-            if (!response.ok) throw new Error("Fallo en servidor");
-            
-            const blob = await response.blob();
-            const urlFinal = URL.createObjectURL(blob);
-            
-            if(document.getElementById('imgOriginalDet')) document.getElementById('imgOriginalDet').src = urlFinal;
-            if(document.getElementById('statusTextDet')) document.getElementById('statusTextDet').innerHTML = "🛡️ <span style='color:#00cc44'>IMAGEN REPARADA A 300DPI</span>";
-            
-            const a = document.createElement("a");
-            a.href = urlFinal; 
-            a.download = `DTF_Limpio_${Date.now()}.png`; 
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        } catch (error) {
-            alert("❌ Falló la conexión con el servidor al reparar.");
-        } finally {
-            document.getElementById('loadingOverlayDet').style.display = 'none';
-        }
-    });
-}
-
-// --- PROCESAR SEMITONOS ---
-if(document.getElementById("btnDtfRunSemi")) {
-    document.getElementById("btnDtfRunSemi").addEventListener("click", async () => {
-        if(!dtfFileActual) return alert("Sube un diseño primero.");
-        let btn = document.getElementById("btnDtfRunSemi");
-        btn.disabled = true;
-        
-        document.getElementById('loadingOverlaySemi').style.display = 'flex';
-        let checkIA = document.getElementById('checkIASemi');
-        document.getElementById('loadingHintSemi').innerText = (checkIA && checkIA.checked) ? "Mejorando calidad con IA y calculando puntos..." : "Calculando matriz de puntos...";
-        
-        let imgTransparenteSemi = document.getElementById('imgTransparenteSemi');
-        let imgConTelaSemi = document.getElementById('imgConTelaSemi');
-
-        try {
-            const fd = new FormData();
-            fd.append("imagen", dtfFileActual);
-            
-            let activeColor = document.querySelector(`#semi_colorGroup .active`);
-            if(activeColor) fd.append("color", activeColor.getAttribute("data-val"));
-            
-            let activeSat = document.querySelector(`#semi_satGroup .active`);
-            if(activeSat) fd.append("sat", activeSat.getAttribute("data-val"));
-            
-            let activeModo = document.querySelector(`#semi_modoGroup .active`);
-            if(activeModo) fd.append("limpieza", activeModo.getAttribute("data-val"));
-            
-            let activeTrama = document.querySelector(`#semi_tramaGroup .active`);
-            if(activeTrama) fd.append("trama", activeTrama.getAttribute("data-val"));
-            
-            fd.append("tolerancia", document.getElementById("semi_tol") ? document.getElementById("semi_tol").value : 20);
-            fd.append("px", document.getElementById("semi_px") ? document.getElementById("semi_px").value : 10);
-            fd.append("angulo", document.getElementById("semi_ang") ? document.getElementById("semi_ang").value : 22);
-            fd.append("ancho", document.getElementById("semi_ancho") ? document.getElementById("semi_ancho").value : 29.7);
-            fd.append("alto", document.getElementById("semi_alto") ? document.getElementById("semi_alto").value : 42.0);
-            
-            let checkBg = document.getElementById("checkBGSemi");
-            let checkChoke = document.getElementById("checkChokeSemi");
-            let checkSemi = document.getElementById("checkSemiSemi");
-            
-            fd.append("usar_ia", (checkIA && checkIA.checked) ? "true" : "false");
-            fd.append("quitar_fondo", (checkBg && checkBg.checked) ? "true" : "false");
-            fd.append("choke", (checkChoke && checkChoke.checked) ? "true" : "false");
-            fd.append("fix_semi", (checkSemi && checkSemi.checked) ? "true" : "false");
-
-            const res = await fetch("/api/procesar", { method: "POST", body: fd });
-            
-            if (!res.ok) throw new Error("Error en servidor al procesar semitonos");
-            
-            const blob = await res.blob();
-            const urlFinal = URL.createObjectURL(blob);
-            
-            if(imgTransparenteSemi) imgTransparenteSemi.src = urlFinal;
-            if(imgConTelaSemi) imgConTelaSemi.src = urlFinal;
-            if(document.getElementById('semiOverlayCanvasSemi')) document.getElementById('semiOverlayCanvasSemi').style.display = 'none';
-            
-            urlResultSemiMemoria = urlFinal;
-            if(document.getElementById('btnDownloadSemi')) document.getElementById('btnDownloadSemi').style.display = 'inline-block';
-
-        } catch(err) {
-            alert("❌ Error procesando semitonos: Asegúrate de subir una imagen sin fondo o activar la IA.");
-        } finally {
-            document.getElementById('loadingOverlaySemi').style.display = 'none';
-            btn.disabled = false;
-        }
-    });
-}
-
-function descargarSemi() {
-    if(!urlResultSemiMemoria) return;
-    const a = document.createElement("a"); a.href = urlResultSemiMemoria; a.download = `DTF_Semitono_${Date.now()}.png`; document.body.appendChild(a); a.click(); document.body.removeChild(a);
-}
+document.querySelectorAll(".lang-switch button").forEach(btn => { btn.classList.toggle("active", btn.dataset.lang === currentLang); });
+applyStaticText(); checkSession();
 </script>
 </body>
-</html>    
+</html>
