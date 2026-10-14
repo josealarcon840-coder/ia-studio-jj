@@ -1,202 +1,215 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Comunidad J&J | Master Edition</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-<style>
-  :root {
-    --bg-a: #1a0000; --bg-b: #050505; --panel: #111111; --panel-raised: #1f0a0a;
-    --border: #3a141480; --red: #d81e2c; --red-bright: #ff2d3a; --red-dim: #7a0d14;
-    --text: #f5eeee; --text-dim: #b99; --text-faint: #7a5c5c; --ok: #00ffcc; --danger: #ff5252;
-    --font-display: "Anton", sans-serif; --font-body: "Inter", sans-serif;
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 15% 0%, var(--bg-a) 0%, var(--bg-b) 55%); color: var(--text); font-family: var(--font-body); line-height: 1.5; }
-  ::selection { background: var(--red); color: #fff; }
-  button { font-family: inherit; color: inherit; cursor: pointer; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DTF Studio Pro - Comunidad J&J</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-a: #1a0000; --bg-b: #050505; --panel: #111111; --panel-raised: #1f0a0a;
+            --border: #3a141480; --red: #d81e2c; --red-bright: #ff2d3a; --red-dim: #7a0d14;
+            --text: #f5eeee; --text-dim: #b99; --text-faint: #7a5c5c; --ok: #00ffcc; --danger: #ff5252;
+            --font-display: "Anton", sans-serif; --font-body: "Inter", sans-serif;
+            --bg-deep: #050505; --bg-panel: #111111; --bg-section: #1a1a1a;
+            --primary-red: #e60000; --primary-hover: #ff1a1a;
+            --text-main: #ffffff; --text-muted: #888888; --border-color: #2a2a2a;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-body); }
+        body { background: linear-gradient(135deg, #1f0000 0%, var(--bg-deep) 100%); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; overflow-y: auto; line-height: 1.5; }
+        ::selection { background: var(--red); color: #fff; }
+        button { font-family: inherit; color: inherit; cursor: pointer; }
 
-  .lang-switch { display: inline-flex; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
-  .lang-switch button { background: none; border: none; color: var(--text-faint); font-size: 0.74rem; font-weight: 700; padding: 6px 11px; transition: 0.2s ease; }
-  .lang-switch button.active { background: var(--red); color: #fff; }
+        .lang-switch { display: inline-flex; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
+        .lang-switch button { background: none; border: none; color: var(--text-faint); font-size: 0.74rem; font-weight: 700; padding: 6px 11px; transition: 0.2s ease; }
+        .lang-switch button.active { background: var(--red); color: #fff; }
 
-  .brand-mark { width: 80px; height: 80px; margin: 0 auto 18px; border-radius: 18px; background: linear-gradient(135deg, #111, #300); border: 2px solid var(--red-bright); display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 1.5rem; color: #fff; box-shadow: 0 0 20px rgba(255,45,58,0.5), inset 0 0 15px rgba(122,13,20,0.8); text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-  .brand-mark i { font-size: 0.6em; color: #ffd700; margin-bottom: -2px; }
+        .brand-mark { width: 80px; height: 80px; margin: 0 auto 18px; border-radius: 18px; background: linear-gradient(135deg, #111, #300); border: 2px solid var(--red-bright); display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 1.5rem; color: #fff; box-shadow: 0 0 20px rgba(255,45,58,0.5), inset 0 0 15px rgba(122,13,20,0.8); text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .brand-mark i { font-size: 0.6em; color: #ffd700; margin-bottom: -2px; }
 
-  #gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; position: relative; }
-  .gate-lang { position: absolute; top: 20px; right: 20px; }
-  .gate-card { width: 100%; max-width: 380px; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 36px 30px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
-  .gate-card h1 { font-family: var(--font-display); font-size: 1.8rem; letter-spacing: 0.02em; margin: 0 0 6px; text-transform: uppercase; color: var(--text); }
-  .gate-card p.sub { color: var(--text-dim); font-size: 0.86rem; margin: 0 0 24px; }
-  
-  .gate-error { color: var(--danger); font-size: 0.82rem; font-weight: 600; margin: 12px 0 0; display: none; }
-  .gate-error.show { display: block; }
-  .gate-links { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
-  .gate-links p { font-size: 0.76rem; color: var(--text-faint); text-transform: uppercase; font-weight: 700; margin: 0 0 4px; }
-  .wa-link { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.82rem; text-transform: uppercase; transition: 0.2s; color: #fff;}
-  .wa-link:hover { filter: brightness(1.2);}
-  .wa-subscribe { background: #25D366; color: #05310f !important; }
+        #gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; position: relative; }
+        .gate-lang { position: absolute; top: 20px; right: 20px; }
+        .gate-card { width: 100%; max-width: 380px; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 36px 30px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
+        .gate-card h1 { font-family: var(--font-display); font-size: 1.8rem; letter-spacing: 0.02em; margin: 0 0 6px; text-transform: uppercase; color: var(--text); }
+        .gate-card p.sub { color: var(--text-dim); font-size: 0.86rem; margin: 0 0 24px; }
+        
+        .gate-error { color: var(--danger); font-size: 0.82rem; font-weight: 600; margin: 12px 0 0; display: none; }
+        .gate-error.show { display: block; }
+        .gate-links { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+        .gate-links p { font-size: 0.76rem; color: var(--text-faint); text-transform: uppercase; font-weight: 700; margin: 0 0 4px; }
+        .wa-link { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.82rem; text-transform: uppercase; transition: 0.2s; color: #fff;}
+        .wa-link:hover { filter: brightness(1.2);}
+        .wa-subscribe { background: #25D366; color: #05310f !important; }
 
-  #app { display: none; min-height: 100vh; }
-  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 28px; border-bottom: 1px solid var(--border); background: rgba(10,4,4,0.9); position: sticky; top: 0; z-index: 20; flex-wrap: wrap; box-shadow: 0 4px 20px rgba(0,0,0,0.5);}
-  .topbar-brand { display: flex; align-items: center; gap: 12px; }
-  .topbar-brand .brand-mark { width: 40px; height: 40px; margin: 0; font-size: 0.85rem; border-radius: 10px; border-width: 1px;}
-  .topbar-brand h1 { font-family: var(--font-display); font-size: 1.25rem; letter-spacing: 0.05em; text-transform: uppercase; margin: 0; color: var(--text); }
-  .topbar-right { display: flex; align-items: center; gap: 14px; }
-  .topbar-user { font-size: 0.82rem; color: var(--ok); font-weight: bold;}
-  .logout-btn { background: #222; border: 1px solid var(--border); color: var(--text-dim); padding: 7px 13px; border-radius: 7px; font-size: 0.78rem; transition: 0.2s ease; }
-  .logout-btn:hover { border-color: var(--red); background: var(--red-dim); color: #fff;}
+        #app { display: none; min-height: 100vh; }
+        .topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 28px; border-bottom: 1px solid var(--border); background: rgba(10,4,4,0.9); position: sticky; top: 0; z-index: 20; flex-wrap: wrap; box-shadow: 0 4px 20px rgba(0,0,0,0.5);}
+        .topbar-brand { display: flex; align-items: center; gap: 12px; }
+        .topbar-brand .brand-mark { width: 40px; height: 40px; margin: 0; font-size: 0.85rem; border-radius: 10px; border-width: 1px;}
+        .topbar-brand h1 { font-family: var(--font-display); font-size: 1.25rem; letter-spacing: 0.05em; text-transform: uppercase; margin: 0; color: var(--text); }
+        .topbar-right { display: flex; align-items: center; gap: 14px; }
+        .topbar-user { font-size: 0.82rem; color: var(--ok); font-weight: bold;}
+        .logout-btn { background: #222; border: 1px solid var(--border); color: var(--text-dim); padding: 7px 13px; border-radius: 7px; font-size: 0.78rem; transition: 0.2s ease; }
+        .logout-btn:hover { border-color: var(--red); background: var(--red-dim); color: #fff;}
 
-  main { padding: 32px 28px 70px; max-width: 1200px; margin: 0 auto; }
+        main { padding: 32px 28px 70px; max-width: 1200px; margin: 0 auto; width: 100%; }
 
-  .home-title { font-family: var(--font-display); font-size: 2.2rem; text-transform: uppercase; letter-spacing: 0.02em; margin: 0 0 4px; color: var(--text); }
-  .home-sub { color: var(--text-dim); font-size: 1rem; margin: 0 0 30px; }
-  .cat-heading { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--red-bright); font-weight: 800; margin: 40px 0 15px; border-bottom: 1px solid var(--border); padding-bottom: 8px;}
-  .cat-heading:first-of-type { margin-top: 0; }
+        .home-title { font-family: var(--font-display); font-size: 2.2rem; text-transform: uppercase; letter-spacing: 0.02em; margin: 0 0 4px; color: var(--text); }
+        .home-sub { color: var(--text-dim); font-size: 1rem; margin: 0 0 30px; }
+        .cat-heading { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--red-bright); font-weight: 800; margin: 40px 0 15px; border-bottom: 1px solid var(--border); padding-bottom: 8px;}
+        .cat-heading:first-of-type { margin-top: 0; }
 
-  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 18px; }
-  .tool-card { background: var(--panel); border: 1px solid #333; border-radius: 14px; padding: 25px 20px; text-align: center; cursor: pointer; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.5);}
-  .tool-card i { font-size: 2.5rem; color: var(--red-bright); margin-bottom: 15px; transition: 0.3s; }
-  .tool-card:hover { transform: translateY(-5px); border-color: var(--red-bright); background: var(--panel-raised); box-shadow: 0 12px 30px rgba(216,30,44,0.2); }
-  .tool-card:hover i { transform: scale(1.1); text-shadow: 0 0 15px var(--red-bright); }
-  .tool-card h3 { font-size: 1.1rem; font-weight: 800; margin: 0 0 8px; color: var(--text); text-transform: uppercase;}
-  .tool-card p { font-size: 0.85rem; color: var(--text-dim); margin: 0; line-height: 1.4; }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 18px; }
+        .tool-card { background: var(--panel); border: 1px solid #333; border-radius: 14px; padding: 25px 20px; text-align: center; cursor: pointer; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.5);}
+        .tool-card i { font-size: 2.5rem; color: var(--red-bright); margin-bottom: 15px; transition: 0.3s; }
+        .tool-card:hover { transform: translateY(-5px); border-color: var(--red-bright); background: var(--panel-raised); box-shadow: 0 12px 30px rgba(216,30,44,0.2); }
+        .tool-card:hover i { transform: scale(1.1); text-shadow: 0 0 15px var(--red-bright); }
+        .tool-card h3 { font-size: 1.1rem; font-weight: 800; margin: 0 0 8px; color: var(--text); text-transform: uppercase;}
+        .tool-card p { font-size: 0.85rem; color: var(--text-dim); margin: 0; line-height: 1.4; }
 
-  #toolView { display: none; }
-  .back-btn { display: inline-flex; align-items: center; gap: 8px; background: #111; border: 1px solid #333; color: #aaa; font-size: 0.85rem; font-weight: bold; cursor: pointer; padding: 10px 18px; border-radius: 8px; margin-bottom: 25px; transition: 0.2s; text-transform: uppercase;}
-  .back-btn:hover { color: #fff; border-color: var(--red-bright); background: var(--red-dim); }
+        #toolView { display: none; }
+        .back-btn { display: inline-flex; align-items: center; gap: 8px; background: #111; border: 1px solid #333; color: #aaa; font-size: 0.85rem; font-weight: bold; cursor: pointer; padding: 10px 18px; border-radius: 8px; margin-bottom: 25px; transition: 0.2s; text-transform: uppercase;}
+        .back-btn:hover { color: #fff; border-color: var(--red-bright); background: var(--red-dim); }
 
-  .tool-title { font-family: var(--font-display); font-size: 2rem; text-transform: uppercase; margin: 0 0 8px; color: var(--red-bright); }
-  .tool-desc { color: var(--text-dim); font-size: 1rem; margin: 0 0 30px; font-weight: 500;}
+        .tool-title { font-family: var(--font-display); font-size: 2rem; text-transform: uppercase; margin: 0 0 8px; color: var(--red-bright); }
+        .tool-desc { color: var(--text-dim); font-size: 1rem; margin: 0 0 30px; font-weight: 500;}
 
-  .workspace-layout { display: flex; flex-direction: row; gap: 30px; align-items: flex-start;}
-  .form-container { flex: 1; min-width: 350px; max-width: 400px; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); position: sticky; top: 90px;}
-  .canvas-container { flex: 2; display: flex; flex-direction: column; width: 100%;}
+        .workspace-layout { display: flex; flex-direction: row; gap: 30px; align-items: flex-start;}
+        .form-container { flex: 1; min-width: 350px; max-width: 400px; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); position: sticky; top: 90px;}
+        .canvas-container { flex: 2; display: flex; flex-direction: column; width: 100%;}
 
-  .field { margin-bottom: 22px; }
-  .field label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; color: #ccc; text-transform: uppercase; letter-spacing: 0.5px;}
-  .field label .req { color: var(--red-bright); margin-left: 3px; font-size: 1.1em;}
+        .field { margin-bottom: 22px; }
+        .field label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; color: #ccc; text-transform: uppercase; letter-spacing: 0.5px;}
+        .field label .req { color: var(--red-bright); margin-left: 3px; font-size: 1.1em;}
 
-  input[type="text"], input[type="number"], select, textarea { width: 100%; background: #050505; border: 1px solid #444; color: var(--text); padding: 12px 14px; border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; transition: 0.2s;}
-  input[type="color"] { width: 100%; height: 45px; background: #050505; border: 1px solid #444; padding: 2px; border-radius: 8px; cursor: pointer;}
-  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--red-bright); box-shadow: 0 0 8px rgba(255,45,58,0.3); }
-  textarea { min-height: 100px; resize: vertical; }
+        input[type="text"], input[type="number"], select, textarea { width: 100%; background: #050505; border: 1px solid #444; color: var(--text); padding: 12px 14px; border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; transition: 0.2s;}
+        input[type="color"] { width: 100%; height: 45px; background: #050505; border: 1px solid #444; padding: 2px; border-radius: 8px; cursor: pointer;}
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--red-bright); box-shadow: 0 0 8px rgba(255,45,58,0.3); }
+        textarea { min-height: 100px; resize: vertical; }
 
-  .dropzone { position: relative; border: 2px dashed #444; border-radius: 12px; padding: 25px 20px; text-align: center; cursor: pointer; background: #080808; transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 10px;}
-  .dropzone i { font-size: 2.5rem; color: #555; transition: 0.2s; }
-  .dropzone:hover { border-color: var(--red-bright); background: #1a0505;}
-  .dropzone:hover i { color: var(--red-bright); transform: scale(1.1); }
-  .dropzone.has-file { border-style: solid; border-color: var(--ok); background: rgba(0, 255, 204, 0.05);}
-  .dropzone.has-file i { color: var(--ok); }
-  .dropzone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-  .dropzone .dz-text { font-size: 0.9rem; font-weight: bold; color: #888; }
-  .dropzone.has-file .dz-text { color: var(--ok); }
+        .dropzone { position: relative; border: 2px dashed #444; border-radius: 12px; padding: 25px 20px; text-align: center; cursor: pointer; background: #080808; transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 10px;}
+        .dropzone i { font-size: 2.5rem; color: #555; transition: 0.2s; }
+        .dropzone:hover { border-color: var(--red-bright); background: #1a0505;}
+        .dropzone:hover i { color: var(--red-bright); transform: scale(1.1); }
+        .dropzone.has-file { border-style: solid; border-color: var(--ok); background: rgba(0, 255, 204, 0.05);}
+        .dropzone.has-file i { color: var(--ok); }
+        .dropzone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        .dropzone .dz-text { font-size: 0.9rem; font-weight: bold; color: #888; }
+        .dropzone.has-file .dz-text { color: var(--ok); }
 
-  .checkbox-row { display: flex; align-items: center; gap: 10px; cursor: pointer;}
-  .checkbox-row input { width: 18px; height: 18px; accent-color: var(--red-bright); cursor: pointer;}
-  .checkbox-row label { margin: 0; font-size: 0.95rem; color: #eee; cursor: pointer; text-transform: none;}
+        .checkbox-row { display: flex; align-items: center; gap: 10px; cursor: pointer;}
+        .checkbox-row input { width: 18px; height: 18px; accent-color: var(--red-bright); cursor: pointer;}
+        .checkbox-row label { margin: 0; font-size: 0.95rem; color: #eee; cursor: pointer; text-transform: none;}
 
-  .status-line { margin-top: 20px; font-size: 0.9rem; font-weight: bold; color: var(--text-dim); display: none; align-items: center; justify-content: center; gap: 10px; padding: 15px; border-radius: 8px; background: #111; border: 1px solid #333; text-align: center;}
-  .status-line.show { display: flex; }
-  .status-line.error { color: var(--danger); border-color: var(--danger); background: rgba(255,82,82,0.1);}
-  .status-line.ok { color: var(--ok); border-color: var(--ok); background: rgba(0,255,204,0.1);}
-  .pulse-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red-bright); animation: pulse 1s infinite ease-in-out; flex-shrink: 0; }
-  @keyframes pulse { 0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--red-bright);} 50% { opacity: 0.3; } }
+        .status-line { margin-top: 20px; font-size: 0.9rem; font-weight: bold; color: var(--text-dim); display: none; align-items: center; justify-content: center; gap: 10px; padding: 15px; border-radius: 8px; background: #111; border: 1px solid #333; text-align: center;}
+        .status-line.show { display: flex; }
+        .status-line.error { color: var(--danger); border-color: var(--danger); background: rgba(255,82,82,0.1);}
+        .status-line.ok { color: var(--ok); border-color: var(--ok); background: rgba(0,255,204,0.1);}
+        .pulse-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red-bright); animation: pulse 1s infinite ease-in-out; flex-shrink: 0; }
+        @keyframes pulse { 0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--red-bright);} 50% { opacity: 0.3; } }
 
-  .checkerboard { background-image: linear-gradient(45deg, #111 25%, transparent 25%), linear-gradient(-45deg, #111 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #111 75%), linear-gradient(-45deg, transparent 75%, #111 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
-  .viewer-container { width: 100%; min-height: 450px; height: 100%; border-radius: 16px; border: 1px solid #333; overflow: hidden; position: relative; background: #080808; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); cursor: grab; }
-  .viewer-container:active { cursor: grabbing; }
-  #viewerWrapper { transform-origin: center center; transition: transform 0.1s ease-out; position: relative; display: inline-block;}
-  #mainResultImg { display: block; max-width: 90vw; max-height: 70vh; border-radius: 8px;}
+        .checkerboard { background-image: linear-gradient(45deg, #111 25%, transparent 25%), linear-gradient(-45deg, #111 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #111 75%), linear-gradient(-45deg, transparent 75%, #111 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
+        .viewer-container { width: 100%; min-height: 450px; height: 100%; border-radius: 16px; border: 1px solid #333; overflow: hidden; position: relative; background: #080808; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); cursor: grab; }
+        .viewer-container:active { cursor: grabbing; }
+        #viewerWrapper { transform-origin: center center; transition: transform 0.1s ease-out; position: relative; display: inline-block;}
+        #mainResultImg { display: block; max-width: 90vw; max-height: 70vh; border-radius: 8px;}
 
-  .btn-visor { position: absolute; z-index: 200; background: rgba(0,0,0,0.8); color: #fff; border: 1px solid #555; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-family: sans-serif; font-size: 0.8rem; cursor: pointer; transition: 0.2s;}
-  .btn-visor:hover { background: #333; border-color: #777;}
-  
-  #magicTagsPanel { background: #000; border: 1px solid #500; border-radius: 8px; padding: 15px; margin-top: 20px; display: none; text-align: center;}
-  .ai-tag { display: inline-block; padding: 6px 12px; margin: 4px; font-size: 12px; border: 1px solid #500; cursor: pointer; border-radius: 6px; color: #aaa; font-weight: bold; transition: 0.2s; background: #111;}
-  .ai-tag.selected { background: var(--red-bright); color: #fff; border-color: var(--red-bright); box-shadow: 0 0 10px rgba(255,45,58,0.5);}
-  .ai-box { position: absolute; border: 2px solid transparent; border-radius: 6px; pointer-events: none; transition: 0.2s; }
-  .ai-box.selected { border-color: var(--red-bright); background: rgba(255,45,58,0.2); box-shadow: 0 0 15px rgba(255,45,58,0.6); }
+        .btn-visor { position: absolute; z-index: 200; background: rgba(0,0,0,0.8); color: #fff; border: 1px solid #555; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-family: sans-serif; font-size: 0.8rem; cursor: pointer; transition: 0.2s;}
+        .btn-visor:hover { background: #333; border-color: #777;}
+        
+        #magicTagsPanel { background: #000; border: 1px solid #500; border-radius: 8px; padding: 15px; margin-top: 20px; display: none; text-align: center;}
+        .ai-tag { display: inline-block; padding: 6px 12px; margin: 4px; font-size: 12px; border: 1px solid #500; cursor: pointer; border-radius: 6px; color: #aaa; font-weight: bold; transition: 0.2s; background: #111;}
+        .ai-tag.selected { background: var(--red-bright); color: #fff; border-color: var(--red-bright); box-shadow: 0 0 10px rgba(255,45,58,0.5);}
+        .ai-box { position: absolute; border: 2px solid transparent; border-radius: 6px; pointer-events: none; transition: 0.2s; }
+        .ai-box.selected { border-color: var(--red-bright); background: rgba(255,45,58,0.2); box-shadow: 0 0 15px rgba(255,45,58,0.6); }
 
-  .btn-primary { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--red-bright), var(--red-dim)); color: #fff; border: none; border-radius: 8px; font-weight: 900; font-size: 0.9rem; text-transform: uppercase; cursor: pointer; transition: 0.2s ease; box-shadow: 0 5px 15px rgba(255,45,58,0.3); margin-top: 15px;}
-  .btn-primary:hover:not(:disabled) { transform: scale(1.02); filter: brightness(1.15); }
-  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--red-bright), var(--red-dim)); color: #fff; border: none; border-radius: 8px; font-weight: 900; font-size: 0.9rem; text-transform: uppercase; cursor: pointer; transition: 0.2s ease; box-shadow: 0 5px 15px rgba(255,45,58,0.3); margin-top: 15px;}
+        .btn-primary:hover:not(:disabled) { transform: scale(1.02); filter: brightness(1.15); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  .btn-restart { background: #222; border: 1px solid #444; color: #fff; box-shadow: none; margin-top: 10px; }
-  .btn-restart:hover:not(:disabled) { background: #333; border-color: #555; }
+        .btn-restart { background: #222; border: 1px solid #444; color: #fff; box-shadow: none; margin-top: 10px; }
+        .btn-restart:hover:not(:disabled) { background: #333; border-color: #555; }
 
-  .quick-actions-bar { margin-top: 15px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; animation: rise 0.4s ease;}
-  .quick-actions-bar h4 { margin: 0 0 15px; font-size: 0.9rem; color: var(--ok); text-transform: uppercase; font-weight: 800; letter-spacing: 0.1em;}
-  .qa-buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-  .btn-qa { background: #111; color: #fff; border: 1px solid #444; padding: 12px 15px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: 0.2s; flex: 1; min-width: 140px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);}
-  .btn-qa:hover { background: var(--red-dim); border-color: var(--red-bright); transform: translateY(-2px);}
+        .quick-actions-bar { margin-top: 15px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; animation: rise 0.4s ease;}
+        .quick-actions-bar h4 { margin: 0 0 15px; font-size: 0.9rem; color: var(--ok); text-transform: uppercase; font-weight: 800; letter-spacing: 0.1em;}
+        .qa-buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+        .btn-qa { background: #111; color: #fff; border: 1px solid #444; padding: 12px 15px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: 0.2s; flex: 1; min-width: 140px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);}
+        .btn-qa:hover { background: var(--red-dim); border-color: var(--red-bright); transform: translateY(-2px);}
 
-  .btn-download { display: inline-block; margin-top: 20px; padding: 15px 30px; background: var(--ok); color: #000; text-decoration: none; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 1rem; transition: 0.2s; text-align: center; width: 100%; box-shadow: 0 5px 15px rgba(0,255,204,0.3);}
-  .btn-download:hover { transform: scale(1.02); background: #fff; }
+        .btn-download { display: inline-block; margin-top: 20px; padding: 15px 30px; background: var(--ok); color: #000; text-decoration: none; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 1rem; transition: 0.2s; text-align: center; width: 100%; box-shadow: 0 5px 15px rgba(0,255,204,0.3);}
+        .btn-download:hover { transform: scale(1.02); background: #fff; }
 
-  #jsonViewer { background: #000; color: var(--ok); border: 1px solid #333; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; width: 100%; height: 250px; overflow-y: auto; text-align: left; resize: none; margin-top: 15px; display: none; }
+        #jsonViewer { background: #000; color: var(--ok); border: 1px solid #333; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; width: 100%; height: 250px; overflow-y: auto; text-align: left; resize: none; margin-top: 15px; display: none; }
 
-  .custom-modal-overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8); z-index: 9999;
-      display: none; align-items: center; justify-content: center;
-      backdrop-filter: blur(5px);
-  }
-  .custom-modal {
-      background: var(--panel); border: 1px solid var(--red-bright);
-      border-radius: 12px; width: 90%; max-width: 450px;
-      padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-      text-align: center;
-  }
-  .custom-modal h3 { margin-top: 0; color: #fff; margin-bottom: 10px;}
-  .custom-modal textarea {
-      width: 100%; height: 100px; background: #050505; border: 1px solid #444;
-      color: #fff; padding: 15px; border-radius: 8px; margin-bottom: 20px;
-      font-family: var(--font-body); font-size: 0.95rem; resize: none;
-  }
-  .custom-modal textarea:focus { border-color: var(--ok); outline: none; box-shadow: 0 0 10px rgba(0,255,204,0.2);}
-  .custom-modal-btns { display: flex; gap: 10px; justify-content: flex-end;}
-  .custom-modal-btns button { padding: 12px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; text-transform: uppercase; font-size: 0.85rem;}
-  .btn-cancel { background: #333; color: #fff;}
-  .btn-cancel:hover { background: #444;}
-  .btn-confirm { background: var(--ok); color: #000; flex: 1;}
-  .btn-confirm:hover { filter: brightness(1.2);}
+        .custom-modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 9999;
+            display: none; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        .custom-modal {
+            background: var(--panel); border: 1px solid var(--red-bright);
+            border-radius: 12px; width: 90%; max-width: 450px;
+            padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            text-align: center;
+        }
+        .custom-modal h3 { margin-top: 0; color: #fff; margin-bottom: 10px;}
+        .custom-modal textarea {
+            width: 100%; height: 100px; background: #050505; border: 1px solid #444;
+            color: #fff; padding: 15px; border-radius: 8px; margin-bottom: 20px;
+            font-family: var(--font-body); font-size: 0.95rem; resize: none;
+        }
+        .custom-modal textarea:focus { border-color: var(--ok); outline: none; box-shadow: 0 0 10px rgba(0,255,204,0.2);}
+        .custom-modal-btns { display: flex; gap: 10px; justify-content: flex-end;}
+        .custom-modal-btns button { padding: 12px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; text-transform: uppercase; font-size: 0.85rem;}
+        .btn-cancel { background: #333; color: #fff;}
+        .btn-cancel:hover { background: #444;}
+        .btn-confirm { background: var(--ok); color: #000; flex: 1;}
+        .btn-confirm:hover { filter: brightness(1.2);}
 
-  @media (max-width: 900px) {
-    .workspace-layout { flex-direction: column; }
-    .form-container { max-width: 100%; position: relative; top: 0; }
-    .canvas-container { width: 100%; }
-  }
-  
-  /* ESTILOS INYECTADOS PARA EL PANEL DE SEMITONOS */
-  .section-box-dtf { background-color: #1a1a1a; padding: 12px; border-radius: 6px; border: 1px solid #2a2a2a; margin-bottom: 10px; }
-  .section-title-dtf { font-size: 12px; font-weight: 700; color: #fff; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
-  .section-title-dtf::before { content: ""; display: block; width: 3px; height: 12px; background-color: var(--red-bright); border-radius: 2px; }
-  .switch-row-dtf { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-  .switch-row-dtf span { font-size: 12px; font-weight: 600; color: #ddd; }
-  .switch-dtf { position: relative; display: inline-block; width: 34px; height: 18px; }
-  .switch-dtf input { opacity: 0; width: 0; height: 0; }
-  .slider-tg-dtf { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 20px; }
-  .slider-tg-dtf:before { position: absolute; content: ""; height: 12px; width: 12px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
-  .switch-dtf input:checked + .slider-tg-dtf { background-color: var(--red-bright); }
-  .switch-dtf input:checked + .slider-tg-dtf:before { transform: translateX(16px); }
-  .dim-grid-dtf { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 5px; }
-  .input-group-dtf label { color: #888; font-size: 10px; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; display: block; }
-  .input-group-dtf input { background: #000; border: 1px solid #2a2a2a; color: white; padding: 6px; border-radius: 4px; font-weight: bold; font-size: 12px; text-align: center; width: 100%; }
-  .btn-grid-dtf { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
-  .btn-grid-dtf.cols-3 { grid-template-columns: repeat(3, 1fr); }
-  .btn-select-dtf { background: #0a0a0a; border: 1px solid #2a2a2a; color: #888; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 5px;}
-  .btn-select-dtf:hover { border-color: #555; }
-  .btn-select-dtf.active { background: rgba(230,0,0,0.15); border-color: var(--red-bright); color: white; }
-  .slider-wrap-dtf { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-  .slider-wrap-dtf label { color: #888; font-size: 10px; font-weight: 600; text-transform: uppercase; margin-bottom: 0; width: 100px; }
-  input[type="range"].ui-slider-dtf { flex: 1; accent-color: var(--red-bright); cursor: pointer; height: 3px; }
-  .val-badge-dtf { background: #000; color: var(--red-bright); padding: 3px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; min-width: 40px; text-align: center; border: 1px solid #2a2a2a; }
-  .color-hidden-dtf { width: 0; height: 0; visibility: hidden; position: absolute;}
-</style>
+        @media (max-width: 900px) {
+            .workspace-layout { flex-direction: column; }
+            .form-container { max-width: 100%; position: relative; top: 0; }
+            .canvas-container { width: 100%; }
+        }
+
+        /* --- ESTILOS INYECTADOS PARA EL PANEL DE SEMITONOS DTF --- */
+        .section-box-dtf { background-color: #1a1a1a; padding: 12px; border-radius: 6px; border: 1px solid #2a2a2a; margin-bottom: 15px; }
+        .section-title-dtf { font-size: 12px; font-weight: 700; color: #fff; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; text-transform: uppercase;}
+        .section-title-dtf::before { content: ""; display: block; width: 3px; height: 12px; background-color: var(--red-bright); border-radius: 2px; }
+        .lbl-dtf { color: #888; font-size: 10px; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; display: block; }
+        .switch-row-dtf { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .switch-row-dtf span { font-size: 12px; font-weight: 600; color: #ddd; }
+        .switch-dtf { position: relative; display: inline-block; width: 34px; height: 18px; }
+        .switch-dtf input { opacity: 0; width: 0; height: 0; }
+        .slider-tg-dtf { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 20px; }
+        .slider-tg-dtf:before { position: absolute; content: ""; height: 12px; width: 12px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+        .switch-dtf input:checked + .slider-tg-dtf { background-color: var(--red-bright); }
+        .switch-dtf input:checked + .slider-tg-dtf:before { transform: translateX(16px); }
+        .btn-scan-dtf { background: #222; border: 1px solid #444; color: #fff; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 5px; transition: 0.2s; width: 100%;}
+        .btn-scan-dtf:hover { background: #333; border-color: #ff00ff; color: #ff00ff; box-shadow: 0 0 10px rgba(255,0,255,0.2);}
+        .dim-grid-dtf { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 5px; }
+        .input-group-dtf input { background: #000; border: 1px solid #2a2a2a; color: white; padding: 6px; border-radius: 4px; font-weight: bold; font-size: 12px; text-align: center; width: 100%; }
+        .btn-grid-dtf { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+        .btn-grid-dtf.cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .btn-select-dtf { background: #0a0a0a; border: 1px solid #2a2a2a; color: #888; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 5px;}
+        .btn-select-dtf.active { background: rgba(230,0,0,0.15); border-color: var(--red-bright); color: white; }
+        .slider-wrap-dtf { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+        input[type="range"].ui-slider-dtf { flex: 1; accent-color: var(--red-bright); cursor: pointer; height: 3px; }
+        .val-badge-dtf { background: #000; color: var(--red-bright); padding: 3px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; min-width: 40px; text-align: center; border: 1px solid #2a2a2a; }
+        .color-hidden { width: 0; height: 0; visibility: hidden; position: absolute;}
+        
+        /* Overlays del Visor DTF */
+        .fabric-layer { display:none; position:absolute; top:0; left:0; width:100%; height:100%; background-color:#ffffff; clip-path:inset(0 50% 0 0); z-index:2; pointer-events:none; border-radius:8px;}
+        #semiOverlayCanvas { display:none; position:absolute; top:0; left:0; width:100%; height:100%; object-fit:contain; pointer-events:none; z-index:6; filter:drop-shadow(0 0 3px #ff00ff); border-radius:8px;}
+        .slider-line { display:none; position:absolute; top:0; bottom:0; left:50%; width:2px; background-color:var(--red-bright); z-index:7; pointer-events:none; box-shadow:0 0 10px rgba(0,0,0,0.8);}
+        .slider-line::after { content:"↔"; position:absolute; top:50%; left:-14px; width:28px; height:28px; background:var(--red-bright); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:14px; transform:translateY(-50%); box-shadow:0 0 8px rgba(0,0,0,0.8);}
+        .drag-slider { display:none; -webkit-appearance:none; appearance:none; position:absolute; top:0; left:0; width:100%; height:100%; background:transparent; outline:none; z-index:10; margin:0; pointer-events:none; opacity:0; cursor:ew-resize;}
+        .drag-slider::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:40px; height:60px; background:transparent; cursor:ew-resize; pointer-events:all; }
+        .status-badge { display:none; position:absolute; top:12px; background:rgba(0,0,0,0.8); color:white; padding:4px 10px; border-radius:4px; font-size:10px; font-weight:bold; z-index:15; border:1px solid var(--border-color); pointer-events:none;}
+        .badge-left { left:12px; } .badge-right { right:12px; background:rgba(230,0,0,0.8); border:none;}
+    </style>
 </head>
 <body>
 
@@ -220,17 +233,14 @@
         <p style="font-size: 0.9rem; color: var(--text-dim); margin-bottom: 20px; text-align: left; line-height: 1.4;">
             Ajusta el color y grosor del resplandor:
         </p>
-        
         <div style="background:#050505; padding:15px; border-radius:8px; margin-bottom:15px; border: 1px solid #444; display:flex; align-items:center; justify-content:space-between;">
             <label style="font-size:0.85rem; font-weight:bold; color:#ccc;">Color del Resplandor:</label>
             <input type="color" id="modalGlowColor" value="#ff0000" style="width:45px; height:45px; padding:0; border:none; background:none; cursor:pointer;">
         </div>
-
         <div style="background:#050505; padding:15px; border-radius:8px; margin-bottom:20px; border: 1px solid #444; text-align:left;">
             <div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:bold; margin-bottom:10px; color:#ccc;"><span>Grosor:</span><span id="modalGlowVal">30</span></div>
             <input type="range" id="modalGlowSize" min="1" max="100" value="30" style="width:100%; accent-color:var(--red-bright);" oninput="document.getElementById('modalGlowVal').innerText=this.value">
         </div>
-
         <div class="custom-modal-btns">
             <button class="btn-cancel" onclick="document.getElementById('glowModal').style.display='none'">Cancelar</button>
             <button class="btn-confirm" id="btnConfirmGlow"><i class="fa-solid fa-wand-sparkles mr-2"></i> Aplicar</button>
@@ -248,9 +258,7 @@
   <div class="gate-card">
     <div class="brand-mark"><i class="fa-solid fa-crown"></i><span>J&J</span></div>
     <h1>Comunidad J&J</h1>
-    
     <p class="sub" data-i18n="gate_sub">Inicia sesión con Telegram para acceder.</p>
-    
     <div style="margin-top:20px; margin-bottom: 20px; display:flex; justify-content:center;">
         <script async src="https://telegram.org/js/telegram-widget.js?22" 
                 data-telegram-login="acceso_paginabot" 
@@ -259,9 +267,7 @@
                 data-auth-url="https://ia-studio-jj.onrender.com/login-telegram"
                 data-request-access="write"></script>
     </div>
-
     <p class="gate-error" id="gateError" data-i18n="gate_error"></p>
-    
     <div class="gate-links">
       <p>¿AÚN NO ESTÁS EN EL GRUPO VIP?</p>
       <a href="https://wa.me/51904503246" target="_blank" class="wa-link wa-subscribe">
@@ -304,8 +310,92 @@
 
       <div class="workspace-layout">
         <div class="form-container">
+          <!-- FORMULARIO ORIGINAL (Oculto en modo DTF) -->
           <form id="form"></form>
           
+          <!-- PANEL INYECTADO: SÚPER PANEL DTF STUDIO PRO (Oculto por defecto) -->
+          <div id="dtfCustomPanel" style="display:none; background-color: var(--bg-panel); border-radius: 10px;">
+              <div class="dropzone" onclick="document.getElementById('dtf_file_input').click()" style="margin-bottom:15px;">
+                  <i class="fa-solid fa-braille"></i>
+                  <div class="dz-text" id="dtf_dz_text">Sube tu diseño para Escanear o Semitonos</div>
+                  <input type="file" id="dtf_file_input" accept="image/png, image/jpeg, image/webp" style="display:none">
+              </div>
+
+              <div class="section-box-dtf">
+                  <div class="section-title-dtf">MEDIDAS DE IMPRESIÓN (CM)</div>
+                  <div class="dtf-dim-grid">
+                      <div class="dtf-input-group"><label class="lbl-dtf">ANCHO</label><input type="number" id="anchoInput" value="29.7" step="0.1"></div>
+                      <div class="dtf-input-group"><label class="lbl-dtf">ALTO</label><input type="number" id="altoInput" value="42.0" step="0.1"></div>
+                  </div>
+              </div>
+
+              <div class="section-box-dtf">
+                  <div class="section-title-dtf">MEJORA Y MÁSCARA (RIP)</div>
+                  <div class="switch-row-dtf">
+                      <span>✨ Mejor Calidad IA (x4)</span>
+                      <label class="switch-dtf"><input type="checkbox" id="checkIA"><span class="slider-tg-dtf"></span></label>
+                  </div>
+                  <div class="switch-row-dtf">
+                      <span>✂️ Quitar Fondo Sólido</span>
+                      <label class="switch-dtf"><input type="checkbox" id="checkBG"><span class="slider-tg-dtf"></span></label>
+                  </div>
+                  <div class="switch-row-dtf">
+                      <span>🔹 Contraer Bordes (Asfixia)</span>
+                      <label class="switch-dtf"><input type="checkbox" id="checkChoke" checked><span class="slider-tg-dtf"></span></label>
+                  </div>
+                  <div class="switch-row-dtf" style="margin-bottom: 0;">
+                      <span>🛡️ Fijar Semitransparencias</span>
+                      <label class="switch-dtf"><input type="checkbox" id="checkSemi" checked><span class="slider-tg-dtf"></span></label>
+                  </div>
+                  <button type="button" class="btn-scan-dtf" id="btnScan">🔍 Escanear Semitransparencias</button>
+              </div>
+
+              <div class="section-box-dtf" id="dtfTramadoOptions">
+                  <div class="section-title-dtf">TRAMADO Y SATURACIÓN</div>
+                  <label class="lbl-dtf">COLOR A PERFORAR</label>
+                  <div class="btn-grid-dtf cols-3" id="colorGroup">
+                      <button type="button" class="btn-select-dtf active" data-val="#000000">⚫️ Negro</button>
+                      <button type="button" class="btn-select-dtf" data-val="#ffffff">⚪️ Blanco</button>
+                      <button type="button" class="btn-select-dtf" id="btnCustomColor" data-val="#ff0000" onclick="document.getElementById('colorPickerRemove').click();">
+                          <input type="color" class="color-hidden" id="colorPickerRemove" value="#ff0000"> 🎨 Otro
+                      </button>
+                  </div>
+
+                  <label class="lbl-dtf" style="margin-top: 10px;">SATURACIÓN</label>
+                  <div class="btn-grid-dtf cols-3" id="satGroup">
+                      <button type="button" class="btn-select-dtf active" data-val="1.0">Normal</button>
+                      <button type="button" class="btn-select-dtf" data-val="1.5">Media</button>
+                      <button type="button" class="btn-select-dtf" data-val="2.0">Alta</button>
+                  </div>
+
+                  <label class="lbl-dtf" style="margin-top: 10px;">MODO DE LIMPIEZA</label>
+                  <div class="btn-grid-dtf cols-2" id="modoGroup">
+                      <button type="button" class="btn-select-dtf" data-val="baja">✨ Clásico (Suave)</button>
+                      <button type="button" class="btn-select-dtf active" data-val="global">🌌 Tramado Total</button>
+                  </div>
+
+                  <label class="lbl-dtf" style="margin-top: 10px;">FORMA DEL ENTRAMADO</label>
+                  <div class="btn-grid-dtf cols-2" id="tramaGroup">
+                      <button type="button" class="btn-select-dtf active" data-val="round">Puntos</button>
+                      <button type="button" class="btn-select-dtf" data-val="line">Líneas</button>
+                      <button type="button" class="btn-select-dtf" data-val="ellipse">Elipse</button>
+                      <button type="button" class="btn-select-dtf" data-val="roseta">Doble Trama</button>
+                  </div>
+              </div>
+
+              <div class="section-box-dtf" id="dtfParamsOptions">
+                  <div class="section-title-dtf">PARAMETROS MANUALES</div>
+                  <div class="slider-wrap-dtf"><label style="width:110px;">TOLERANCIA (1-100)</label><input type="range" class="ui-slider-dtf" id="tolSlider" min="1" max="100" value="20"><span class="val-badge-dtf" id="tolVal">20</span></div>
+                  <div class="slider-wrap-dtf"><label style="width:110px;">LPI (GROSOR PX)</label><input type="range" class="ui-slider-dtf" id="pxSlider" min="5" max="20" value="10"><span class="val-badge-dtf" id="pxVal">10px</span></div>
+                  <div class="slider-wrap-dtf"><label style="width:110px;">ÁNGULO</label><input type="range" class="ui-slider-dtf" id="angSlider" min="0" max="90" value="22"><span class="val-badge-dtf" id="angVal">22°</span></div>
+              </div>
+
+              <button type="button" class="btn-primary" id="btnDtfRunSemi">
+                  <i class="fa-solid fa-bolt mr-2"></i> Procesar Semitonos
+              </button>
+          </div>
+          <!-- Fin Panel DTF -->
+
           <button type="button" id="btnRestart" class="btn-primary btn-restart" style="display:none;" onclick="reiniciarHerramienta(true)">
              <i class="fa-solid fa-rotate-left mr-2"></i> <span data-i18n="restart_btn">Subir Otra Imagen</span>
           </button>
@@ -321,21 +411,17 @@
           <div id="masterColorPanel" style="display:none; background: #000; border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-top: 15px;">
               <h4 style="margin: 0 0 10px; font-size: 1rem; color: var(--ok); text-transform: uppercase; font-weight: 800; text-align: center;"><i class="fa-solid fa-fill-drip mr-2"></i> Master Color</h4>
               <p style="font-size:0.75rem; color:#888; text-align:center; margin-bottom:15px;">1. Copia un color con el gotero.<br>2. Selecciona una zona o reemplázalo en todo.</p>
-
               <div style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:10px; border-radius:6px; margin-bottom:10px;">
                   <button type="button" id="btnEyedropper" class="btn-qa" style="min-width: unset; padding: 10px; margin:0;"><i class="fa-solid fa-eye-dropper"></i> Gotero</button>
                   <div id="mcOldColor" style="width:30px; height:30px; background:#fff; border: 1px solid #555; border-radius:4px;"></div>
                   <span style="color:var(--ok); font-weight:bold;">➜</span>
                   <input type="color" id="mcNewColor" value="#ff0000" style="width:35px; height:35px; padding:0; border:none; background:none; cursor:pointer;">
               </div>
-
               <div style="background:#111; padding:10px; border-radius:6px; margin-bottom:10px;">
                   <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; margin-bottom:5px; color:#ccc;"><span>Tolerancia de Color:</span><span id="mcTolVal">40</span></div>
                   <input type="range" id="mcTolerance" min="1" max="150" value="40" style="width:100%; accent-color:var(--red-bright);" oninput="document.getElementById('mcTolVal').innerText=this.value">
               </div>
-
               <button type="button" id="btnMcSelect" class="btn-qa" style="width:100%; margin-bottom:10px; background:#444;"><i class="fa-solid fa-vector-square mr-2"></i> Dibujar Zona</button>
-              
               <div style="display:flex; gap:10px;">
                   <button type="button" onclick="applyMasterColorZone()" class="btn-primary" style="margin-top:0; flex:1; padding: 10px; font-size: 0.75rem;"><i class="fa-solid fa-square-check block mb-1 text-lg"></i> En Zona</button>
                   <button type="button" onclick="applyMasterColorGlobal()" class="btn-primary" style="margin-top:0; flex:1; padding: 10px; font-size: 0.75rem;"><i class="fa-solid fa-globe block mb-1 text-lg"></i> En Todo</button>
@@ -364,11 +450,23 @@
                   Zoom: <span id="lblZoom">100%</span>
               </span>
 
+              <div class="status-badge badge-left" id="badgeLeft">TELA SIMULADA</div>
+              <div class="status-badge badge-right" id="badgeRight">FONDO TRANSPARENTE</div>
+
               <div id="viewerWrapper">
                   <div id="imgContainer" style="position:relative; display:inline-block; line-height:0;">
                       <img id="mainResultImg" src="" alt="Resultado" style="display:block; max-width: 90vw; max-height: 70vh; border-radius: 8px;">
                       <canvas id="editCanvas" style="display:none; max-width: 90vw; max-height: 70vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.8); margin: 0 auto;"></canvas>
                       <canvas id="maskCanvas" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; z-index:10; opacity:0.6; cursor:crosshair; touch-action:none; border-radius: 8px;"></canvas>
+                      
+                      <!-- Elementos Inyectados para Visor Semitonos -->
+                      <div class="fabric-layer" id="fabricLayer">
+                          <img id="imgConTela" class="img-base" src="">
+                      </div>
+                      <canvas id="semiOverlayCanvas"></canvas>
+                      <div class="slider-line" id="sliderLine"></div>
+                      <input type="range" min="0" max="100" value="50" class="drag-slider" id="dtfDragSlider">
+
                       <video id="mainResultVideo" controls loop style="display: none; max-width: 90vw; max-height: 70vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.8);"></video>
                       <div id="boxesContainer" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
                   </div>
@@ -386,7 +484,6 @@
     </div>
   </main>
 </div>
-
 <script>
 const UI = {
   es: {
@@ -476,7 +573,11 @@ function buildHome(models) {
     categories[cat].forEach(m => {
       const card = document.createElement("button"); card.type = "button"; card.className = "tool-card"; const icon = m.icon ? m.icon : "fa-wand-magic-sparkles";
       card.innerHTML = `<i class="fa-solid ${icon}"></i><h3>${tl(m.label).split('|')[0].trim()}</h3><p>${tl(m.desc).split('|')[0].trim()}</p>`;
-      card.addEventListener("click", () => openTool(m.slug)); grid.appendChild(card);
+      
+      card.addEventListener("click", function() {
+          openTool(m.slug);
+      });
+      grid.appendChild(card);
     });
     catContainer.appendChild(grid);
   });
@@ -488,6 +589,27 @@ function openTool(slug) {
   const icon = model.icon ? model.icon : "fa-wand-magic-sparkles";
   toolTitle.innerHTML = `<i class="fa-solid ${icon} mr-3"></i> ${tl(model.label).split('|')[0].trim()}`; toolDesc.textContent = tl(model.desc).split('|')[0].trim();
   reiniciarHerramienta(true);
+
+  // LOGICA PARA MOSTRAR/OCULTAR EL SUPER PANEL DTF
+  const dtfCustomPanel = document.getElementById("dtfCustomPanel");
+  if (slug === "semitonos-dtf" || slug === "detector-dtf") {
+      form.style.display = "none";
+      dtfCustomPanel.style.display = "block";
+      if(slug === "detector-dtf") {
+          document.getElementById("btnScan").style.display = "flex";
+          document.getElementById("dtfTramadoOptions").style.display = "none";
+          document.getElementById("dtfParamsOptions").style.display = "none";
+          document.getElementById("btnDtfRunSemi").style.display = "none";
+      } else {
+          document.getElementById("btnScan").style.display = "none";
+          document.getElementById("dtfTramadoOptions").style.display = "block";
+          document.getElementById("dtfParamsOptions").style.display = "block";
+          document.getElementById("btnDtfRunSemi").style.display = "block";
+      }
+  } else {
+      form.style.display = "block";
+      dtfCustomPanel.style.display = "none";
+  }
 
   if (slug === 'master-color' && (urlResultMemoria || currentImageData)) {
       setTimeout(() => {
@@ -518,6 +640,18 @@ function reiniciarHerramienta(keepTool = false) {
     statusLine.classList.remove("show", "error", "ok"); btnDownloadResult.style.display = "none"; btnRestart.style.display = "none"; magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; quickActionsBar.style.display = "none"; document.getElementById("masterColorPanel").style.display = "none";
     document.getElementById("downloadBtnText").innerText = t("download_btn"); document.getElementById('btnAntes').style.display = 'none'; document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block'; jsonViewer.style.display = "none";
     document.querySelectorAll('.dropzone').forEach(dz => { dz.classList.remove("has-file"); dz.querySelector('i').className = "fa-solid fa-cloud-arrow-up"; dz.querySelector('.dz-text').textContent = t("dropzone_text"); });
+    
+    // Limpiar Visor DTF al reiniciar
+    document.getElementById('dtf_file_input').value = '';
+    document.getElementById('dtf_dz_text').textContent = "Sube tu diseño para Escanear o Semitonos";
+    document.getElementById('fabricLayer').style.display = 'none';
+    document.getElementById('semiOverlayCanvas').style.display = 'none';
+    document.getElementById('sliderLine').style.display = 'none';
+    document.getElementById('dtfDragSlider').style.display = 'none';
+    document.getElementById('badgeLeft').style.display = 'none';
+    document.getElementById('badgeRight').style.display = 'none';
+    dtfFileActual = null;
+
     if (currentSlug && keepTool) renderForm(MODELS.find(m => m.slug === currentSlug)); resetearZoom();
 }
 
@@ -526,6 +660,7 @@ document.getElementById("backBtn").addEventListener("click", () => { toolView.st
 function renderForm(model) {
   form.innerHTML = "";
   if (model.slug === 'master-color') { document.getElementById('masterColorPanel').style.display = 'block'; } else { document.getElementById('masterColorPanel').style.display = 'none'; }
+  if (model.fields.length === 0) return;
 
   model.fields.forEach(field => {
     const wrap = document.createElement("div"); wrap.className = "field";
@@ -1113,305 +1248,202 @@ btnExecuteErase.addEventListener("click", async () => {
     finally { btnExecuteErase.disabled = false; btnExecuteErase.innerHTML = `<i class="fa-solid fa-eraser mr-2"></i> ` + t("magic_btn_apply"); }
 });
 
-// ==========================================
-// INYECCIÓN DE LA HERRAMIENTA SEMITONOS
-// ==========================================
-(function initSemitonos() {
-    const formCont = document.querySelector(".form-container");
-    const semitonosPanel = document.createElement("div");
-    semitonosPanel.id = "dtfCustomPanel";
-    semitonosPanel.style.display = "none";
-    semitonosPanel.innerHTML = `
-        <style>
-            .dtf-box { background-color: #1a1a1a; padding: 12px; border-radius: 6px; border: 1px solid #2a2a2a; margin-bottom: 12px; }
-            .dtf-title { font-size: 12px; font-weight: 700; color: #ffffff; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; text-transform: uppercase;}
-            .dtf-title::before { content: ""; display: block; width: 3px; height: 12px; background-color: var(--red-bright); border-radius: 2px; }
-            .dtf-label { color: #888888; font-size: 10px; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; display: block; }
-            .dtf-switch-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-            .dtf-switch-row span { font-size: 12px; font-weight: 600; color: #ddd; }
-            .dtf-switch { position: relative; display: inline-block; width: 34px; height: 18px; }
-            .dtf-switch input { opacity: 0; width: 0; height: 0; }
-            .dtf-slider-tg { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 20px; }
-            .dtf-slider-tg:before { position: absolute; content: ""; height: 12px; width: 12px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
-            .dtf-switch input:checked + .dtf-slider-tg { background-color: var(--red-bright); }
-            .dtf-switch input:checked + .dtf-slider-tg:before { transform: translateX(16px); }
-            .dtf-btn-scan { background: #222; border: 1px solid #444; color: #fff; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 5px; transition: 0.2s; width: 100%;}
-            .dtf-btn-scan:hover { background: #333; border-color: #ff00ff; color: #ff00ff; box-shadow: 0 0 10px rgba(255,0,255,0.2);}
-            .dtf-dim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 5px; }
-            .dtf-input-group input { background: #000; border: 1px solid #2a2a2a; color: white; padding: 6px; border-radius: 4px; font-weight: bold; font-size: 12px; text-align: center; width: 100%; }
-            .dtf-btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
-            .dtf-btn-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
-            .dtf-btn-select { background: #0a0a0a; border: 1px solid #2a2a2a; color: #888888; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 5px;}
-            .dtf-btn-select.active { background: rgba(230,0,0,0.15); border-color: var(--red-bright); color: white; }
-            .dtf-slider-wrap { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-            input[type="range"].dtf-ui-slider { flex: 1; accent-color: var(--red-bright); cursor: pointer; height: 3px; }
-            .dtf-val-badge { background: #000; color: var(--red-bright); padding: 3px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; min-width: 40px; text-align: center; border: 1px solid #2a2a2a; }
-            .color-hidden { width: 0; height: 0; visibility: hidden; position: absolute;}
-        </style>
-        
-        <div class="dropzone" onclick="document.getElementById('dtf_file_input').click()" style="margin-bottom:15px;">
-            <i class="fa-solid fa-braille"></i>
-            <div class="dz-text" id="dtf_dz_text">Sube tu diseño para Semitonos</div>
-            <input type="file" id="dtf_file_input" accept="image/png, image/jpeg, image/webp" style="display:none">
-        </div>
+// LOGICA INYECTADA DE LA HERRAMIENTA SEMITONOS
+let dtfFileActual = null;
 
-        <div class="dtf-box">
-            <div class="dtf-title">MEDIDAS DE IMPRESIÓN (CM)</div>
-            <div class="dtf-dim-grid">
-                <div class="dtf-input-group"><label class="dtf-label">ANCHO</label><input type="number" id="anchoInput" value="29.7" step="0.1"></div>
-                <div class="dtf-input-group"><label class="dtf-label">ALTO</label><input type="number" id="altoInput" value="42.0" step="0.1"></div>
-            </div>
-        </div>
-
-        <div class="dtf-box">
-            <div class="dtf-title">MEJORA Y MÁSCARA (RIP)</div>
-            <div class="dtf-switch-row">
-                <span>✨ Mejorar Calidad IA (x4)</span>
-                <label class="dtf-switch"><input type="checkbox" id="checkIA"><span class="dtf-slider-tg"></span></label>
-            </div>
-            <div class="dtf-switch-row">
-                <span>✂️ Quitar Fondo Sólido</span>
-                <label class="dtf-switch"><input type="checkbox" id="checkBG"><span class="dtf-slider-tg"></span></label>
-            </div>
-            <div class="dtf-switch-row">
-                <span>🔹 Contraer Bordes (Asfixia 1px)</span>
-                <label class="dtf-switch"><input type="checkbox" id="checkChoke" checked><span class="dtf-slider-tg"></span></label>
-            </div>
-            <div class="dtf-switch-row" style="margin-bottom: 0;">
-                <span>🛡️ Fijar Semitransparencias</span>
-                <label class="dtf-switch"><input type="checkbox" id="checkSemi" checked><span class="dtf-slider-tg"></span></label>
-            </div>
-            <button class="dtf-btn-scan" id="btnScan">🔍 Escanear y Mostrar Píxeles Rotos</button>
-        </div>
-
-        <div class="dtf-box">
-            <div class="dtf-title">TRAMADO Y SATURACIÓN</div>
-            <label class="dtf-label">COLOR A PERFORAR</label>
-            <div class="dtf-btn-grid cols-3" id="colorGroup">
-                <button type="button" class="dtf-btn-select active" data-val="#000000">⚫️ Negro</button>
-                <button type="button" class="dtf-btn-select" data-val="#ffffff">⚪️ Blanco</button>
-                <button type="button" class="dtf-btn-select" id="btnCustomColor" data-val="#ff0000" onclick="document.getElementById('colorPickerRemove').click();">
-                    <input type="color" class="color-hidden" id="colorPickerRemove" value="#ff0000"> 🎨 Otro
-                </button>
-            </div>
-
-            <label class="dtf-label">SATURACIÓN</label>
-            <div class="dtf-btn-grid cols-3" id="satGroup">
-                <button type="button" class="dtf-btn-select active" data-val="1.0">Normal</button>
-                <button type="button" class="dtf-btn-select" data-val="1.5">Media</button>
-                <button type="button" class="dtf-btn-select" data-val="2.0">Alta</button>
-            </div>
-
-            <label class="dtf-label">MODO DE LIMPIEZA</label>
-            <div class="dtf-btn-grid cols-2" id="modoGroup">
-                <button type="button" class="dtf-btn-select" data-val="baja">✨ Clásico (Suave)</button>
-                <button type="button" class="dtf-btn-select active" data-val="global">🌌 Tramado Total</button>
-            </div>
-
-            <label class="dtf-label" style="margin-top: 5px;">FORMA DEL ENTRAMADO</label>
-            <div class="dtf-btn-grid cols-2" id="tramaGroup">
-                <button type="button" class="dtf-btn-select active" data-val="round">Puntos</button>
-                <button type="button" class="dtf-btn-select" data-val="line">Líneas</button>
-                <button type="button" class="dtf-btn-select" data-val="ellipse">Elipse</button>
-                <button type="button" class="dtf-btn-select" data-val="roseta">Doble Trama</button>
-            </div>
-        </div>
-
-        <div class="dtf-box">
-            <div class="dtf-title">PARAMETROS MANUALES</div>
-            <label class="dtf-label">TOLERANCIA (1-100) (Usar 20 en Suave)</label>
-            <div class="dtf-slider-wrap"><input type="range" class="dtf-ui-slider" id="tolSlider" min="1" max="100" value="20"><span class="dtf-val-badge" id="tolVal">20</span></div>
-
-            <label class="dtf-label">LPI (GROSOR PIXEL)</label>
-            <div class="dtf-slider-wrap"><input type="range" class="dtf-ui-slider" id="pxSlider" min="5" max="20" value="10"><span class="dtf-val-badge" id="pxVal">10px</span></div>
-            
-            <label class="dtf-label">ÁNGULO</label>
-            <div class="dtf-slider-wrap"><input type="range" class="dtf-ui-slider" id="angSlider" min="0" max="90" value="22"><span class="dtf-val-badge" id="angVal">22°</span></div>
-        </div>
-
-        <button type="button" class="btn-primary" id="btnDtfRunSemi">
-            <i class="fa-solid fa-bolt mr-2"></i> Procesar Semitonos
-        </button>
-    `;
-
-    formCont.insertBefore(semitonosPanel, document.getElementById("status"));
-
-    let overlay = document.createElement("canvas");
-    overlay.id = "dtfOverlayCanvas";
-    overlay.style.position = "absolute";
-    overlay.style.top = "0"; overlay.style.left = "0"; overlay.style.width = "100%"; overlay.style.height = "100%";
-    overlay.style.objectFit = "contain"; overlay.style.pointerEvents = "none"; overlay.style.zIndex = "6"; overlay.style.display = "none";
-    overlay.style.filter = "drop-shadow(0 0 3px #ff00ff)";
-    document.getElementById("imgContainer").appendChild(overlay);
-
-    function setupDtfGroup(groupId) {
-        const btns = document.querySelectorAll(`#${groupId} .dtf-btn-select`);
-        btns.forEach(btn => {
-            if (btn.id === "btnCustomColor") return;
-            btn.addEventListener("click", () => {
-                btns.forEach(b => b.classList.remove("active"));
-                btn.classList.add("active");
-            });
-        });
-    }
-    setupDtfGroup("colorGroup");
-    setupDtfGroup("satGroup");
-    setupDtfGroup("modoGroup");
-    setupDtfGroup("tramaGroup");
-
-    document.getElementById("colorPickerRemove").addEventListener("change", function() {
-        const btn = document.getElementById("btnCustomColor");
-        btn.setAttribute("data-val", this.value);
-        document.querySelectorAll("#colorGroup .dtf-btn-select").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-    });
-
-    ["tolSlider", "pxSlider", "angSlider"].forEach(id => {
-        document.getElementById(id).addEventListener("input", function() {
-            let val = this.value;
-            if(id === "pxSlider") val += "px";
-            if(id === "angSlider") val += "°";
-            document.getElementById(id.replace("Slider", "Val")).innerText = val;
+function setupDtfGroup(groupId) {
+    const btns = document.querySelectorAll(`#${groupId} .btn-select-dtf`);
+    btns.forEach(btn => {
+        if (btn.id === "btnCustomColor") return;
+        btn.addEventListener("click", () => {
+            btns.forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
         });
     });
+}
+setupDtfGroup("colorGroup");
+setupDtfGroup("satGroup");
+setupDtfGroup("modoGroup");
+setupDtfGroup("tramaGroup");
 
-    let aspectRatio = 1;
-    document.getElementById("anchoInput").addEventListener("input", function() {
-        if(this.value > 0) document.getElementById("altoInput").value = (this.value / aspectRatio).toFixed(1);
-    });
-    document.getElementById("altoInput").addEventListener("input", function() {
-        if(this.value > 0) document.getElementById("anchoInput").value = (this.value * aspectRatio).toFixed(1);
-    });
+document.getElementById("colorPickerRemove").addEventListener("change", function() {
+    const btn = document.getElementById("btnCustomColor");
+    btn.setAttribute("data-val", this.value);
+    document.querySelectorAll("#colorGroup .btn-select-dtf").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+});
 
-    let dtfFile = null;
-    document.getElementById("dtf_file_input").addEventListener("change", function(e) {
-        const f = e.target.files[0]; if(!f) return;
-        dtfFile = f;
-        document.getElementById("dtf_dz_text").textContent = f.name;
-        const url = URL.createObjectURL(f);
-        urlOriginalMemoria = url;
-        urlResultMemoria = url;
-        
+["tolSlider", "pxSlider", "angSlider"].forEach(id => {
+    document.getElementById(id).addEventListener("input", function() {
+        let val = this.value;
+        if(id === "pxSlider") val += "px";
+        if(id === "angSlider") val += "°";
+        document.getElementById(id.replace("Slider", "Val")).innerText = val;
+    });
+});
+
+let dtfAspectRatio = 1;
+document.getElementById("anchoInput").addEventListener("input", function() {
+    if(this.value > 0) document.getElementById("altoInput").value = (this.value / dtfAspectRatio).toFixed(1);
+});
+document.getElementById("altoInput").addEventListener("input", function() {
+    if(this.value > 0) document.getElementById("anchoInput").value = (this.value * dtfAspectRatio).toFixed(1);
+});
+
+function slideReveal(val) {
+    const rightCrop = 100 - val;
+    document.getElementById('fabricLayer').style.clipPath = `inset(0 ${rightCrop}% 0 0)`;
+    document.getElementById('sliderLine').style.left = `${val}%`;
+}
+
+document.getElementById("dtf_file_input").addEventListener("change", function(e) {
+    const f = e.target.files[0]; if(!f) return;
+    dtfFileActual = f;
+    document.getElementById("dtf_dz_text").textContent = f.name;
+    const url = URL.createObjectURL(f);
+    urlOriginalMemoria = url;
+    urlResultMemoria = url;
+    
+    const img = new Image();
+    img.onload = () => {
+        dtfAspectRatio = img.width / img.height;
+        document.getElementById("anchoInput").value = "29.7";
+        document.getElementById("altoInput").value = (29.7 / dtfAspectRatio).toFixed(1);
+    };
+    img.src = url;
+
+    tray.style.display = "block";
+    btnRestart.style.display = "block";
+    
+    mainResultImg.style.display = "none";
+    document.getElementById('imgTransparente').src = url;
+    document.getElementById('imgConTela').src = url;
+    document.getElementById('fabricLayer').style.display = 'block';
+    document.getElementById('semiOverlayCanvas').style.display = 'none';
+    document.getElementById('sliderLine').style.display = 'block';
+    document.getElementById('dtfDragSlider').style.display = 'block';
+    document.getElementById('badgeLeft').style.display = 'block';
+    document.getElementById('badgeRight').style.display = 'block';
+    
+    slideReveal(50);
+    document.getElementById('dtfDragSlider').value = 50;
+
+    resetearZoom();
+    document.getElementById('imgContainer').style.display = 'inline-block';
+    document.getElementById('btnCentrar').style.display = 'block';
+    document.getElementById('btnZoomLabel').style.display = 'block';
+});
+
+document.getElementById("btnScan").addEventListener("click", () => {
+    if(!dtfFileActual) return alert("Sube un diseño primero.");
+    const btn = document.getElementById("btnScan");
+    const prevText = btn.innerHTML;
+    btn.innerHTML = "⏳ Escaneando...";
+    btn.disabled = true;
+
+    setTimeout(() => {
         const img = new Image();
         img.onload = () => {
-            aspectRatio = img.width / img.height;
-            document.getElementById("anchoInput").value = "29.7";
-            document.getElementById("altoInput").value = (29.7 / aspectRatio).toFixed(1);
-        };
-        img.src = url;
-
-        tray.style.display = "block";
-        btnRestart.style.display = "block";
-        mainResultImg.src = url;
-        mainResultImg.style.display = "block";
-        editCanvas.style.display = "none";
-        overlay.style.display = "none";
-        resetearZoom();
-        document.getElementById('imgContainer').style.display = 'inline-block';
-        document.getElementById('btnCentrar').style.display = 'block';
-        document.getElementById('btnZoomLabel').style.display = 'block';
-    });
-
-    document.getElementById("btnScan").addEventListener("click", () => {
-        if(!dtfFile) return alert("Sube un diseño primero.");
-        const btn = document.getElementById("btnScan");
-        const prevText = btn.innerHTML;
-        btn.innerHTML = "⏳ Escaneando...";
-        btn.disabled = true;
-
-        setTimeout(() => {
-            const img = new Image();
-            img.onload = () => {
-                const cvs = document.createElement("canvas");
-                cvs.width = img.width; cvs.height = img.height;
-                const ctx = cvs.getContext("2d"); ctx.drawImage(img, 0, 0);
-                
-                overlay.width = img.width; overlay.height = img.height;
-                const oCtx = overlay.getContext("2d");
-                const oData = oCtx.createImageData(img.width, img.height);
-                
-                try {
-                    const idata = ctx.getImageData(0,0,img.width,img.height).data;
-                    let hasSemi = false;
-                    for (let i = 3; i < idata.length; i += 4) {
-                        const alpha = idata[i];
-                        if (alpha > 10 && alpha < 245) {
-                            oData.data[i-3] = 255; oData.data[i-2] = 0; oData.data[i-1] = 255; oData.data[i] = 255;
-                            hasSemi = true;
-                        }
-                    }
-                    if (hasSemi) {
-                        oCtx.putImageData(oData, 0, 0);
-                        overlay.style.display = "block";
-                        alert("⚠️ ALERTA DTF: ¡Se detectaron píxeles peligrosos!\nLas zonas marcadas en FUCSIA son bordes borrosos o sombras. El sistema activó 'Fijar Semitransparencias' automáticamente.");
-                        document.getElementById("checkSemi").checked = true;
-                    } else {
-                        overlay.style.display = "none";
-                        alert("✅ ESCANEO LIMPIO: Tu diseño tiene colores sólidos perfectos.");
-                    }
-                } catch(e) {}
-                btn.innerHTML = prevText; btn.disabled = false;
-            };
-            img.src = urlOriginalMemoria;
-        }, 100);
-    });
-
-    document.getElementById("btnDtfRunSemi").addEventListener("click", async () => {
-        if(!dtfFile) return alert("Sube un diseño primero.");
-        const btn = document.getElementById("btnDtfRunSemi");
-        btn.disabled = true;
-        statusLine.className = "status-line show";
-        statusText.textContent = "Procesando Semitonos (Esto puede tardar unos segundos)...";
-        mainResultImg.classList.add("opacity-50", "blur-sm");
-        overlay.style.display = "none";
-
-        try {
-            const fd = new FormData();
-            fd.append("imagen", dtfFile);
-            fd.append("color", document.querySelector("#colorGroup .active").getAttribute("data-val"));
-            fd.append("sat", document.querySelector("#satGroup .active").getAttribute("data-val"));
-            fd.append("limpieza", document.querySelector("#modoGroup .active").getAttribute("data-val"));
-            fd.append("trama", document.querySelector("#tramaGroup .active").getAttribute("data-val"));
-            fd.append("tolerancia", document.getElementById("tolSlider").value);
-            fd.append("px", document.getElementById("pxSlider").value);
-            fd.append("angulo", document.getElementById("angSlider").value);
-            fd.append("ancho", document.getElementById("anchoInput").value);
-            fd.append("alto", document.getElementById("altoInput").value);
-            fd.append("usar_ia", document.getElementById("checkIA").checked ? "true" : "false");
-            fd.append("quitar_fondo", document.getElementById("checkBG").checked ? "true" : "false");
-            fd.append("choke", document.getElementById("checkChoke").checked ? "true" : "false");
-            fd.append("fix_semi", document.getElementById("checkSemi").checked ? "true" : "false");
-
-            const res = await fetch("/api/procesar", { method: "POST", body: fd });
-            mainResultImg.classList.remove("opacity-50", "blur-sm");
-            if (!res.ok) throw new Error("Error en servidor al procesar la imagen");
+            const cvs = document.createElement("canvas");
+            cvs.width = img.width; cvs.height = img.height;
+            const ctx = cvs.getContext("2d"); ctx.drawImage(img, 0, 0);
             
-            const blob = await res.blob();
-            processFinalUrl(URL.createObjectURL(blob), "semitonos-dtf", "png");
-        } catch(err) {
-            mainResultImg.classList.remove("opacity-50", "blur-sm");
-            statusLine.className = "status-line show error";
-            statusText.textContent = "Error: " + err.message;
-        } finally {
-            btn.disabled = false;
-        }
-    });
+            const overlay = document.getElementById('semiOverlayCanvas');
+            overlay.width = img.width; overlay.height = img.height;
+            const oCtx = overlay.getContext("2d");
+            const oData = oCtx.createImageData(img.width, img.height);
+            
+            try {
+                const idata = ctx.getImageData(0,0,img.width,img.height).data;
+                let hasSemi = false;
+                for (let i = 3; i < idata.length; i += 4) {
+                    const alpha = idata[i];
+                    if (alpha > 10 && alpha < 245) {
+                        oData.data[i-3] = 255; oData.data[i-2] = 0; oData.data[i-1] = 255; oData.data[i] = 255;
+                        hasSemi = true;
+                    }
+                }
+                if (hasSemi) {
+                    oCtx.putImageData(oData, 0, 0);
+                    overlay.style.display = "block";
+                    document.getElementById('fabricLayer').style.display = "none";
+                    document.getElementById('sliderLine').style.display = "none";
+                    document.getElementById('dtfDragSlider').style.display = "none";
+                    alert("⚠️ ALERTA DTF: ¡Se detectaron píxeles peligrosos!\nLas zonas marcadas en FUCSIA son bordes borrosos o sombras. El sistema activó 'Fijar Semitransparencias' automáticamente.");
+                    document.getElementById("checkSemi").checked = true;
+                } else {
+                    overlay.style.display = "none";
+                    alert("✅ ESCANEO LIMPIO: Tu diseño tiene colores sólidos perfectos.");
+                }
+            } catch(e) {}
+            btn.innerHTML = prevText; btn.disabled = false;
+        };
+        img.src = urlOriginalMemoria;
+    }, 100);
+});
 
-    const origOpenTool = window.openTool || function(){};
-    window.openTool = function(slug) {
-        origOpenTool(slug);
-        if(slug === "semitonos-dtf") {
-            document.getElementById("form").style.display = "none";
-            semitonosPanel.style.display = "block";
-        } else {
-            document.getElementById("form").style.display = "block";
-            semitonosPanel.style.display = "none";
-        }
-    };
-})();
+document.getElementById("btnDtfRunSemi").addEventListener("click", async () => {
+    if(!dtfFileActual) return alert("Sube un diseño primero.");
+    const btn = document.getElementById("btnDtfRunSemi");
+    btn.disabled = true;
+    statusLine.className = "status-line show";
+    statusText.textContent = "Procesando Matriz de Puntos (Esto puede tardar unos segundos)...";
+    document.getElementById('imgTransparente').style.opacity = "0.5";
+    document.getElementById('imgTransparente').style.filter = "blur(4px)";
 
-document.querySelectorAll(".lang-switch button").forEach(btn => { btn.classList.toggle("active", btn.dataset.lang === currentLang); });
-applyStaticText(); checkSession();
+    try {
+        const fd = new FormData();
+        fd.append("imagen", dtfFileActual);
+        fd.append("color", document.querySelector("#colorGroup .active").getAttribute("data-val"));
+        fd.append("sat", document.querySelector("#satGroup .active").getAttribute("data-val"));
+        fd.append("limpieza", document.querySelector("#modoGroup .active").getAttribute("data-val"));
+        fd.append("trama", document.querySelector("#tramaGroup .active").getAttribute("data-val"));
+        fd.append("tolerancia", document.getElementById("tolSlider").value);
+        fd.append("px", document.getElementById("pxSlider").value);
+        fd.append("angulo", document.getElementById("angSlider").value);
+        fd.append("ancho", document.getElementById("anchoInput").value);
+        fd.append("alto", document.getElementById("altoInput").value);
+        fd.append("usar_ia", document.getElementById("checkIA").checked ? "true" : "false");
+        fd.append("quitar_fondo", document.getElementById("checkBG").checked ? "true" : "false");
+        fd.append("choke", document.getElementById("checkChoke").checked ? "true" : "false");
+        fd.append("fix_semi", document.getElementById("checkSemi").checked ? "true" : "false");
+
+        const res = await fetch("/api/procesar", { method: "POST", body: fd });
+        
+        document.getElementById('imgTransparente').style.opacity = "1";
+        document.getElementById('imgTransparente').style.filter = "none";
+        
+        if (!res.ok) throw new Error("Error en servidor al procesar la imagen");
+        
+        const blob = await res.blob();
+        const urlFinal = URL.createObjectURL(blob);
+        
+        document.getElementById('imgTransparente').src = urlFinal;
+        document.getElementById('imgConTela').src = urlFinal;
+        document.getElementById('semiOverlayCanvas').style.display = 'none';
+        
+        urlResultMemoria = urlFinal;
+        btnDownloadResult.href = urlFinal; 
+        btnDownloadResult.setAttribute("download", `DTF_Studio_Pro_${Date.now()}.png`); 
+        btnDownloadResult.style.display = "block";
+        
+        statusLine.className = "status-line show ok";
+        statusText.innerHTML = "<i class='fa-solid fa-check mr-2'></i> Semitono generado correctamente.";
+
+    } catch(err) {
+        document.getElementById('imgTransparente').style.opacity = "1";
+        document.getElementById('imgTransparente').style.filter = "none";
+        statusLine.className = "status-line show error";
+        statusText.textContent = "Error: " + err.message;
+    } finally {
+        btn.disabled = false;
+    }
+});
+
+document.getElementById('dtfDragSlider').addEventListener('input', function() {
+    slideReveal(this.value);
+});
+
 </script>
 </body>
 </html>
