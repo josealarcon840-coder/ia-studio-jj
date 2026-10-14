@@ -83,6 +83,7 @@ MODELS = [
             {"value": "3:2", "label": "3:2 (Foto - 1024x683)"}
         ]}
     ]},
+    
     {"slug": "fairy-art", "label": L("Retrato a Arte", "Portrait to Art"), "icon": "fa-wand-magic-sparkles", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Convierte fotos a Anime/Boceto o estilos creativos.", "Convert photos to Art."), "endpoint": "/v1/images/generates/art", "response_type": "image", "fields": [
         {"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, 
         {"name": "hybrid_style", "type": "select_hybrid", "label": L("Elige un Estilo", "Style"), "required": True, "options_url": "https://storage.googleapis.com/assets.snapedit.app/fairyai/anime_styles_6mar25.json", "options": [
@@ -91,13 +92,42 @@ MODELS = [
             {"value": "PROMPT: Keep the exact same original shape, face, clothes and layout. Transform the photo into a 3D Pixar Disney style animated character.", "label": "🧸 Animado 3D"}
         ]}
     ]},
+
     {"slug": "generate-background", "label": L("Generar Fondo Nuevo", "Generate Background"), "icon": "fa-image", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Fondo para productos. ¡Sube un PNG SIN FONDO!", "Background for products."), "endpoint": "/v1/images/generates-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen (Transparente)", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Descripción del fondo", "Background prompt"), "required": True}]},
+    
     {"slug": "sticker", "label": L("Crear Sticker", "Create Sticker"), "icon": "fa-note-sticky", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Haz un sticker de tu foto con borde blanco al instante.", "Make a sticker from photo."), "endpoint": "/v1/images/generates/sticker", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    {"slug": "master-color", "label": L("🎨 Master Color", "🎨 Master Color"), "icon": "fa-fill-drip", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Sustituye colores seleccionando por gotero y zona.", "Change colors by selecting zone and eyedropper."), "endpoint": "/local/canvas", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Sube tu Diseño", "Upload Design"), "required": True}]},
-    {"slug": "edit-multi", "label": L("Fusión IA (Múltiple)", "AI Fusion (Multi)"), "icon": "fa-object-group", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Edita hasta 3 imágenes juntas.", "Edit using up to 3 images."), "endpoint": "/v1/images/edits/multi", "response_type": "image", "fields": [{"name": "input_image_0", "type": "image", "label": L("Imagen Base 1", "Base Image 1"), "required": True}, {"name": "input_image_1", "type": "image", "label": L("Imagen Extra 2", "Extra Image 2"), "required": False}, {"name": "input_image_2", "type": "image", "label": L("Imagen Extra 3", "Extra Image 3"), "required": False}, {"name": "prompt", "type": "textarea", "label": L("Instrucción", "Prompt"), "required": True}]},
-    {"slug": "studio-vignette", "label": L("🌟 Resplandor Mágico", "🌟 Outer Glow"), "icon": "fa-star", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Añade resplandor HD a diseños sin fondo.", "Adds a glow to a transparent design."), "endpoint": "/local/canvas", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Sube tu Diseño (Sin Fondo)", "Upload Transparent Design"), "required": True}, {"name": "bg_color", "type": "color", "label": L("Color del Resplandor", "Glow Color"), "default": "#ff0000"}, {"name": "glow_size", "type": "range", "label": L("Grosor del Resplandor", "Glow Thickness"), "min": 1, "max": 100, "default": 30}]},
-    {"slug": "textile-styles", "label": L("Texturas Mágicas 3D", "3D Magic Textures"), "icon": "fa-cubes", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Aplica lana, bordado, parche o inflado.", "Applies yarn, thread, patch or puffy styles."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Sube tu Diseño Original", "Upload Design"), "required": True}, {"name": "prompt", "type": "select", "label": L("Elige la Textura", "Select Texture"), "required": True, "options": [{"value": "Convert every single colored region... into a uniform 3D amigurumi crochet texture...", "label": L("🧶 Crochet HD", "HD Crochet")}, {"value": "Convert every single colored region... into a uniform 3D embroidery texture...", "label": L("🧵 Bordado HD", "Realistic Embroidery")}]}]},
+    {"slug": "master-color", "label": L("🎨 Master Color", "🎨 Master Color"), "icon": "fa-fill-drip", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Sustituye colores seleccionando por gotero y zona.", "Change colors by selecting zone and eyedropper."), "endpoint": "/local/canvas", "response_type": "image", "fields": [
+        {"name": "input_image", "type": "image", "label": L("Sube tu Diseño", "Upload Design"), "required": True}
+    ]},
+
+    {"slug": "edit-multi", "label": L("Fusión IA (Múltiple)", "AI Fusion (Multi)"), "icon": "fa-object-group", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Edita hasta 3 imágenes juntas (Ej: Pon a la persona de la Imagen 2 en la 1).", "Edit using up to 3 images."), "endpoint": "/v1/images/edits/multi", "response_type": "image", "fields": [
+        {"name": "input_image_0", "type": "image", "label": L("Imagen Base 1", "Base Image 1"), "required": True},
+        {"name": "input_image_1", "type": "image", "label": L("Imagen Extra 2 (Opcional)", "Extra Image 2 (Optional)"), "required": False},
+        {"name": "input_image_2", "type": "image", "label": L("Imagen Extra 3 (Opcional)", "Extra Image 3 (Optional)"), "required": False},
+        {"name": "prompt", "type": "textarea", "label": L("Instrucción (Ej: Reemplaza a la chica por la de la imagen 2)", "Prompt"), "required": True}
+    ]},
+
+    {"slug": "studio-vignette", "label": L("🌟 Resplandor Mágico", "🌟 Magic Glow"), "icon": "fa-star", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Añade resplandor HD a diseños sin fondo.", "Adds a glow to a transparent design."), "endpoint": "/local/canvas", "response_type": "image", "fields": [
+        {"name": "input_image", "type": "image", "label": L("Sube tu Diseño (Sin Fondo)", "Upload Transparent Design"), "required": True}, 
+        {"name": "bg_color", "type": "color", "label": L("Elige el Color del Resplandor", "Glow Color"), "default": "#ff0000"},
+        {"name": "glow_size", "type": "range", "label": L("Grosor del Resplandor", "Glow Thickness"), "min": 1, "max": 100, "default": 30}
+    ]},
+
+    {"slug": "edit-image", "label": L("Edición Mágica (Texto)", "Magic Edit (Text)"), "icon": "fa-wand-sparkles", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Edita usando órdenes.", "Edit using text prompts."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Instrucción", "Prompt"), "required": True}, {"name": "mode", "type": "select", "label": L("Modo", "Mode"), "required": True, "options": [{"value": "editing", "label": L("General", "General")}, {"value": "inpaint", "label": L("Inpaint", "Inpaint")}]}]},
+    
+    {"slug": "textile-styles", "label": L("Texturas Mágicas 3D", "3D Magic Textures"), "icon": "fa-cubes", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Aplica lana, bordado, parche o inflado.", "Applies yarn, thread, patch or puffy styles."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
+        {"name": "input_image", "type": "image", "label": L("Sube tu Diseño Original", "Upload Design"), "required": True}, 
+        {"name": "prompt", "type": "select", "label": L("Elige la Textura", "Select Texture"), "required": True, "options": [
+            {"value": "Convert every single colored region of this image from top to bottom—including the top shapes, main subject, accessories, cups, glasses, bottom waves, splashes, and base details—into a uniform 3D amigurumi crochet texture made entirely of thick knitted yarn loops. Every surface must be made of yarn while keeping its exact original position, shape, and color.", "label": L("🧶 Crochet / Amigurumi HD", "HD Crochet")},
+            {"value": "Convert every single colored region of this image from top to bottom—including the top shapes, main subject, accessories, cups, glasses, bottom waves, splashes, and base details—into a uniform 3D embroidery texture made entirely of thick glossy thread stitches. Every surface must be stitched thread while keeping its exact original position, shape, and color.", "label": L("🧵 Bordado Realista HD", "Realistic Embroidery")},
+            {"value": "Convert the entire image from top to bottom—including all top shapes, main subject, accessories, and bottom wave or base details—into a 3D embroidered patch made of thick thread stitches with a tight stitched border along the outer silhouette. Keep every element in its exact original position and color.", "label": L("🏷️ Parche (Sin Fondo - Borde Ajustado)", "Patch Tight Border")},
+            {"value": "Place the complete graphic from top to bottom onto a square fabric patch with a stitched thread border around the outer square edge. Render every single element, including top shapes, accessories, and bottom base details, in 3D embroidered thread keeping their exact original positions and colors.", "label": L("⬛ Parche (Fondo Cuadrado)", "Square Patch")},
+            {"value": "Place the complete graphic from top to bottom onto a circular fabric patch with a stitched thread border around the outer circle edge. Render every single element, including top shapes, accessories, and bottom base details, in 3D embroidered thread keeping their exact original positions and colors.", "label": L("🔴 Parche (Fondo Redondo)", "Round Patch")},
+            {"value": "Convert every single colored region of this image from top to bottom—including the top shapes, main subject, accessories, cups, glasses, bottom waves, splashes, and base details—into a uniform 3D inflated puffy balloon texture made of glossy soft vinyl. Keep every element in its exact original position, shape, and color.", "label": L("🎈 Estilo Inflado 3D (Globo)", "3D Inflated/Puffer")}
+        ]}
+    ]},
+
     {"slug": "retouch-skin", "label": L("Retoque Facial", "Skin Retouch"), "icon": "fa-face-smile", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Limpia la piel automáticamente.", "Cleans skin automatically."), "endpoint": "/v1/images/retouch-skin", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]}
 ]
 
@@ -256,6 +286,35 @@ def validate_and_build_response(raw_bytes):
 # ==========================================
 # RUTAS NUEVAS (SEMITONOS Y DETECTOR)
 # ==========================================
+
+@app.route("/")
+def index():
+    html = render_template("index.html")
+    if request.args.get("tg_login") == "ok":
+        nombre = request.args.get("name", "VIP")
+        script_acceso = f"""
+        <script>
+            sessionStorage.setItem("jj_session_perm", "active");
+            sessionStorage.setItem("jj_user_name", {jsonify(nombre).get_data(as_text=True)});
+            window.history.replaceState({{}}, document.title, "/");
+        </script>
+        """
+        html = html.replace("<head>", "<head>" + script_acceso, 1)
+    elif request.args.get("tg_error"):
+        err_msg = request.args.get("tg_error")
+        script_err = f"""
+        <script>
+            window.addEventListener("DOMContentLoaded", function() {{
+                var ge = document.getElementById("gateError");
+                if (ge) {{ ge.textContent = {jsonify(err_msg).get_data(as_text=True)}; ge.classList.add("show"); }}
+                window.history.replaceState({{}}, document.title, "/");
+            }});
+        </script>
+        """
+        html = html.replace("<head>", "<head>" + script_err, 1)
+    resp = app.make_response(html)
+    resp.headers['Cross-Origin-Opener-Policy'] = 'same-origin-allow-popups'
+    return resp
 
 @app.route('/api/reparar', methods=['POST'])
 def reparar_api():
@@ -426,6 +485,79 @@ def procesar():
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
+@app.route("/login-telegram", methods=["GET"])
+def login_telegram_redirect():
+    data = request.args.to_dict()
+    if not data or 'hash' not in data: return redirect("/?tg_error=" + quote("Datos inválidos"))
+    hash_recibido = data.pop('hash')
+    data_check_string = '\n'.join(sorted([f'{k}={v}' for k, v in data.items()]))
+    secret_key = hashlib.sha256(TELEGRAM_BOT_TOKEN.encode('utf-8')).digest()
+    if hmac.new(secret_key, data_check_string.encode('utf-8'), hashlib.sha256).hexdigest() != hash_recibido:
+        return redirect("/?tg_error=" + quote("Firma no válida"))
+    user_id = data.get('id')
+    first_name = data.get('first_name', 'VIP')
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getChatMember"
+    try:
+        resp = requests.get(url, params={"chat_id": TELEGRAM_CHAT_ID, "user_id": user_id}, timeout=10).json()
+        if resp.get('ok') and resp['result']['status'] in ['member', 'administrator', 'creator']:
+            return redirect(f"/?tg_login=ok&name={quote(first_name)}")
+        return redirect("/?tg_error=" + quote("No eres miembro del grupo VIP."))
+    except Exception:
+        return redirect("/?tg_error=" + quote("Error verificando grupo VIP."))
+
+@app.route("/verify-telegram", methods=["POST"])
+def verify_telegram():
+    data = request.json
+    if not data or 'hash' not in data: return jsonify({"access": False, "message": "Datos inválidos"}), 400
+    data_check_arr = [f'{k}={v}' for k, v in data.items() if k != 'hash']
+    data_check_string = '\n'.join(sorted(data_check_arr))
+    secret_key = hashlib.sha256(TELEGRAM_BOT_TOKEN.encode('utf-8')).digest()
+    hash_calc = hmac.new(secret_key, data_check_string.encode('utf-8'), hashlib.sha256).hexdigest()
+    if hash_calc != data['hash']: return jsonify({"access": False, "message": "Firma no válida"}), 403
+    user_id = data.get('id')
+    first_name = data.get('first_name', 'Usuario')
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getChatMember"
+    try:
+        resp = requests.get(url, params={"chat_id": TELEGRAM_CHAT_ID, "user_id": user_id}, timeout=10).json()
+        if resp.get('ok') and resp['result']['status'] in ['member', 'administrator', 'creator']: return jsonify({"access": True, "nombre": first_name})
+        return jsonify({"access": False, "message": "No eres miembro del grupo VIP."})
+    except Exception as e: return jsonify({"access": False, "message": str(e)}), 500
+
+@app.route("/models")
+def get_models():
+    public_fields = ("slug", "label", "icon", "category", "desc", "fields", "response_type", "needs_image")
+    return jsonify([{k: m[k] for k in public_fields if k in m} for m in MODELS])
+
+@app.route("/style-list")
+def style_list():
+    url = request.args.get("url", "")
+    if not url or not any(url.startswith(f"https://{d}") for d in ALLOWED_STYLE_DOMAINS): return jsonify({"error": True}), 400
+    try: return jsonify(requests.get(url, timeout=15).json())
+    except: return jsonify({"error": True}), 500
+
+@app.route("/proxy-image")
+def proxy_image():
+    url = request.args.get("url")
+    dl = request.args.get("dl", "0")
+    if not url: return jsonify({"error": True, "message": "No URL"}), 400
+    raw_bytes, err = download_from_cdn_with_retry(url)
+    if err: return jsonify({"error": True, "message": err}), 400
+    resp_obj, err_img = validate_and_build_response(raw_bytes)
+    if err_img: return jsonify({"error": True, "message": err_img}), 400
+    if dl == "1":
+        resp_obj.headers["Content-Disposition"] = "attachment; filename=JJ_Studio_Diseno.png"
+    return resp_obj
+
+@app.route("/check-task", methods=["GET"])
+def check_task():
+    task_id = request.args.get("task_id")
+    endpoint = request.args.get("endpoint")
+    if not task_id or not endpoint: return jsonify({"error": True, "message": "Faltan datos de la tarea."})
+    try:
+        r = requests.get(f"{BASE}{endpoint}/tasks/{task_id}", headers=HEADERS, timeout=15)
+        return jsonify(r.json())
+    except Exception as e: return jsonify({"error": True, "message": str(e)})
 
 @app.route("/run/<slug>", methods=["POST"])
 def run_model(slug):
