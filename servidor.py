@@ -23,7 +23,7 @@ BASE = "https://api.snapedit.app"
 HEADERS = {"api-key": API_SNAPEDIT, "Authorization": f"Bearer {API_SNAPEDIT}"}
 ALLOWED_STYLE_DOMAINS = ("storage.googleapis.com",)
 
-TELEGRAM_BOT_TOKEN = "8812898715:AAHSgtmxCjQ8yRTANb85EuluZgw9Dz3x1Fw" 
+TELEGRAM_BOT_TOKEN = "8812898715:AAEjcvqmdvEa9gCl740i4j1skcHw723N3EQ" 
 TELEGRAM_CHAT_ID = "-1002330690954"
 
 def L(es, en): return {"es": es, "en": en}
