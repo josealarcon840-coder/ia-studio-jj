@@ -6,21 +6,16 @@ import hashlib
 import hmac
 import gc  
 import time 
-import traceback
-import numpy as np
-from flask import Flask, render_template, request, jsonify, Response, send_file, redirect
-from flask_cors import CORS
-from PIL import Image, ImageChops, ImageEnhance, ImageFilter
-from urllib.parse import quote
+from flask import Flask, render_template, request, jsonify, Response
+from PIL import Image, ImageChops
 
 Image.MAX_IMAGE_PIXELS = None
 
 app = Flask(__name__)
-CORS(app)
 
-API_SNAPEDIT = os.environ.get("SNAPEDIT_API_KEY", "sk-snap-uuh6Z0veQTW7z3DSQ7TUr5yuyaC7HIHAoUchqM_KrfI")
+API_KEY = os.environ.get("SNAPEDIT_API_KEY", "sk-snap-uuh6Z0veQTW7z3DSQ7TUr5yuyaC7HIHAoUchqM_KrfI")
 BASE = "https://api.snapedit.app"
-HEADERS = {"api-key": API_SNAPEDIT, "Authorization": f"Bearer {API_SNAPEDIT}"}
+HEADERS = {"api-key": API_KEY, "Authorization": f"Bearer {API_KEY}"}
 ALLOWED_STYLE_DOMAINS = ("storage.googleapis.com",)
 
 TELEGRAM_BOT_TOKEN = "8812898715:AAHSgtmxCjQ8yRTANb85EuluZgw9Dz3x1Fw" 
@@ -29,9 +24,6 @@ TELEGRAM_CHAT_ID = "-1002330690954"
 def L(es, en): return {"es": es, "en": en}
 
 MODELS = [
-    {"slug": "detector-dtf", "label": L("🔍 Detectar Semitransparencias", "🔍 Transparency Scanner"), "icon": "fa-magnifying-glass-chart", "category": L("6. Especiales DTF", "6. DTF Specials"), "desc": L("Escanea tu diseño en busca de píxeles fantasmas y repáralos para DTF a 300DPI.", "Scan and fix ghost pixels for DTF."), "endpoint": "/api/reparar", "response_type": "page", "fields": []},
-    {"slug": "semitonos-dtf", "label": L("🕸️ Semitonos DTF Pro", "🕸️ Halftones DTF Pro"), "icon": "fa-braille", "category": L("6. Especiales DTF", "6. DTF Specials"), "desc": L("Convierte fondos en tramas de puntos, aplica asfixia y limpieza HD.", "Convert to halftones, apply choke and upscale."), "endpoint": "/api/procesar", "response_type": "page", "fields": []},
-
     {"slug": "detect-objects", "label": L("Borrador Mágico (Auto)", "Magic Eraser (Auto)"), "icon": "fa-magic", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Encuentra objetos para borrarlos con un clic.", "Finds objects to erase them with a click."), "endpoint": "/v1/images/detect-objects", "response_type": "json", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen Base", "Base Image"), "required": True}, {"name": "lang", "type": "select", "label": L("Idioma", "Language"), "options": [{"value": "es", "label": L("Español", "Spanish")}]}, {"name": "erase_mode", "type": "select", "label": L("Calidad", "Quality"), "options": [{"value": "ultra", "label": L("Ultra HD", "Ultra HD")}, {"value": "super", "label": L("Super", "Super")}, {"value": "normal", "label": L("Normal", "Normal")}]}]},
     {"slug": "detect-text", "label": L("Borrar Texto (Auto)", "Erase Text (Auto)"), "icon": "fa-font", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Detecta y borra los textos automáticamente.", "Detects and erases text automatically."), "endpoint": "/v1/images/detect-text", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "detect-wires", "label": L("Borrar Cables (Auto)", "Erase Wires (Auto)"), "icon": "fa-plug", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Detecta y borra cables/postes.", "Detects and erases wires."), "endpoint": "/v1/images/detect-wires", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
@@ -137,51 +129,18 @@ MODELS = [
 
 MODELS_BY_SLUG = {m["slug"]: m for m in MODELS}
 
-
-# ==========================================
-# FUNCIONES AUXILIARES (SnapEdit y Limpieza)
-# ==========================================
-def procesar_con_snapedit(ruta_imagen):
-    url = "https://api.snapedit.app/v1/images/enhance-art"
-    headers = {"api-key": API_SNAPEDIT}
-    try:
-        with open(ruta_imagen, 'rb') as f:
-            response = requests.post(url, headers=headers, files={'input_image': f}, data={'zoom_factor': '4'}, timeout=90)
-        if response.status_code == 200:
-            data = response.json()
-            if "data" in data and len(data["data"]) > 0:
-                img_descargada = requests.get(data["data"][0]["url"], timeout=90).content
-                nueva_ruta = ruta_imagen.replace(".", "_ia.")
-                with open(nueva_ruta, 'wb') as f_out: f_out.write(img_descargada)
-                return nueva_ruta
-    except: pass
-    return ruta_imagen 
-
-def quitar_fondo_snapedit(ruta_imagen):
-    url = "https://api.snapedit.app/v1/images/remove-background-graphic"
-    headers = {"api-key": API_SNAPEDIT}
-    try:
-        with open(ruta_imagen, 'rb') as f:
-            response = requests.post(url, headers=headers, files={'input_image': f}, timeout=90)
-        if response.status_code == 200:
-            data = response.json()
-            if "data" in data and len(data["data"]) > 0:
-                img_descargada = requests.get(data["data"][0]["url"], timeout=90).content
-                nueva_ruta = ruta_imagen.replace(".", "_nobg.")
-                with open(nueva_ruta, 'wb') as f_out: f_out.write(img_descargada)
-                return nueva_ruta
-    except: pass
-    return ruta_imagen 
-
 def resize_if_needed(file_bytes, slug, original_filename="image.jpg", zoom_factor="2"):
     if not file_bytes or len(file_bytes) == 0:
         raise ValueError("El archivo enviado está vacío (0 bytes).")
     try:
         if "enhance" in slug:
             zf = str(zoom_factor).strip()
-            if zf == "8": max_dim = 500
-            elif zf == "4": max_dim = 950
-            else: max_dim = 1500
+            if zf == "8":
+                max_dim = 500
+            elif zf == "4":
+                max_dim = 950
+            else:
+                max_dim = 1500
         else:
             max_dim = 2400
 
@@ -200,8 +159,7 @@ def resize_if_needed(file_bytes, slug, original_filename="image.jpg", zoom_facto
             img.draft("RGB", (max_dim, max_dim))
 
         if needs_resize:
-            # 🔥 CORREGIDO PARA ACELERAR EL PROCESAMIENTO (BILINEAR)
-            filtro = Image.BILINEAR
+            filtro = Image.BILINEAR if max(width, height) > 4000 else Image.LANCZOS
             img.thumbnail((max_dim, max_dim), filtro)
 
         buffer = io.BytesIO()
@@ -246,11 +204,13 @@ def extract_raw_bytes_from_response(response):
                     _, encoded = url_img.split(",", 1)
                     return base64.b64decode(encoded), None
                 raw_bytes, err_dl = download_from_cdn_with_retry(url_img)
-                if err_dl: return None, f"Error descargando imagen: {err_dl}"
+                if err_dl:
+                    return None, f"Error descargando imagen: {err_dl}"
                 return raw_bytes, None
 
             if b64_img:
-                if "," in b64_img: b64_img = b64_img.split(",", 1)[1]
+                if "," in b64_img:
+                    b64_img = b64_img.split(",", 1)[1]
                 b64_img = b64_img.replace('\n', '').replace('\r', '').strip()
                 b64_img += "=" * ((4 - len(b64_img) % 4) % 4)
                 return base64.b64decode(b64_img), None
@@ -259,39 +219,19 @@ def extract_raw_bytes_from_response(response):
         err_msg = datos.get("error", {}).get("message") if isinstance(datos.get("error"), dict) else datos.get("message", str(datos))
         return None, err_msg
     else:
-        if response.status_code != 200: return None, f"Servidores de IA ocupados (HTTP {response.status_code}). Intenta en unos segundos."
+        if response.status_code != 200:
+            return None, f"Servidores de IA ocupados (HTTP {response.status_code}). Intenta en unos segundos."
         return response.content, None
 
-def download_from_cdn_with_retry(url_img, retries=3):
-    for attempt in range(retries):
-        try:
-            r_img = requests.get(url_img, headers={'User-Agent': 'Mozilla/5.0'}, timeout=45)
-            if r_img.status_code == 200 and len(r_img.content) > 100: return r_img.content, None
-            time.sleep(1)
-        except Exception as e:
-            if attempt == retries - 1: return None, str(e)
-            time.sleep(1)
-    return None, "El CDN de SnapEdit entregó 0 bytes."
-
-def validate_and_build_response(raw_bytes):
-    if not raw_bytes or len(raw_bytes) < 64: return None, "El servidor de IA devolvió un archivo vacío (0 bytes)."
-    if raw_bytes[:8] == b'\x89PNG\r\n\x1a\n': return Response(raw_bytes, mimetype="image/png"), None
-    elif (raw_bytes[:3] == b'\xff\xd8\xff') or (raw_bytes[:4] == b'RIFF' and raw_bytes[8:12] == b'WEBP'):
-        try:
-            img = Image.open(io.BytesIO(raw_bytes))
-            out = io.BytesIO()
-            img.save(out, format="PNG")
-            png_bytes = out.getvalue()
-            img.close()
-            gc.collect()
-            return Response(png_bytes, mimetype="image/png"), None
-        except Exception: return Response(raw_bytes, mimetype="image/png"), None
-    else: return None, "La IA devolvió un archivo corrupto o está saturada. Intenta nuevamente."
-
 def upscale_cropped_design_hd(img_pil):
+    """
+    Toma el diseño ya recortado y lo escala automáticamente 4x con IA (enhance-art / enhance)
+    para que pase de ~500px a +2400px Ultra HD con bordes definidos antes de quitar el fondo.
+    """
     try:
         w, h = img_pil.size
         max_side = max(w, h)
+        # Elegir factor de zoom seguro según límites de la API de SnapEdit
         if max_side <= 950:
             zf = "4"
         elif max_side <= 1500:
@@ -303,9 +243,11 @@ def upscale_cropped_design_hd(img_pil):
         img_pil.convert("RGB").save(buf, format="JPEG", quality=98)
         f_up = {"input_image": ("crop.jpg", buf.getvalue(), "image/jpeg")}
 
+        # Intentamos primero con enhance-art (ideal para estampados, vectores, textos y trazos)
         r_up = requests.post(BASE + "/v1/images/enhance-art", headers=HEADERS, files=f_up, data={"zoom_factor": zf}, timeout=120)
         up_bytes, up_err = extract_raw_bytes_from_response(r_up)
 
+        # Si falla enhance-art, probamos con enhance general
         if up_err or not up_bytes:
             f_up2 = {"input_image": ("crop.jpg", buf.getvalue(), "image/jpeg")}
             r_up2 = requests.post(BASE + "/v1/images/enhance", headers=HEADERS, files=f_up2, data={"zoom_factor": zf, "enhance_faces": "true"}, timeout=120)
@@ -320,10 +262,16 @@ def upscale_cropped_design_hd(img_pil):
     return img_pil
 
 def process_dtf_extraction(raw_bytes, extract_mode):
+    """
+    1. Recorta todo el margen vacío alrededor del estampado.
+    2. Escala el recorte a Ultra HD (4x) con IA para máxima nitidez.
+    3. Desfonda el color base (Knockout DTF para negro o blanco) respetando líneas finas.
+    """
     try:
         img = Image.open(io.BytesIO(raw_bytes)).convert("RGBA")
         r, g, b, _ = img.split()
 
+        # PASO 1: Auto-Recorte Inteligente del margen vacío
         if "BLACK" in extract_mode:
             max_c = ImageChops.lighter(ImageChops.lighter(r, g), b)
             crop_mask = max_c.point(lambda p: 255 if p > 28 else 0)
@@ -340,11 +288,14 @@ def process_dtf_extraction(raw_bytes, extract_mode):
             bottom = min(img.height, bbox[3] + pad)
             img = img.crop((left, top, right, bottom))
 
+        # PASO 2: Súper Escalado Automático 4x HD sobre el diseño ya encuadrado
         img = upscale_cropped_design_hd(img)
 
+        # PASO 3: Extracción de Fondo / Knockout DTF en Alta Resolución
         if extract_mode == "AUTO_BLACK":
             r, g, b, _ = img.split()
             max_c = ImageChops.lighter(ImageChops.lighter(r, g), b)
+            # Desfondado de negro estilo DTF en HD: limpia el negro incluso dentro de líneas delgadas
             alpha = max_c.point(lambda p: 0 if p <= 20 else (255 if p >= 52 else int((p - 20) * 255 / 32)))
             img.putalpha(alpha)
 
@@ -373,248 +324,41 @@ def process_dtf_extraction(raw_bytes, extract_mode):
         print(f"⚠️ Error en process_dtf_extraction: {e}")
         return raw_bytes
 
-# ==========================================
-# RUTAS NUEVAS Y ORIGINALES
-# ==========================================
+def validate_and_build_response(raw_bytes):
+    if not raw_bytes or len(raw_bytes) < 64:
+        return None, "El servidor de IA devolvió un archivo vacío (0 bytes)."
+
+    if raw_bytes[:8] == b'\x89PNG\r\n\x1a\n':
+        return Response(raw_bytes, mimetype="image/png"), None
+    elif (raw_bytes[:3] == b'\xff\xd8\xff') or (raw_bytes[:4] == b'RIFF' and raw_bytes[8:12] == b'WEBP'):
+        try:
+            img = Image.open(io.BytesIO(raw_bytes))
+            out = io.BytesIO()
+            img.save(out, format="PNG")
+            png_bytes = out.getvalue()
+            img.close()
+            gc.collect()
+            return Response(png_bytes, mimetype="image/png"), None
+        except Exception:
+            return Response(raw_bytes, mimetype="image/png"), None
+    else:
+        return None, "La IA devolvió un archivo corrupto o está saturada. Intenta nuevamente."
+
+def download_from_cdn_with_retry(url_img, retries=3):
+    for attempt in range(retries):
+        try:
+            r_img = requests.get(url_img, headers={'User-Agent': 'Mozilla/5.0'}, timeout=45)
+            if r_img.status_code == 200 and len(r_img.content) > 100:
+                return r_img.content, None
+            time.sleep(1)
+        except Exception as e:
+            if attempt == retries - 1:
+                return None, str(e)
+            time.sleep(1)
+    return None, "El CDN de SnapEdit entregó 0 bytes."
 
 @app.route("/")
-def index():
-    html = render_template("index.html")
-    if request.args.get("tg_login") == "ok":
-        nombre = request.args.get("name", "VIP")
-        script_acceso = f"""
-        <script>
-            sessionStorage.setItem("jj_session_perm", "active");
-            sessionStorage.setItem("jj_user_name", {jsonify(nombre).get_data(as_text=True)});
-            window.history.replaceState({{}}, document.title, "/");
-        </script>
-        """
-        html = html.replace("<head>", "<head>" + script_acceso, 1)
-    elif request.args.get("tg_error"):
-        err_msg = request.args.get("tg_error")
-        script_err = f"""
-        <script>
-            window.addEventListener("DOMContentLoaded", function() {{
-                var ge = document.getElementById("gateError");
-                if (ge) {{ ge.textContent = {jsonify(err_msg).get_data(as_text=True)}; ge.classList.add("show"); }}
-                window.history.replaceState({{}}, document.title, "/");
-            }});
-        </script>
-        """
-        html = html.replace("<head>", "<head>" + script_err, 1)
-    resp = app.make_response(html)
-    resp.headers['Cross-Origin-Opener-Policy'] = 'same-origin-allow-popups'
-    return resp
-
-@app.route('/api/reparar', methods=['POST'])
-def reparar_api():
-    try:
-        if 'imagen' not in request.files: 
-            return jsonify({"error": "No se subió imagen"}), 400
-            
-        file = request.files['imagen']
-        ancho_cm = float(request.form.get('ancho', 29.7))
-        alto_cm = float(request.form.get('alto', 42.0))
-        
-        target_w = int((ancho_cm / 2.54) * 300)
-        target_h = int((alto_cm / 2.54) * 300)
-
-        os.makedirs("temp", exist_ok=True)
-        ruta_in = os.path.join("temp", f"in_{int(time.time())}.png")
-        ruta_out = os.path.join("temp", f"out_{int(time.time())}.png")
-        file.save(ruta_in)
-        
-        img = Image.open(ruta_in).convert("RGBA")
-        # 🔥 CORREGIDO PARA ACELERAR
-        filtro = Image.BILINEAR
-        img = img.resize((target_w, target_h), filtro)
-        
-        arr = np.array(img)
-        arr[:, :, 3] = np.where(arr[:, :, 3] > 100, 255, 0).astype(np.uint8)
-        
-        img_final = Image.fromarray(arr, mode="RGBA")
-        img_final.save(ruta_out, format="PNG", dpi=(300, 300))
-        
-        del arr
-        img.close()
-        img_final.close()
-        gc.collect()
-        
-        try: os.remove(ruta_in)
-        except: pass
-        
-        return send_file(ruta_out, mimetype='image/png')
-        
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route('/api/procesar', methods=['POST'])
-def procesar():
-    try:
-        if 'imagen' not in request.files:
-            return jsonify({"error": "No se subió imagen"}), 400
-            
-        file = request.files['imagen']
-        if file.filename == '':
-            return jsonify({"error": "Nombre de archivo vacío"}), 400
-
-        os.makedirs("temp", exist_ok=True)
-        ruta_entrada = os.path.join("temp", f"img_orig_{int(time.time())}.png")
-        ruta_salida = os.path.join("temp", f"img_final_{int(time.time())}.png")
-        file.save(ruta_entrada)
-
-        color_hex = request.form.get('color', '#000000')
-        saturacion = float(request.form.get('sat', '1.0'))
-        modo = request.form.get('limpieza', 'global')
-        trama = request.form.get('trama', 'round')
-        
-        tolerancia = int(request.form.get('tolerancia', 20))
-        dot_size = int(request.form.get('px', 10))
-        angulo = int(request.form.get('angulo', 22))
-        
-        usar_ia = request.form.get('usar_ia') == 'true'
-        quitar_fondo = request.form.get('quitar_fondo') == 'true'
-        choke = request.form.get('choke') == 'true'
-        fix_semi = request.form.get('fix_semi') == 'true'
-
-        ancho_cm = float(request.form.get('ancho', 29.7))
-        alto_cm = float(request.form.get('alto', 42.0))
-
-        dpi = 300
-        cm_to_inch = 2.54
-        target_w = int((ancho_cm / cm_to_inch) * dpi)
-        target_h = int((alto_cm / cm_to_inch) * dpi)
-
-        if quitar_fondo:
-            ruta_entrada = quitar_fondo_snapedit(ruta_entrada)
-        
-        if usar_ia:
-            ruta_entrada = procesar_con_snapedit(ruta_entrada)
-
-        modo_suave_clasico = (modo == "baja")
-        gamma_boost = 1.0 if modo_suave_clasico else 0.8 
-
-        # --- Lógica Matemática V36 ---
-        img_orig = Image.open(ruta_entrada).convert("RGBA")
-        
-        # 🔥 CORREGIDO PARA ACELERAR
-        filtro = Image.BILINEAR
-        img_orig = img_orig.resize((target_w, target_h), filtro)
-        
-        if saturacion != 1.0:
-            enhancer = ImageEnhance.Color(img_orig)
-            img_orig = enhancer.enhance(saturacion)
-            
-        arr_visual = np.array(img_orig).copy() 
-        ancho, alto = img_orig.size
-        
-        hex_str = color_hex.lstrip('#')
-        c_target = np.array([int(hex_str[0:2], 16), int(hex_str[2:4], 16), int(hex_str[4:6], 16)], dtype=np.float32)
-        
-        img_rgb = np.array(img_orig.convert("RGB"), dtype=np.float32)
-        alpha_orig = np.array(img_orig.split()[3], dtype=np.float32)
-
-        diff = np.sqrt(np.sum((img_rgb - c_target)**2, axis=2))
-        
-        if modo_suave_clasico:
-            dist_max = tolerancia * 2.55 
-            opacidad_target = np.clip(1.0 - (diff / (dist_max + 1e-5)), 0.0, 1.0)
-        else:
-            dist_max = tolerancia * 4.0
-            rango_fade = 60.0
-            opacidad_target = np.clip(1.0 - ((diff - dist_max + rango_fade) / rango_fade), 0.0, 1.0)
-
-        if gamma_boost != 1.0:
-            opacidad_target = np.power(opacidad_target, 1.0/gamma_boost)
-
-        opacidad_target = opacidad_target * (alpha_orig / 255.0)
-
-        x = np.arange(ancho, dtype=np.float32)
-        y = np.arange(alto, dtype=np.float32)
-        xv, yv = np.meshgrid(x, y)
-
-        theta = np.radians(angulo)
-        xr = xv * np.cos(theta) - yv * np.sin(theta)
-        yr = xv * np.sin(theta) + yv * np.cos(theta)
-
-        if trama == "line":
-            patron = (np.cos(2 * np.pi * yr / dot_size) + 1.0) / 2.0
-        elif trama == "ellipse":
-            patron = (np.cos(2 * np.pi * xr / dot_size) + np.cos(2 * np.pi * yr / (dot_size/2.0))) / 4.0 + 0.5
-        elif trama == "roseta":
-            p1 = (np.cos(2 * np.pi * xr / dot_size) + np.cos(2 * np.pi * yr / dot_size)) / 4.0 + 0.5
-            xr2 = xv * np.cos(theta + np.pi/4) - yv * np.sin(theta + np.pi/4)
-            yr2 = xv * np.sin(theta + np.pi/4) + yv * np.cos(theta + np.pi/4)
-            p2 = (np.cos(2 * np.pi * xr2 / dot_size) + np.cos(2 * np.pi * yr2 / dot_size)) / 4.0 + 0.5
-            patron = (p1 + p2) / 2.0
-        else:
-            patron = (np.cos(2 * np.pi * xr / dot_size) + np.cos(2 * np.pi * yr / dot_size)) / 4.0 + 0.5
-
-        mask_remover = opacidad_target > patron
-        alpha_final = np.where(mask_remover, 0, alpha_orig).astype(np.uint8)
-
-        if fix_semi:
-            alpha_final = np.where((alpha_final > 15) & (alpha_final < 240), 255, alpha_final)
-
-        arr_visual[:,:,3] = alpha_final
-        img_final = Image.fromarray(arr_visual, "RGBA")
-        
-        if choke:
-            img_final = img_final.filter(ImageFilter.MinFilter(3))
-
-        img_final.save(ruta_salida, "PNG", optimize=True)
-        img_orig.close()
-        img_final.close()
-        gc.collect()
-        
-        try: os.remove(ruta_entrada)
-        except: pass
-
-        return send_file(ruta_salida, mimetype='image/png')
-
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
-
-@app.route("/login-telegram", methods=["GET"])
-def login_telegram_redirect():
-    data = request.args.to_dict()
-    if not data or 'hash' not in data: return redirect("/?tg_error=" + quote("Datos inválidos"))
-    hash_recibido = data.pop('hash')
-    data_check_string = '\n'.join(sorted([f'{k}={v}' for k, v in data.items()]))
-    secret_key = hashlib.sha256(TELEGRAM_BOT_TOKEN.encode('utf-8')).digest()
-    if hmac.new(secret_key, data_check_string.encode('utf-8'), hashlib.sha256).hexdigest() != hash_recibido:
-        return redirect("/?tg_error=" + quote("Firma no válida"))
-    user_id = data.get('id')
-    first_name = data.get('first_name', 'VIP')
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getChatMember"
-    try:
-        resp = requests.get(url, params={"chat_id": TELEGRAM_CHAT_ID, "user_id": user_id}, timeout=10).json()
-        if resp.get('ok') and resp['result']['status'] in ['member', 'administrator', 'creator']:
-            return redirect(f"/?tg_login=ok&name={quote(first_name)}")
-        return redirect("/?tg_error=" + quote("No eres miembro del grupo VIP."))
-    except Exception:
-        return redirect("/?tg_error=" + quote("Error verificando grupo VIP."))
-
-@app.route("/verify-telegram", methods=["POST"])
-def verify_telegram():
-    data = request.json
-    if not data or 'hash' not in data: return jsonify({"access": False, "message": "Datos inválidos"}), 400
-    data_check_arr = [f'{k}={v}' for k, v in data.items() if k != 'hash']
-    data_check_string = '\n'.join(sorted(data_check_arr))
-    secret_key = hashlib.sha256(TELEGRAM_BOT_TOKEN.encode('utf-8')).digest()
-    hash_calc = hmac.new(secret_key, data_check_string.encode('utf-8'), hashlib.sha256).hexdigest()
-    if hash_calc != data['hash']: return jsonify({"access": False, "message": "Firma no válida"}), 403
-    user_id = data.get('id')
-    first_name = data.get('first_name', 'Usuario')
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getChatMember"
-    try:
-        resp = requests.get(url, params={"chat_id": TELEGRAM_CHAT_ID, "user_id": user_id}, timeout=10).json()
-        if resp.get('ok') and resp['result']['status'] in ['member', 'administrator', 'creator']: return jsonify({"access": True, "nombre": first_name})
-        return jsonify({"access": False, "message": "No eres miembro del grupo VIP."})
-    except Exception as e: return jsonify({"access": False, "message": str(e)}), 500
+def index(): return render_template("index.html")
 
 @app.route("/models")
 def get_models():
@@ -637,8 +381,27 @@ def proxy_image():
     if err: return jsonify({"error": True, "message": err}), 400
     resp_obj, err_img = validate_and_build_response(raw_bytes)
     if err_img: return jsonify({"error": True, "message": err_img}), 400
-    if dl == "1": resp_obj.headers["Content-Disposition"] = "attachment; filename=JJ_Studio_Diseno.png"
+    if dl == "1":
+        resp_obj.headers["Content-Disposition"] = "attachment; filename=JJ_Studio_Diseno.png"
     return resp_obj
+
+@app.route("/verify-telegram", methods=["POST"])
+def verify_telegram():
+    data = request.json
+    if not data or 'hash' not in data: return jsonify({"access": False, "message": "Datos inválidos"}), 400
+    data_check_arr = [f'{k}={v}' for k, v in data.items() if k != 'hash']
+    data_check_string = '\n'.join(sorted(data_check_arr))
+    secret_key = hashlib.sha256(TELEGRAM_BOT_TOKEN.encode('utf-8')).digest()
+    hash_calc = hmac.new(secret_key, data_check_string.encode('utf-8'), hashlib.sha256).hexdigest()
+    if hash_calc != data['hash']: return jsonify({"access": False, "message": "Firma no válida"}), 403
+    user_id = data.get('id')
+    first_name = data.get('first_name', 'Usuario')
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getChatMember"
+    try:
+        resp = requests.get(url, params={"chat_id": TELEGRAM_CHAT_ID, "user_id": user_id}, timeout=10).json()
+        if resp.get('ok') and resp['result']['status'] in ['member', 'administrator', 'creator']: return jsonify({"access": True, "nombre": first_name})
+        return jsonify({"access": False, "message": "No eres miembro del grupo VIP."})
+    except Exception as e: return jsonify({"access": False, "message": str(e)}), 500
 
 @app.route("/check-task", methods=["GET"])
 def check_task():
@@ -754,11 +517,10 @@ def run_model(slug):
         return resp_obj
 
     except Exception as e: 
-        traceback.print_exc()
+        print(f"❌ ERROR: {str(e)}")
         return jsonify({"error": True, "message": f"Error interno: {str(e)}"}), 400
     finally:
         gc.collect()
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(debug=False, host="0.0.0.0", port=port)
+    app.run(debug=True, host="0.0.0.0", port=10000)
