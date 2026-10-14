@@ -989,13 +989,116 @@ function applyMasterColorZone() {
     ctxEdit.putImageData(imgData, x, y); ctxMask.clearRect(0,0, maskCanvas.width, maskCanvas.height); mcSelection = null; saveToHistory();
 }
 
+// 1. Ocultar ícono roto de "Resultado" cuando no hay imagen cargada
+if (mainResultImg) {
+    mainResultImg.addEventListener("error", () => { mainResultImg.style.display = "none"; });
+    if (!mainResultImg.getAttribute("src")) mainResultImg.style.display = "none";
+}
+const origReiniciar = reiniciarHerramienta;
+reiniciarHerramienta = function(keepTool = false) {
+    origReiniciar(keepTool);
+    if (mainResultImg && (!mainResultImg.getAttribute("src") || mainResultImg.getAttribute("src") === "")) {
+        mainResultImg.style.display = "none";
+    }
+};
+
+// 2. Restaurar el envío de todas las herramientas de IA (evita que regrese al menú principal)
+form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!currentSlug) return;
+
+    if (currentSlug === "master-color") {
+        editCanvas.toBlob(blob => {
+            const url = URL.createObjectURL(blob);
+            btnDownloadResult.href = url;
+            btnDownloadResult.download = `MasterColor_${Date.now()}.png`;
+            btnDownloadResult.style.display = "inline-flex";
+            statusLine.textContent = TEXT[currentLang].status_ok || "✅ Listo para descargar";
+            statusLine.className = "status show ok";
+        }, "image/png");
+        return;
+    }
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+    statusLine.textContent = TEXT[currentLang].status_loading || "⏳ Procesando con IA...";
+    statusLine.className = "status show";
+
+    try {
+        const fd = new FormData(form);
+        if (isMaskTool && maskFieldName) {
+            const maskBlob = await new Promise(res => maskCanvas.toBlob(res, "image/png"));
+            fd.set(maskFieldName, maskBlob, "mask.png");
+        }
+        const resp = await fetch(`/run/${currentSlug}`, { method: "POST", body: fd });
+        const contentType = resp.headers.get("content-type") || "";
+
+        if (!resp.ok) {
+            let errMsg = "Error al procesar";
+            if (contentType.includes("application/json")) {
+                const j = await resp.json();
+                errMsg = j.error || j.message || errMsg;
+            }
+            throw new Error(errMsg);
+        }
+
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        urlResultMemoria = url;
+
+        const mainResultVideo = document.getElementById("mainResultVideo");
+        if (blob.type.startsWith("video/")) {
+            if (mainResultImg) mainResultImg.style.display = "none";
+            if (mainResultVideo) {
+                mainResultVideo.src = url;
+                mainResultVideo.style.display = "block";
+            }
+        } else {
+            if (mainResultVideo) mainResultVideo.style.display = "none";
+            if (mainResultImg) {
+                mainResultImg.src = url;
+                mainResultImg.style.display = "block";
+            }
+        }
+
+        tray.style.display = "block";
+        btnDownloadResult.href = url;
+        btnDownloadResult.download = `JJ_Studio_${currentSlug}_${Date.now()}.${blob.type.includes("video") ? "mp4" : "png"}`;
+        btnDownloadResult.style.display = "inline-flex";
+        statusLine.textContent = TEXT[currentLang].status_ok || "✅ ¡Procesado con éxito!";
+        statusLine.className = "status show ok";
+    } catch (err) {
+        statusLine.textContent = "❌ " + (err.message || "Error en el servidor");
+        statusLine.className = "status show error";
+    } finally {
+        if (submitBtn) submitBtn.disabled = false;
+    }
+});
+
+// 3. Botones de Cerrar Sesión y Cambio de Idioma
+document.getElementById("logoutBtn").addEventListener("click", () => {
+    sessionStorage.removeItem("jj_session_perm");
+    sessionStorage.removeItem("jj_user_name");
+    location.reload();
+});
+
+document.querySelectorAll(".lang-switch button").forEach(btn => {
+    btn.addEventListener("click", () => {
+        currentLang = btn.dataset.lang;
+        localStorage.setItem("jj_lang", currentLang);
+        document.querySelectorAll(".lang-switch button").forEach(b => b.classList.toggle("active", b.dataset.lang === currentLang));
+        applyStaticText();
+        if (currentSlug) openTool(currentSlug);
+    });
+});
+
 // ==========================================
-// LÓGICA DE HERRAMIENTAS DTF PRO V36
+// 4. LÓGICA DE HERRAMIENTAS DTF PRO V36
 // ==========================================
 let dtfScale = 1, dtfPanX = 0, dtfPanY = 0, isDtfPanning = false, dtfStartX = 0, dtfStartY = 0;
 
 function updateDtfTransform() {
-    let pref = currentSlug === 'detector' ? 'det_' : 'semi_';
+    let pref = (currentSlug === 'detector-dtf' || currentSlug === 'detector') ? 'det_' : 'semi_';
     const wrap = document.getElementById(pref + 'canvasWrapper');
     if (wrap) wrap.style.transform = `translate(${dtfPanX}px, ${dtfPanY}px) scale(${dtfScale})`;
 }
@@ -1198,3 +1301,5 @@ checkSession();
 </script>
 </body>
 </html>
+  
+            
