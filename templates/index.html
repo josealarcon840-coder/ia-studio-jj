@@ -665,9 +665,21 @@ document.querySelectorAll(".lang-switch").forEach(sw => { sw.querySelectorAll("b
 const gate = document.getElementById("gate"); const appEl = document.getElementById("app"); const gateError = document.getElementById("gateError"); const userLabel = document.getElementById("userLabel");
 
 function checkSession() {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get("tg_login") === "ok") {
+      const nombre = urlParams.get("name") || "VIP";
+      sessionStorage.setItem("jj_session_perm", "active");
+      sessionStorage.setItem("jj_user_name", nombre);
+      window.history.replaceState({}, document.title, "/");
+  } else if (urlParams.get("tg_error")) {
+      gateError.textContent = urlParams.get("tg_error");
+      gateError.classList.add("show");
+      window.history.replaceState({}, document.title, "/");
+  }
   const perm = sessionStorage.getItem("jj_session_perm"); const name = sessionStorage.getItem("jj_user_name");
   if (perm === "active") { showApp(name); return true; } return false;
 }
+
 function showApp(name) { gate.style.display = "none"; appEl.style.display = "block"; userLabel.textContent = name ? name.toUpperCase() : ""; loadModels(); }
 
 async function onTelegramAuth(user) {
