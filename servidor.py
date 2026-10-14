@@ -29,8 +29,8 @@ TELEGRAM_CHAT_ID = "-1002330690954"
 def L(es, en): return {"es": es, "en": en}
 
 MODELS = [
-    {"slug": "detector-dtf", "label": L("🔍 Detectar Semitransparencias", "🔍 Transparency Scanner"), "icon": "fa-magnifying-glass-chart", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Escanea tu diseño en busca de píxeles fantasmas y repáralos para DTF.", "Scan and fix ghost pixels for DTF."), "endpoint": "/api/reparar", "response_type": "page", "fields": []},
-    {"slug": "semitonos-dtf", "label": L("🕸️ Semitonos DTF Pro", "🕸️ Halftones DTF Pro"), "icon": "fa-braille", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Convierte fondos en tramas de puntos, aplica asfixia y limpieza HD.", "Convert to halftones, apply choke and upscale."), "endpoint": "/api/procesar", "response_type": "page", "fields": []},
+    {"slug": "detector-dtf", "label": L("🔍 Detectar Semitransparencias", "🔍 Transparency Scanner"), "icon": "fa-magnifying-glass-chart", "category": L("6. Especiales DTF", "6. DTF Specials"), "desc": L("Escanea tu diseño en busca de píxeles fantasmas y repáralos para DTF a 300DPI.", "Scan and fix ghost pixels for DTF."), "endpoint": "/api/reparar", "response_type": "page", "fields": []},
+    {"slug": "semitonos-dtf", "label": L("🕸️ Semitonos DTF Pro", "🕸️ Halftones DTF Pro"), "icon": "fa-braille", "category": L("6. Especiales DTF", "6. DTF Specials"), "desc": L("Convierte fondos en tramas de puntos, aplica asfixia y limpieza HD.", "Convert to halftones, apply choke and upscale."), "endpoint": "/api/procesar", "response_type": "page", "fields": []},
 
     {"slug": "detect-objects", "label": L("Borrador Mágico (Auto)", "Magic Eraser (Auto)"), "icon": "fa-magic", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Encuentra objetos para borrarlos con un clic.", "Finds objects to erase them with a click."), "endpoint": "/v1/images/detect-objects", "response_type": "json", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen Base", "Base Image"), "required": True}, {"name": "lang", "type": "select", "label": L("Idioma", "Language"), "options": [{"value": "es", "label": L("Español", "Spanish")}]}, {"name": "erase_mode", "type": "select", "label": L("Calidad", "Quality"), "options": [{"value": "ultra", "label": L("Ultra HD", "Ultra HD")}, {"value": "super", "label": L("Super", "Super")}, {"value": "normal", "label": L("Normal", "Normal")}]}]},
     {"slug": "detect-text", "label": L("Borrar Texto (Auto)", "Erase Text (Auto)"), "icon": "fa-font", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Detecta y borra los textos automáticamente.", "Detects and erases text automatically."), "endpoint": "/v1/images/detect-text", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
@@ -83,25 +83,95 @@ MODELS = [
             {"value": "3:2", "label": "3:2 (Foto - 1024x683)"}
         ]}
     ]},
+    
     {"slug": "fairy-art", "label": L("Retrato a Arte", "Portrait to Art"), "icon": "fa-wand-magic-sparkles", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Convierte fotos a Anime/Boceto o estilos creativos.", "Convert photos to Art."), "endpoint": "/v1/images/generates/art", "response_type": "image", "fields": [
         {"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, 
         {"name": "hybrid_style", "type": "select_hybrid", "label": L("Elige un Estilo", "Style"), "required": True, "options_url": "https://storage.googleapis.com/assets.snapedit.app/fairyai/anime_styles_6mar25.json", "options": [
             {"value": "PROMPT: Keep the exact same original shape, face, clothes and layout. Transform the photo into a highly detailed artistic black and white pencil sketch drawing.", "label": "✏️ Boceto a Lápiz"},
             {"value": "PROMPT: Keep the exact same original shape, face, clothes and layout. Transform the photo into a Studio Ghibli 2D anime style, vibrant flat colors.", "label": "🍃 Estilo Ghibli"},
-            {"value": "PROMPT: Keep the exact same original shape, face, clothes and layout. Transform the photo into a 3D Pixar Disney style animated character.", "label": "🧸 Animado 3D"}
+            {"value": "PROMPT: Keep the exact same original shape, face, clothes and layout. Transform the photo into a 3D Pixar Disney style animated character.", "label": "🧸 Animado 3D"},
+            {"value": "PROMPT: Keep the exact same original shape, face, clothes and layout. Transform the photo into a funny 2D cartoon caricature.", "label": "🤪 Caricatura"},
+            {"value": "PROMPT: Keep the exact same original shape, face, clothes and layout. Transform the photo into a classic 2D Cartoon network style.", "label": "📺 Cartoons"},
+            {"value": "PROMPT: Keep the exact same original shape, face, clothes and layout. Transform the photo into a cute kawaii anime Chibi style character.", "label": "👶 Chibi Anime"},
+            {"value": "PROMPT: Keep the exact same original shape, face, clothes and layout. Transform the photo into a beautiful comic book illustration drawing.", "label": "🎨 Dibujo / Ilustración"}
         ]}
     ]},
+
     {"slug": "generate-background", "label": L("Generar Fondo Nuevo", "Generate Background"), "icon": "fa-image", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Fondo para productos. ¡Sube un PNG SIN FONDO!", "Background for products."), "endpoint": "/v1/images/generates-background", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen (Transparente)", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Descripción del fondo", "Background prompt"), "required": True}]},
+    
     {"slug": "sticker", "label": L("Crear Sticker", "Create Sticker"), "icon": "fa-note-sticky", "category": L("4. Inteligencia Artificial", "4. AI Generation"), "desc": L("Haz un sticker de tu foto con borde blanco al instante.", "Make a sticker from photo."), "endpoint": "/v1/images/generates/sticker", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
 
-    {"slug": "master-color", "label": L("🎨 Master Color", "🎨 Master Color"), "icon": "fa-fill-drip", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Sustituye colores seleccionando por gotero y zona.", "Change colors by selecting zone and eyedropper."), "endpoint": "/local/canvas", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Sube tu Diseño", "Upload Design"), "required": True}]},
-    {"slug": "edit-multi", "label": L("Fusión IA (Múltiple)", "AI Fusion (Multi)"), "icon": "fa-object-group", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Edita hasta 3 imágenes juntas.", "Edit using up to 3 images."), "endpoint": "/v1/images/edits/multi", "response_type": "image", "fields": [{"name": "input_image_0", "type": "image", "label": L("Imagen Base 1", "Base Image 1"), "required": True}, {"name": "input_image_1", "type": "image", "label": L("Imagen Extra 2", "Extra Image 2"), "required": False}, {"name": "input_image_2", "type": "image", "label": L("Imagen Extra 3", "Extra Image 3"), "required": False}, {"name": "prompt", "type": "textarea", "label": L("Instrucción", "Prompt"), "required": True}]},
-    {"slug": "studio-vignette", "label": L("🌟 Resplandor Mágico", "🌟 Outer Glow"), "icon": "fa-star", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Añade resplandor HD a diseños sin fondo.", "Adds a glow to a transparent design."), "endpoint": "/local/canvas", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Sube tu Diseño (Sin Fondo)", "Upload Transparent Design"), "required": True}, {"name": "bg_color", "type": "color", "label": L("Color del Resplandor", "Glow Color"), "default": "#ff0000"}, {"name": "glow_size", "type": "range", "label": L("Grosor del Resplandor", "Glow Thickness"), "min": 1, "max": 100, "default": 30}]},
-    {"slug": "textile-styles", "label": L("Texturas Mágicas 3D", "3D Magic Textures"), "icon": "fa-cubes", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Aplica lana, bordado, parche o inflado.", "Applies yarn, thread, patch or puffy styles."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Sube tu Diseño Original", "Upload Design"), "required": True}, {"name": "prompt", "type": "select", "label": L("Elige la Textura", "Select Texture"), "required": True, "options": [{"value": "Convert every single colored region... into a uniform 3D amigurumi crochet texture...", "label": L("🧶 Crochet HD", "HD Crochet")}, {"value": "Convert every single colored region... into a uniform 3D embroidery texture...", "label": L("🧵 Bordado HD", "Realistic Embroidery")}]}]},
+    {"slug": "master-color", "label": L("🎨 Master Color", "🎨 Master Color"), "icon": "fa-fill-drip", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Sustituye colores seleccionando por gotero y zona.", "Change colors by selecting zone and eyedropper."), "endpoint": "/local/canvas", "response_type": "image", "fields": [
+        {"name": "input_image", "type": "image", "label": L("Sube tu Diseño", "Upload Design"), "required": True}
+    ]},
+
+    {"slug": "edit-multi", "label": L("Fusión IA (Múltiple)", "AI Fusion (Multi)"), "icon": "fa-object-group", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Edita hasta 3 imágenes juntas (Ej: Pon a la persona de la Imagen 2 en la 1).", "Edit using up to 3 images."), "endpoint": "/v1/images/edits/multi", "response_type": "image", "fields": [
+        {"name": "input_image_0", "type": "image", "label": L("Imagen Base 1", "Base Image 1"), "required": True},
+        {"name": "input_image_1", "type": "image", "label": L("Imagen Extra 2 (Opcional)", "Extra Image 2 (Optional)"), "required": False},
+        {"name": "input_image_2", "type": "image", "label": L("Imagen Extra 3 (Opcional)", "Extra Image 3 (Optional)"), "required": False},
+        {"name": "prompt", "type": "textarea", "label": L("Instrucción (Ej: Reemplaza a la chica por la de la imagen 2)", "Prompt"), "required": True}
+    ]},
+
+    {"slug": "studio-vignette", "label": L("🌟 Resplandor Mágico", "🌟 Magic Glow"), "icon": "fa-star", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Añade resplandor HD a diseños sin fondo.", "Adds a glow to a transparent design."), "endpoint": "/local/canvas", "response_type": "image", "fields": [
+        {"name": "input_image", "type": "image", "label": L("Sube tu Diseño (Sin Fondo)", "Upload Transparent Design"), "required": True}, 
+        {"name": "bg_color", "type": "color", "label": L("Elige el Color del Resplandor", "Glow Color"), "default": "#ff0000"},
+        {"name": "glow_size", "type": "range", "label": L("Grosor del Resplandor", "Glow Thickness"), "min": 1, "max": 100, "default": 30}
+    ]},
+
+    {"slug": "edit-image", "label": L("Edición Mágica (Texto)", "Magic Edit (Text)"), "icon": "fa-wand-sparkles", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Edita usando órdenes.", "Edit using text prompts."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}, {"name": "prompt", "type": "textarea", "label": L("Instrucción", "Prompt"), "required": True}, {"name": "mode", "type": "select", "label": L("Modo", "Mode"), "required": True, "options": [{"value": "editing", "label": L("General", "General")}, {"value": "inpaint", "label": L("Inpaint", "Inpaint")}]}]},
+    
+    {"slug": "textile-styles", "label": L("Texturas Mágicas 3D", "3D Magic Textures"), "icon": "fa-cubes", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Aplica lana, bordado, parche o inflado.", "Applies yarn, thread, patch or puffy styles."), "endpoint": "/v1/images/edits", "response_type": "image", "fields": [
+        {"name": "input_image", "type": "image", "label": L("Sube tu Diseño Original", "Upload Design"), "required": True}, 
+        {"name": "prompt", "type": "select", "label": L("Elige la Textura", "Select Texture"), "required": True, "options": [
+            {"value": "Convert every single colored region of this image from top to bottom—including the top shapes, main subject, accessories, cups, glasses, bottom waves, splashes, and base details—into a uniform 3D amigurumi crochet texture made entirely of thick knitted yarn loops. Every surface must be made of yarn while keeping its exact original position, shape, and color.", "label": L("🧶 Crochet / Amigurumi HD", "HD Crochet")},
+            {"value": "Convert every single colored region of this image from top to bottom—including the top shapes, main subject, accessories, cups, glasses, bottom waves, splashes, and base details—into a uniform 3D embroidery texture made entirely of thick glossy thread stitches. Every surface must be stitched thread while keeping its exact original position, shape, and color.", "label": L("🧵 Bordado Realista HD", "Realistic Embroidery")},
+            {"value": "Convert the entire image from top to bottom—including all top shapes, main subject, accessories, and bottom wave or base details—into a 3D embroidered patch made of thick thread stitches with a tight stitched border along the outer silhouette. Keep every element in its exact original position and color.", "label": L("🏷️ Parche (Sin Fondo - Borde Ajustado)", "Patch Tight Border")},
+            {"value": "Place the complete graphic from top to bottom onto a square fabric patch with a stitched thread border around the outer square edge. Render every single element, including top shapes, accessories, and bottom base details, in 3D embroidered thread keeping their exact original positions and colors.", "label": L("⬛ Parche (Fondo Cuadrado)", "Square Patch")},
+            {"value": "Place the complete graphic from top to bottom onto a circular fabric patch with a stitched thread border around the outer circle edge. Render every single element, including top shapes, accessories, and bottom base details, in 3D embroidered thread keeping their exact original positions and colors.", "label": L("🔴 Parche (Fondo Redondo)", "Round Patch")},
+            {"value": "Convert every single colored region of this image from top to bottom—including the top shapes, main subject, accessories, cups, glasses, bottom waves, splashes, and base details—into a uniform 3D inflated puffy balloon texture made of glossy soft vinyl. Keep every element in its exact original position, shape, and color.", "label": L("🎈 Estilo Inflado 3D (Globo)", "3D Inflated/Puffer")}
+        ]}
+    ]},
+
     {"slug": "retouch-skin", "label": L("Retoque Facial", "Skin Retouch"), "icon": "fa-face-smile", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Limpia la piel automáticamente.", "Cleans skin automatically."), "endpoint": "/v1/images/retouch-skin", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]}
 ]
 
 MODELS_BY_SLUG = {m["slug"]: m for m in MODELS}
+
+
+# ==========================================
+# FUNCIONES AUXILIARES (SnapEdit y Limpieza)
+# ==========================================
+def procesar_con_snapedit(ruta_imagen):
+    url = "https://api.snapedit.app/v1/images/enhance-art"
+    headers = {"api-key": API_SNAPEDIT}
+    try:
+        with open(ruta_imagen, 'rb') as f:
+            response = requests.post(url, headers=headers, files={'input_image': f}, data={'zoom_factor': '4'}, timeout=90)
+        if response.status_code == 200:
+            data = response.json()
+            if "data" in data and len(data["data"]) > 0:
+                img_descargada = requests.get(data["data"][0]["url"], timeout=90).content
+                nueva_ruta = ruta_imagen.replace(".", "_ia.")
+                with open(nueva_ruta, 'wb') as f_out: f_out.write(img_descargada)
+                return nueva_ruta
+    except: pass
+    return ruta_imagen 
+
+def quitar_fondo_snapedit(ruta_imagen):
+    url = "https://api.snapedit.app/v1/images/remove-background-graphic"
+    headers = {"api-key": API_SNAPEDIT}
+    try:
+        with open(ruta_imagen, 'rb') as f:
+            response = requests.post(url, headers=headers, files={'input_image': f}, timeout=90)
+        if response.status_code == 200:
+            data = response.json()
+            if "data" in data and len(data["data"]) > 0:
+                img_descargada = requests.get(data["data"][0]["url"], timeout=90).content
+                nueva_ruta = ruta_imagen.replace(".", "_nobg.")
+                with open(nueva_ruta, 'wb') as f_out: f_out.write(img_descargada)
+                return nueva_ruta
+    except: pass
+    return ruta_imagen 
 
 def resize_if_needed(file_bytes, slug, original_filename="image.jpg", zoom_factor="2"):
     if not file_bytes or len(file_bytes) == 0:
@@ -112,7 +182,8 @@ def resize_if_needed(file_bytes, slug, original_filename="image.jpg", zoom_facto
             if zf == "8": max_dim = 500
             elif zf == "4": max_dim = 950
             else: max_dim = 1500
-        else: max_dim = 2400
+        else:
+            max_dim = 2400
 
         img = Image.open(io.BytesIO(file_bytes))
         img_format = (img.format or "PNG").upper()
@@ -129,7 +200,8 @@ def resize_if_needed(file_bytes, slug, original_filename="image.jpg", zoom_facto
             img.draft("RGB", (max_dim, max_dim))
 
         if needs_resize:
-            filtro = getattr(Image.Resampling, 'LANCZOS', Image.BICUBIC)
+            # 🔥 CORREGIDO PARA ACELERAR EL PROCESAMIENTO (BILINEAR)
+            filtro = Image.BILINEAR
             img.thumbnail((max_dim, max_dim), filtro)
 
         buffer = io.BytesIO()
@@ -146,6 +218,7 @@ def resize_if_needed(file_bytes, slug, original_filename="image.jpg", zoom_facto
             img.close()
             return out_bytes, "image.jpg", "image/jpeg"
     except Exception as e:
+        print(f"⚠️ Aviso en resize_if_needed: {e}")
         return file_bytes, original_filename, "image/png"
     finally:
         gc.collect()
@@ -186,7 +259,7 @@ def extract_raw_bytes_from_response(response):
         err_msg = datos.get("error", {}).get("message") if isinstance(datos.get("error"), dict) else datos.get("message", str(datos))
         return None, err_msg
     else:
-        if response.status_code != 200: return None, f"Servidores ocupados (HTTP {response.status_code})."
+        if response.status_code != 200: return None, f"Servidores de IA ocupados (HTTP {response.status_code}). Intenta en unos segundos."
         return response.content, None
 
 def download_from_cdn_with_retry(url_img, retries=3):
@@ -201,7 +274,7 @@ def download_from_cdn_with_retry(url_img, retries=3):
     return None, "El CDN de SnapEdit entregó 0 bytes."
 
 def validate_and_build_response(raw_bytes):
-    if not raw_bytes or len(raw_bytes) < 64: return None, "El servidor devolvió un archivo vacío (0 bytes)."
+    if not raw_bytes or len(raw_bytes) < 64: return None, "El servidor de IA devolvió un archivo vacío (0 bytes)."
     if raw_bytes[:8] == b'\x89PNG\r\n\x1a\n': return Response(raw_bytes, mimetype="image/png"), None
     elif (raw_bytes[:3] == b'\xff\xd8\xff') or (raw_bytes[:4] == b'RIFF' and raw_bytes[8:12] == b'WEBP'):
         try:
@@ -213,143 +286,96 @@ def validate_and_build_response(raw_bytes):
             gc.collect()
             return Response(png_bytes, mimetype="image/png"), None
         except Exception: return Response(raw_bytes, mimetype="image/png"), None
-    else: return None, "La IA devolvió un archivo corrupto o saturado."
+    else: return None, "La IA devolvió un archivo corrupto o está saturada. Intenta nuevamente."
 
-def procesar_con_snapedit(ruta_imagen):
-    url = "https://api.snapedit.app/v1/images/enhance-art"
+def upscale_cropped_design_hd(img_pil):
     try:
-        with open(ruta_imagen, 'rb') as f:
-            response = requests.post(url, headers=HEADERS, files={'input_image': f}, data={'zoom_factor': '4'}, timeout=90)
-        if response.status_code == 200:
-            data = response.json()
-            if "data" in data and len(data["data"]) > 0:
-                img_descargada = requests.get(data["data"][0]["url"], timeout=90).content
-                nueva_ruta = ruta_imagen.replace(".", "_ia.")
-                with open(nueva_ruta, 'wb') as f_out: f_out.write(img_descargada)
-                return nueva_ruta
-    except: pass
-    return ruta_imagen 
+        w, h = img_pil.size
+        max_side = max(w, h)
+        if max_side <= 950:
+            zf = "4"
+        elif max_side <= 1500:
+            zf = "2"
+        else:
+            return img_pil
 
-def quitar_fondo_snapedit(ruta_imagen):
-    url = "https://api.snapedit.app/v1/images/remove-background-graphic"
+        buf = io.BytesIO()
+        img_pil.convert("RGB").save(buf, format="JPEG", quality=98)
+        f_up = {"input_image": ("crop.jpg", buf.getvalue(), "image/jpeg")}
+
+        r_up = requests.post(BASE + "/v1/images/enhance-art", headers=HEADERS, files=f_up, data={"zoom_factor": zf}, timeout=120)
+        up_bytes, up_err = extract_raw_bytes_from_response(r_up)
+
+        if up_err or not up_bytes:
+            f_up2 = {"input_image": ("crop.jpg", buf.getvalue(), "image/jpeg")}
+            r_up2 = requests.post(BASE + "/v1/images/enhance", headers=HEADERS, files=f_up2, data={"zoom_factor": zf, "enhance_faces": "true"}, timeout=120)
+            up_bytes, up_err = extract_raw_bytes_from_response(r_up2)
+
+        if not up_err and up_bytes and len(up_bytes) > 100:
+            upscaled_img = Image.open(io.BytesIO(up_bytes)).convert("RGBA")
+            img_pil.close()
+            return upscaled_img
+    except Exception as e:
+        print(f"⚠️ Aviso en upscale_cropped_design_hd: {e}")
+    return img_pil
+
+def process_dtf_extraction(raw_bytes, extract_mode):
     try:
-        with open(ruta_imagen, 'rb') as f:
-            response = requests.post(url, headers=HEADERS, files={'input_image': f}, timeout=90)
-        if response.status_code == 200:
-            data = response.json()
-            if "data" in data and len(data["data"]) > 0:
-                img_descargada = requests.get(data["data"][0]["url"], timeout=90).content
-                nueva_ruta = ruta_imagen.replace(".", "_nobg.")
-                with open(nueva_ruta, 'wb') as f_out: f_out.write(img_descargada)
-                return nueva_ruta
-    except: pass
-    return ruta_imagen 
+        img = Image.open(io.BytesIO(raw_bytes)).convert("RGBA")
+        r, g, b, _ = img.split()
 
-def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo, tolerancia, saturacion, trama, reducir_pixeles, modo_suave_clasico, gamma_boost, fix_semi, target_w=None, target_h=None):
-    img_orig = Image.open(ruta_entrada).convert("RGBA")
-    
-    if target_w and target_h:
-        img_orig = img_orig.resize((target_w, target_h), Image.Resampling.LANCZOS)
-    
-    if saturacion != 1.0:
-        enhancer = ImageEnhance.Color(img_orig)
-        img_orig = enhancer.enhance(saturacion)
-        
-    arr_visual = np.array(img_orig).copy() 
-    ancho, alto = img_orig.size
-    
-    hex_str = color_hex.lstrip('#')
-    color_objetivo = np.array([int(hex_str[i:i+2], 16) for i in (0, 2, 4)], dtype=np.float32)
-    umbral_distancia = np.float32((tolerancia * 4.41) + 1.0)
-    
-    rad = np.float32(np.radians(angulo))
-    cos_a = np.float32(np.cos(rad))
-    sin_a = np.float32(np.sin(rad))
-    dot_f32 = np.float32(dot_size)
-    radio_max = np.float32(dot_size / 2.0)
-
-    chunk_size = 1000 
-    for y_start in range(0, alto, chunk_size):
-        y_end = min(y_start + chunk_size, alto)
-        chunk_math = arr_visual[y_start:y_end, :, :].astype(np.float32)
-        rgb = chunk_math[:, :, :3]
-        alfa_original = arr_visual[y_start:y_end, :, 3].copy()
-        
-        if fix_semi:
-            alfa_original = np.where(alfa_original > 80, 255, 0).astype(np.uint8)
-
-        if tolerancia >= 200.0:
-            peso_color = np.ones((y_end - y_start, ancho), dtype=np.float32)
+        if "BLACK" in extract_mode:
+            max_c = ImageChops.lighter(ImageChops.lighter(r, g), b)
+            crop_mask = max_c.point(lambda p: 255 if p > 28 else 0)
         else:
-            distancia = np.linalg.norm(rgb - color_objetivo, axis=2)
-            peso_color = np.clip(np.float32(1.0) - (distancia / umbral_distancia), 0.0, 1.0).astype(np.float32)
+            min_c = ImageChops.darker(ImageChops.darker(r, g), b)
+            crop_mask = min_c.point(lambda p: 255 if p < 235 else 0)
 
-        y_coords, x_coords = np.indices((y_end - y_start, ancho), dtype=np.float32)
-        y_coords += y_start 
-        xr = (x_coords * cos_a - y_coords * sin_a).astype(np.float32)
-        yr = (x_coords * sin_a + y_coords * cos_a).astype(np.float32)
+        bbox = crop_mask.getbbox()
+        if bbox:
+            pad = 20
+            left = max(0, bbox[0] - pad)
+            top = max(0, bbox[1] - pad)
+            right = min(img.width, bbox[2] + pad)
+            bottom = min(img.height, bbox[3] + pad)
+            img = img.crop((left, top, right, bottom))
 
-        u = (np.mod(xr, dot_f32) - radio_max).astype(np.float32)
-        v = (np.mod(yr, dot_f32) - radio_max).astype(np.float32)
+        img = upscale_cropped_design_hd(img)
 
-        if trama == "round":
-            matriz_trama = np.clip(np.sqrt((u * u) + (v * v), dtype=np.float32) / radio_max, 0.0, 1.0)
-        elif trama == "line":
-            matriz_trama = np.clip(np.abs(u) / radio_max, 0.0, 1.0)
-        elif trama == "ellipse":
-            matriz_trama = np.clip(np.sqrt(((u / 1.5) * (u / 1.5)) + (v * v), dtype=np.float32) / radio_max, 0.0, 1.0)
-        elif trama == "roseta":
-            p1 = (np.cos(2 * np.pi * xr / dot_size) + np.cos(2 * np.pi * yr / dot_size)) / 4.0 + 0.5
-            xr2 = x_coords * np.cos(rad + np.pi/4) - y_coords * np.sin(rad + np.pi/4)
-            yr2 = x_coords * np.sin(rad + np.pi/4) + y_coords * np.cos(rad + np.pi/4)
-            p2 = (np.cos(2 * np.pi * xr2 / dot_size) + np.cos(2 * np.pi * yr2 / dot_size)) / 4.0 + 0.5
-            matriz_trama = (p1 + p2) / 2.0
-        else:
-            matriz_trama = np.clip(np.sqrt((u * u) + (v * v), dtype=np.float32) / radio_max, 0.0, 1.0)
+        if extract_mode == "AUTO_BLACK":
+            r, g, b, _ = img.split()
+            max_c = ImageChops.lighter(ImageChops.lighter(r, g), b)
+            alpha = max_c.point(lambda p: 0 if p <= 20 else (255 if p >= 52 else int((p - 20) * 255 / 32)))
+            img.putalpha(alpha)
 
-        if modo_suave_clasico:
-            opacidad_final = np.where((np.float32(1.0) - peso_color) >= matriz_trama, 1.0, 0.0).astype(np.float32)
-        else:
-            if trama == "round": wave = (np.cos((u * np.pi) / radio_max) + np.cos((v * np.pi) / radio_max)) / 2.0
-            elif trama == "line": wave = np.cos((u * np.pi) / radio_max)
-            elif trama == "ellipse": wave = (np.cos((u * np.pi) / (radio_max * 1.5)) + np.cos((v * np.pi) / radio_max)) / 2.0
-            else: wave = (np.cos((u * np.pi) / radio_max) + np.cos((v * np.pi) / radio_max)) / 2.0
-                
-            matriz_trama = np.clip((np.float32(1.0) - wave) / 2.0, 0.0, 1.0).astype(np.float32)
-
-            luminancia = (0.299 * rgb[:, :, 0] + 0.587 * rgb[:, :, 1] + 0.114 * rgb[:, :, 2]) / 255.0
-            
-            if gamma_boost:
-                luminancia = np.clip(luminancia * 1.5, 0.0, 1.0)
-                luminancia = np.power(luminancia, 0.45) 
-                luminancia = np.clip(luminancia, 0.0, 0.95).astype(np.float32)
+        elif extract_mode == "AUTO_WHITE":
+            buf_crop = io.BytesIO()
+            img.save(buf_crop, format="PNG")
+            f_bg = {"input_image": ("extracted_hd.png", buf_crop.getvalue(), "image/png")}
+            r_bg = requests.post(BASE + "/v1/images/remove-background-graphic", headers=HEADERS, files=f_bg, timeout=120)
+            bg_bytes, bg_err = extract_raw_bytes_from_response(r_bg)
+            if not bg_err and bg_bytes and len(bg_bytes) > 100:
+                img.close()
+                img = Image.open(io.BytesIO(bg_bytes)).convert("RGBA")
             else:
-                luminancia = luminancia.astype(np.float32)
+                r, g, b, _ = img.split()
+                min_c = ImageChops.darker(ImageChops.darker(r, g), b)
+                alpha = min_c.point(lambda p: 0 if p >= 242 else (255 if p <= 212 else int((242 - p) * 255 / 30)))
+                img.putalpha(alpha)
 
-            is_dark_target = np.mean(color_objetivo) < 128
-            if is_dark_target:
-                factor_tramado = np.where(luminancia >= matriz_trama, 1.0, 0.0).astype(np.float32)
-            else:
-                factor_tramado = np.where((np.float32(1.0) - luminancia) >= matriz_trama, 1.0, 0.0).astype(np.float32)
-                
-            opacidad_final = (np.float32(1.0) - peso_color) + (peso_color * factor_tramado)
+        out = io.BytesIO()
+        img.save(out, format="PNG")
+        res_bytes = out.getvalue()
+        img.close()
+        gc.collect()
+        return res_bytes
+    except Exception as e:
+        print(f"⚠️ Error en process_dtf_extraction: {e}")
+        return raw_bytes
 
-        arr_visual[y_start:y_end, :, 3] = np.where((alfa_original > 127) & (opacidad_final > 0.5), 255, 0)
-        gc.collect() 
-
-    img_resultado = Image.fromarray(arr_visual, mode="RGBA")
-    del arr_visual
-
-    if reducir_pixeles > 0:
-        alfa = img_resultado.split()[3]
-        for _ in range(reducir_pixeles):
-            alfa = alfa.filter(ImageFilter.MinFilter(3)) 
-        img_resultado.putalpha(alfa)
-
-    img_resultado.save(ruta_salida, format="PNG", dpi=(300, 300))
-    gc.collect()
-    return ruta_salida
-
+# ==========================================
+# RUTAS NUEVAS Y ORIGINALES
+# ==========================================
 
 @app.route("/")
 def index():
@@ -379,6 +405,178 @@ def index():
     resp = app.make_response(html)
     resp.headers['Cross-Origin-Opener-Policy'] = 'same-origin-allow-popups'
     return resp
+
+@app.route('/api/reparar', methods=['POST'])
+def reparar_api():
+    try:
+        if 'imagen' not in request.files: 
+            return jsonify({"error": "No se subió imagen"}), 400
+            
+        file = request.files['imagen']
+        ancho_cm = float(request.form.get('ancho', 29.7))
+        alto_cm = float(request.form.get('alto', 42.0))
+        
+        target_w = int((ancho_cm / 2.54) * 300)
+        target_h = int((alto_cm / 2.54) * 300)
+
+        os.makedirs("temp", exist_ok=True)
+        ruta_in = os.path.join("temp", f"in_{int(time.time())}.png")
+        ruta_out = os.path.join("temp", f"out_{int(time.time())}.png")
+        file.save(ruta_in)
+        
+        img = Image.open(ruta_in).convert("RGBA")
+        # 🔥 CORREGIDO PARA ACELERAR
+        filtro = Image.BILINEAR
+        img = img.resize((target_w, target_h), filtro)
+        
+        arr = np.array(img)
+        arr[:, :, 3] = np.where(arr[:, :, 3] > 100, 255, 0).astype(np.uint8)
+        
+        img_final = Image.fromarray(arr, mode="RGBA")
+        img_final.save(ruta_out, format="PNG", dpi=(300, 300))
+        
+        del arr
+        img.close()
+        img_final.close()
+        gc.collect()
+        
+        try: os.remove(ruta_in)
+        except: pass
+        
+        return send_file(ruta_out, mimetype='image/png')
+        
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/procesar', methods=['POST'])
+def procesar():
+    try:
+        if 'imagen' not in request.files:
+            return jsonify({"error": "No se subió imagen"}), 400
+            
+        file = request.files['imagen']
+        if file.filename == '':
+            return jsonify({"error": "Nombre de archivo vacío"}), 400
+
+        os.makedirs("temp", exist_ok=True)
+        ruta_entrada = os.path.join("temp", f"img_orig_{int(time.time())}.png")
+        ruta_salida = os.path.join("temp", f"img_final_{int(time.time())}.png")
+        file.save(ruta_entrada)
+
+        color_hex = request.form.get('color', '#000000')
+        saturacion = float(request.form.get('sat', '1.0'))
+        modo = request.form.get('limpieza', 'global')
+        trama = request.form.get('trama', 'round')
+        
+        tolerancia = int(request.form.get('tolerancia', 20))
+        dot_size = int(request.form.get('px', 10))
+        angulo = int(request.form.get('angulo', 22))
+        
+        usar_ia = request.form.get('usar_ia') == 'true'
+        quitar_fondo = request.form.get('quitar_fondo') == 'true'
+        choke = request.form.get('choke') == 'true'
+        fix_semi = request.form.get('fix_semi') == 'true'
+
+        ancho_cm = float(request.form.get('ancho', 29.7))
+        alto_cm = float(request.form.get('alto', 42.0))
+
+        dpi = 300
+        cm_to_inch = 2.54
+        target_w = int((ancho_cm / cm_to_inch) * dpi)
+        target_h = int((alto_cm / cm_to_inch) * dpi)
+
+        if quitar_fondo:
+            ruta_entrada = quitar_fondo_snapedit(ruta_entrada)
+        
+        if usar_ia:
+            ruta_entrada = procesar_con_snapedit(ruta_entrada)
+
+        modo_suave_clasico = (modo == "baja")
+        gamma_boost = 1.0 if modo_suave_clasico else 0.8 
+
+        # --- Lógica Matemática V36 ---
+        img_orig = Image.open(ruta_entrada).convert("RGBA")
+        
+        # 🔥 CORREGIDO PARA ACELERAR
+        filtro = Image.BILINEAR
+        img_orig = img_orig.resize((target_w, target_h), filtro)
+        
+        if saturacion != 1.0:
+            enhancer = ImageEnhance.Color(img_orig)
+            img_orig = enhancer.enhance(saturacion)
+            
+        arr_visual = np.array(img_orig).copy() 
+        ancho, alto = img_orig.size
+        
+        hex_str = color_hex.lstrip('#')
+        c_target = np.array([int(hex_str[0:2], 16), int(hex_str[2:4], 16), int(hex_str[4:6], 16)], dtype=np.float32)
+        
+        img_rgb = np.array(img_orig.convert("RGB"), dtype=np.float32)
+        alpha_orig = np.array(img_orig.split()[3], dtype=np.float32)
+
+        diff = np.sqrt(np.sum((img_rgb - c_target)**2, axis=2))
+        
+        if modo_suave_clasico:
+            dist_max = tolerancia * 2.55 
+            opacidad_target = np.clip(1.0 - (diff / (dist_max + 1e-5)), 0.0, 1.0)
+        else:
+            dist_max = tolerancia * 4.0
+            rango_fade = 60.0
+            opacidad_target = np.clip(1.0 - ((diff - dist_max + rango_fade) / rango_fade), 0.0, 1.0)
+
+        if gamma_boost != 1.0:
+            opacidad_target = np.power(opacidad_target, 1.0/gamma_boost)
+
+        opacidad_target = opacidad_target * (alpha_orig / 255.0)
+
+        x = np.arange(ancho, dtype=np.float32)
+        y = np.arange(alto, dtype=np.float32)
+        xv, yv = np.meshgrid(x, y)
+
+        theta = np.radians(angulo)
+        xr = xv * np.cos(theta) - yv * np.sin(theta)
+        yr = xv * np.sin(theta) + yv * np.cos(theta)
+
+        if trama == "line":
+            patron = (np.cos(2 * np.pi * yr / dot_size) + 1.0) / 2.0
+        elif trama == "ellipse":
+            patron = (np.cos(2 * np.pi * xr / dot_size) + np.cos(2 * np.pi * yr / (dot_size/2.0))) / 4.0 + 0.5
+        elif trama == "roseta":
+            p1 = (np.cos(2 * np.pi * xr / dot_size) + np.cos(2 * np.pi * yr / dot_size)) / 4.0 + 0.5
+            xr2 = xv * np.cos(theta + np.pi/4) - yv * np.sin(theta + np.pi/4)
+            yr2 = xv * np.sin(theta + np.pi/4) + yv * np.cos(theta + np.pi/4)
+            p2 = (np.cos(2 * np.pi * xr2 / dot_size) + np.cos(2 * np.pi * yr2 / dot_size)) / 4.0 + 0.5
+            patron = (p1 + p2) / 2.0
+        else:
+            patron = (np.cos(2 * np.pi * xr / dot_size) + np.cos(2 * np.pi * yr / dot_size)) / 4.0 + 0.5
+
+        mask_remover = opacidad_target > patron
+        alpha_final = np.where(mask_remover, 0, alpha_orig).astype(np.uint8)
+
+        if fix_semi:
+            alpha_final = np.where((alpha_final > 15) & (alpha_final < 240), 255, alpha_final)
+
+        arr_visual[:,:,3] = alpha_final
+        img_final = Image.fromarray(arr_visual, "RGBA")
+        
+        if choke:
+            img_final = img_final.filter(ImageFilter.MinFilter(3))
+
+        img_final.save(ruta_salida, "PNG", optimize=True)
+        img_orig.close()
+        img_final.close()
+        gc.collect()
+        
+        try: os.remove(ruta_entrada)
+        except: pass
+
+        return send_file(ruta_salida, mimetype='image/png')
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/login-telegram", methods=["GET"])
 def login_telegram_redirect():
@@ -451,115 +649,6 @@ def check_task():
         r = requests.get(f"{BASE}{endpoint}/tasks/{task_id}", headers=HEADERS, timeout=15)
         return jsonify(r.json())
     except Exception as e: return jsonify({"error": True, "message": str(e)})
-
-@app.route('/api/reparar', methods=['POST'])
-def reparar_api():
-    try:
-        if 'imagen' not in request.files: 
-            return jsonify({"error": "No se subió imagen"}), 400
-            
-        file = request.files['imagen']
-        ancho_cm = float(request.form.get('ancho', 29.7))
-        alto_cm = float(request.form.get('alto', 42.0))
-        
-        target_w = int((ancho_cm / 2.54) * 300)
-        target_h = int((alto_cm / 2.54) * 300)
-
-        os.makedirs("temp", exist_ok=True)
-        ruta_in = os.path.join("temp", f"in_{int(time.time())}.png")
-        ruta_out = os.path.join("temp", f"out_{int(time.time())}.png")
-        file.save(ruta_in)
-        
-        img = Image.open(ruta_in).convert("RGBA")
-        filtro = getattr(Image.Resampling, 'LANCZOS', Image.BICUBIC)
-        img = img.resize((target_w, target_h), filtro)
-        
-        arr = np.array(img)
-        arr[:, :, 3] = np.where(arr[:, :, 3] > 100, 255, 0).astype(np.uint8)
-        
-        img_final = Image.fromarray(arr, mode="RGBA")
-        img_final.save(ruta_out, format="PNG", dpi=(300, 300))
-        
-        del arr
-        img.close()
-        img_final.close()
-        gc.collect()
-        
-        try: os.remove(ruta_in)
-        except: pass
-        
-        return send_file(ruta_out, mimetype='image/png')
-        
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/procesar', methods=['POST'])
-def procesar():
-    try:
-        if 'imagen' not in request.files:
-            return jsonify({"error": "No se subió imagen"}), 400
-            
-        file = request.files['imagen']
-        if file.filename == '':
-            return jsonify({"error": "Nombre de archivo vacío"}), 400
-
-        os.makedirs("temp", exist_ok=True)
-        ruta_entrada = os.path.join("temp", f"img_orig_{int(time.time())}.png")
-        ruta_salida = os.path.join("temp", f"img_final_{int(time.time())}.png")
-        file.save(ruta_entrada)
-
-        color_hex = request.form.get('color', '#000000')
-        saturacion = float(request.form.get('sat', '1.0'))
-        modo = request.form.get('limpieza', 'global')
-        trama = request.form.get('trama', 'round')
-        
-        tolerancia = int(request.form.get('tolerancia', 20))
-        dot_size = int(request.form.get('px', 10))
-        angulo = int(request.form.get('angulo', 22))
-        
-        usar_ia = request.form.get('usar_ia') == 'true'
-        quitar_fondo = request.form.get('quitar_fondo') == 'true'
-        choke = request.form.get('choke') == 'true'
-        fix_semi = request.form.get('fix_semi') == 'true'
-
-        ancho_cm = float(request.form.get('ancho', 29.7))
-        alto_cm = float(request.form.get('alto', 42.0))
-
-        dpi = 300
-        cm_to_inch = 2.54
-        target_w = int((ancho_cm / cm_to_inch) * dpi)
-        target_h = int((alto_cm / cm_to_inch) * dpi)
-
-        if quitar_fondo:
-            ruta_entrada = quitar_fondo_snapedit(ruta_entrada)
-        
-        if usar_ia:
-            ruta_entrada = procesar_con_snapedit(ruta_entrada)
-
-        modo_suave_clasico = (modo == "baja")
-        gamma_boost = True if not modo_suave_clasico else False
-        tolerancia_val = 500.0 if not modo_suave_clasico else tolerancia
-        
-        reducir_pixeles_val = 1 if choke else 0
-
-        motor_local_semitonos(
-            ruta_entrada=ruta_entrada, ruta_salida=ruta_salida,
-            color_hex=color_hex, dot_size=dot_size, angulo=angulo, 
-            tolerancia=tolerancia_val, saturacion=saturacion, trama=trama, 
-            reducir_pixeles=reducir_pixeles_val, modo_suave_clasico=modo_suave_clasico, 
-            gamma_boost=gamma_boost, fix_semi=fix_semi,
-            target_w=target_w, target_h=target_h
-        )
-
-        try: os.remove(ruta_entrada)
-        except: pass
-
-        return send_file(ruta_salida, mimetype='image/png')
-
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
 
 @app.route("/run/<slug>", methods=["POST"])
 def run_model(slug):
