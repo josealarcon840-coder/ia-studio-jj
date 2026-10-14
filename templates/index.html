@@ -336,6 +336,8 @@
 
 <div id="app">
   <div class="topbar">
+
+  <div class="topbar">
     <div class="topbar-brand">
       <div class="brand-mark" style="width: 40px; height: 40px; margin: 0; font-size: 0.85rem; border-radius: 10px; border-width: 1px;">
         <i class="fa-solid fa-crown" style="font-size: 0.7em;"></i>
@@ -969,5 +971,230 @@ document.getElementById('btnEyedropper').addEventListener('click', () => { isMcE
 document.getElementById('btnMcSelect').addEventListener('click', () => { isMcSelecting = !isMcSelecting; isMcEyedropper = false; document.getElementById('btnEyedropper').style.borderColor = '#444'; const btn = document.getElementById('btnMcSelect'); if (isMcSelecting) { btn.style.background = 'var(--red-bright)'; maskCanvas.style.cursor = 'crosshair'; } else { btn.style.background = '#444'; maskCanvas.style.cursor = 'default'; } });
 
 function applyMasterColorZone() {
-    if(!mcSelection || mcSelection.w === 0 || mcSelection.h === 0) { alert("Por favor, activa 'Dibujar Zona' y dibuja un recuadro en la imagen con tu mouse."); return; }
-    const x = Math.max(0, Math.floor(mcSelection.x)); const y = Math.max(0, Math.floor(mcSelection.y)); const w = Math.min(editCanvas.width - x, Math.floor(mcSelection.w)); const h = Math.min(editCanvas.height
+    if(!mcSelection || mcSelection.w === 0 || mcSelection.h === 0) return alert(TEXT[currentLang].mc_err);
+    const x = Math.max(0, Math.floor(mcSelection.x)); const y = Math.max(0, Math.floor(mcSelection.y));
+    const w = Math.min(editCanvas.width - x, Math.floor(mcSelection.w)); const h = Math.min(editCanvas.height - y, Math.floor(mcSelection.h));
+    if(w <= 0 || h <= 0) return;
+    const imgData = ctxEdit.getImageData(x, y, w, h); const data = imgData.data;
+    const hex = document.getElementById('mcNewColor').value;
+    const rT = parseInt(hex.slice(1,3), 16), gT = parseInt(hex.slice(3,5), 16), bT = parseInt(hex.slice(5,7), 16);
+    const [hT, sT, lT] = rgbToHsl(rT, gT, bT); const tol = parseInt(document.getElementById('mcTolerance').value) / 100;
+    for(let i=0; i<data.length; i+=4) {
+        if(data[i+3] === 0) continue;
+        const [hC, sC, lC] = rgbToHsl(data[i], data[i+1], data[i+2]);
+        if(sC < 0.10 && lC > 0.85) continue; if(lC < 0.08) continue;
+        let diff = Math.abs(hC - hT); if(diff > 0.5) diff = 1.0 - diff; 
+        if (diff <= (tol * 0.5) || tol >= 0.95) { const [nR, nG, nB] = hslToRgb(hT, sT, lC); data[i] = nR; data[i+1] = nG; data[i+2] = nB; }
+    }
+    ctxEdit.putImageData(imgData, x, y); ctxMask.clearRect(0,0, maskCanvas.width, maskCanvas.height); mcSelection = null; saveToHistory();
+}
+
+// ==========================================
+// LÓGICA DE HERRAMIENTAS DTF PRO V36
+// ==========================================
+let dtfScale = 1, dtfPanX = 0, dtfPanY = 0, isDtfPanning = false, dtfStartX = 0, dtfStartY = 0;
+
+function updateDtfTransform() {
+    let pref = currentSlug === 'detector' ? 'det_' : 'semi_';
+    const wrap = document.getElementById(pref + 'canvasWrapper');
+    if (wrap) wrap.style.transform = `translate(${dtfPanX}px, ${dtfPanY}px) scale(${dtfScale})`;
+}
+
+function resetDtfZoom() { dtfScale = 1; dtfPanX = 0; dtfPanY = 0; updateDtfTransform(); }
+
+['det_', 'semi_'].forEach(pref => {
+    const vp = document.getElementById(pref + 'viewport');
+    if (!vp) return;
+    vp.addEventListener('wheel', e => {
+        e.preventDefault();
+        dtfScale = Math.min(Math.max(0.2, dtfScale * (e.deltaY > 0 ? 0.9 : 1.1)), 10);
+        updateDtfTransform();
+    });
+    vp.addEventListener('mousedown', e => {
+        if (pref === 'det_' && DTFDetector.tool !== 'pan' && e.button === 0) return;
+        isDtfPanning = true; vp.style.cursor = 'grabbing';
+        dtfStartX = e.clientX - dtfPanX; dtfStartY = e.clientY - dtfPanY;
+    });
+    window.addEventListener('mousemove', e => {
+        if (!isDtfPanning) return;
+        dtfPanX = e.clientX - dtfStartX; dtfPanY = e.clientY - dtfStartY;
+        updateDtfTransform();
+    });
+    window.addEventListener('mouseup', () => {
+        isDtfPanning = false;
+        if (vp) vp.style.cursor = (pref === 'det_' && DTFDetector.tool !== 'pan') ? 'crosshair' : 'grab';
+    });
+});
+
+const DTFDetector = {
+    tool: 'pan', file: null, img: new Image(), isDrawing: false, history: [],
+    setTool: function(t) {
+        this.tool = t;
+        ['Pan','Fix','Eraser'].forEach(b => {
+            const el = document.getElementById('det_btnTool' + b);
+            if (el) el.classList.toggle('active', t === b.toLowerCase());
+        });
+        const vp = document.getElementById('det_viewport');
+        if (vp) vp.style.cursor = t === 'pan' ? 'grab' : 'crosshair';
+    },
+    cargarImagen: function(e) {
+        const f = e.target.files[0]; if (!f) return; this.file = f;
+        const reader = new FileReader();
+        reader.onload = ev => {
+            this.img.onload = () => {
+                document.getElementById('det_uploadArea').style.display = 'none';
+                document.getElementById('det_viewerArea').style.display = 'flex';
+                const c = document.getElementById('det_mainCanvas'), ec = document.getElementById('det_errCanvas');
+                c.width = ec.width = this.img.width; c.height = ec.height = this.img.height;
+                c.getContext('2d').drawImage(this.img, 0, 0);
+                this.analizarTransparencias(); resetDtfZoom();
+            };
+            this.img.src = ev.target.result;
+        };
+        reader.readAsDataURL(f);
+    },
+    analizarTransparencias: function() {
+        const c = document.getElementById('det_mainCanvas'), ec = document.getElementById('det_errCanvas');
+        const ctx = c.getContext('2d'), ectx = ec.getContext('2d');
+        const imgData = ctx.getImageData(0, 0, c.width, c.height), d = imgData.data;
+        const errData = ectx.createImageData(c.width, c.height), ed = errData.data;
+        let count = 0;
+        for (let i = 0; i < d.length; i += 4) {
+            if (d[i+3] > 0 && d[i+3] < 255) {
+                ed[i] = 255; ed[i+1] = 0; ed[i+2] = 50; ed[i+3] = 220; count++;
+            }
+        }
+        ectx.putImageData(errData, 0, 0);
+        const st = document.getElementById('det_statusBox');
+        if (count > 0) {
+            st.className = 'dtf-alert dtf-alert-danger';
+            st.innerText = `⚠️ Se detectaron ${count} píxeles semitransparentes (en rojo).`;
+        } else {
+            st.className = 'dtf-alert dtf-alert-ok';
+            st.innerText = '✅ Imagen 100% sólida y lista para DTF.';
+        }
+    },
+    repararTodo: function() {
+        const c = document.getElementById('det_mainCanvas'); if (!c.width) return;
+        const ctx = c.getContext('2d'), imgData = ctx.getImageData(0, 0, c.width, c.height), d = imgData.data;
+        const umb = parseInt(document.getElementById('det_umbralSlider').value);
+        for (let i = 0; i < d.length; i += 4) {
+            if (d[i+3] > 0 && d[i+3] < 255) d[i+3] = d[i+3] >= umb ? 255 : 0;
+        }
+        ctx.putImageData(imgData, 0, 0); this.analizarTransparencias();
+    },
+    limpiarBordes: function(px) {
+        const c = document.getElementById('det_mainCanvas'); if (!c.width) return;
+        const ctx = c.getContext('2d'), w = c.width, h = c.height;
+        for (let step = 0; step < px; step++) {
+            const imgData = ctx.getImageData(0, 0, w, h), d = imgData.data, copy = new Uint8ClampedArray(d);
+            for (let y = 1; y < h - 1; y++) {
+                for (let x = 1; x < w - 1; x++) {
+                    const idx = (y * w + x) * 4;
+                    if (copy[idx+3] > 0) {
+                        if (copy[((y-1)*w+x)*4+3]===0 || copy[((y+1)*w+x)*4+3]===0 || copy[(y*w+(x-1))*4+3]===0 || copy[(y*w+(x+1))*4+3]===0) d[idx+3] = 0;
+                    }
+                }
+            }
+            ctx.putImageData(imgData, 0, 0);
+        }
+        this.analizarTransparencias();
+    },
+    Undo: function() {},
+    descargar: function() {
+        const c = document.getElementById('det_mainCanvas'); if (!c.width) return;
+        const a = document.createElement('a'); a.download = 'DTF_Reparado_JJ.png'; a.href = c.toDataURL('image/png'); a.click();
+    },
+    resetUI: function() {
+        this.file = null;
+        if (document.getElementById('det_file')) document.getElementById('det_file').value = '';
+        if (document.getElementById('det_uploadArea')) document.getElementById('det_uploadArea').style.display = 'flex';
+        if (document.getElementById('det_viewerArea')) document.getElementById('det_viewerArea').style.display = 'none';
+    }
+};
+
+const DTFSemitonos = {
+    file: null,
+    cargarImagen: function(e) {
+        const f = e.target.files[0]; if (!f) return; this.file = f;
+        const reader = new FileReader();
+        reader.onload = ev => {
+            const img = new Image();
+            img.onload = () => {
+                document.getElementById('semi_uploadArea').style.display = 'none';
+                document.getElementById('semi_viewerArea').style.display = 'flex';
+                const c = document.getElementById('semi_origCanvas');
+                c.width = img.width; c.height = img.height;
+                c.getContext('2d').drawImage(img, 0, 0);
+                document.getElementById('semi_semiOverlayCanvas').style.display = 'none';
+                resetDtfZoom();
+            };
+            img.src = ev.target.result;
+        };
+        reader.readAsDataURL(f);
+    },
+    procesar: async function() {
+        if (!this.file) return alert('Sube una imagen primero.');
+        const btn = document.getElementById('dtfBtnProcesar');
+        btn.disabled = true; btn.innerText = '⏳ Procesando...';
+        try {
+            const fd = new FormData();
+            fd.append('imagen', this.file);
+            fd.append('lpi', document.getElementById('semi_lpiSlider').value);
+            fd.append('angle', document.getElementById('semi_angSlider').value);
+            fd.append('contrast', document.getElementById('semi_conSlider').value);
+            fd.append('shirt_color', document.querySelector('input[name="semi_shirt"]:checked').value);
+            const r = await fetch('/procesar-semitonos', { method: 'POST', body: fd });
+            if (!r.ok) throw new Error('Error en el servidor');
+            const blob = await r.blob(), url = URL.createObjectURL(blob);
+            const img = new Image();
+            img.onload = () => {
+                const oc = document.getElementById('semi_semiOverlayCanvas');
+                oc.width = img.width; oc.height = img.height;
+                oc.getContext('2d').drawImage(img, 0, 0);
+                oc.style.display = 'block';
+                const btnD = document.getElementById('dtfBtnDescargar');
+                if (btnD) { btnD.href = url; btnD.download = 'Semitono_DTF_JJ.png'; btnD.onclick = null; }
+            };
+            img.src = url;
+        } catch (err) { alert('Error procesando semitonos: ' + err.message); }
+        btn.disabled = false; btn.innerText = '⚡ Procesar';
+    },
+    resetUI: function() {
+        this.file = null;
+        if (document.getElementById('semi_file')) document.getElementById('semi_file').value = '';
+        if (document.getElementById('semi_uploadArea')) document.getElementById('semi_uploadArea').style.display = 'flex';
+        if (document.getElementById('semi_viewerArea')) document.getElementById('semi_viewerArea').style.display = 'none';
+        if (document.getElementById('semi_semiOverlayCanvas')) document.getElementById('semi_semiOverlayCanvas').style.display = 'none';
+        let btnDescarga = document.getElementById('dtfBtnDescargar');
+        if (btnDescarga) {
+            btnDescarga.removeAttribute('href'); btnDescarga.removeAttribute('download');
+            btnDescarga.onclick = function() { alert('Procesa una imagen primero.'); };
+        }
+    }
+};
+
+function checkSession() {
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("tg_login") === "ok") {
+        const nombre = urlParams.get("name") || "VIP";
+        sessionStorage.setItem("jj_session_perm", "active");
+        sessionStorage.setItem("jj_user_name", nombre);
+        window.history.replaceState({}, document.title, "/");
+    } else if (urlParams.get("tg_error")) {
+        gateError.textContent = urlParams.get("tg_error");
+        gateError.classList.add("show");
+        window.history.replaceState({}, document.title, "/");
+    }
+  } catch (e) {}
+  const perm = sessionStorage.getItem("jj_session_perm"); const name = sessionStorage.getItem("jj_user_name");
+  if (perm === "active") { showApp(name); return true; } return false;
+}
+
+document.querySelectorAll(".lang-switch button").forEach(btn => { btn.classList.toggle("active", btn.dataset.lang === currentLang); });
+applyStaticText();
+checkSession();
+</script>
+</body>
+</html>
