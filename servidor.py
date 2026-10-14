@@ -546,6 +546,31 @@ def verify_telegram():
         return jsonify({"access": False, "message": "No eres miembro del grupo VIP."})
     except Exception as e: return jsonify({"access": False, "message": str(e)}), 500
 
+@app.route("/login-telegram", methods=["GET"])
+def login_telegram_redirect():
+    from urllib.parse import quote
+    from flask import redirect
+    data = request.args.to_dict()
+    if not data or 'hash' not in data:
+        return redirect("/?tg_error=" + quote("Datos de Telegram inválidos"))
+    hash_recibido = data.pop('hash')
+    data_check_arr = [f'{k}={v}' for k, v in data.items()]
+    data_check_string = '\n'.join(sorted(data_check_arr))
+    secret_key = hashlib.sha256(TELEGRAM_BOT_TOKEN.encode('utf-8')).digest()
+    hash_calc = hmac.new(secret_key, data_check_string.encode('utf-8'), hashlib.sha256).hexdigest()
+    if hash_calc != hash_recibido:
+        return redirect("/?tg_error=" + quote("Firma no válida"))
+    user_id = data.get('id')
+    first_name = data.get('first_name', 'Usuario')
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getChatMember"
+    try:
+        resp = requests.get(url, params={"chat_id": TELEGRAM_CHAT_ID, "user_id": user_id}, timeout=10).json()
+        if resp.get('ok') and resp['result']['status'] in ['member', 'administrator', 'creator']:
+            return redirect(f"/?tg_login=ok&name={quote(first_name)}")
+        return redirect("/?tg_error=" + quote("No eres miembro del grupo VIP."))
+    except Exception as e:
+        return redirect("/?tg_error=" + quote("Error verificando grupo VIP."))
+
 @app.route("/check-task", methods=["GET"])
 def check_task():
     task_id = request.args.get("task_id")
