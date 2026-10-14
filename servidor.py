@@ -29,9 +29,11 @@ TELEGRAM_CHAT_ID = "-1002330690954"
 def L(es, en): return {"es": es, "en": en}
 
 MODELS = [
-    {"slug": "detector-dtf", "label": L("🔍 Escáner Semitransparencias", "🔍 Transparency Scanner"), "icon": "fa-magnifying-glass-chart", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Escanea tu diseño en busca de píxeles fantasmas y repáralos para DTF a 300DPI.", "Scan and fix ghost pixels for DTF."), "endpoint": "/api/reparar", "response_type": "image", "fields": []},
+    # --- TUS HERRAMIENTAS DTF ---
+    {"slug": "detector-dtf", "label": L("🔍 Detectar Semitransparencias", "🔍 Transparency Scanner"), "icon": "fa-magnifying-glass-chart", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Escanea tu diseño en busca de píxeles fantasmas y repáralos para DTF a 300DPI.", "Scan and fix ghost pixels for DTF."), "endpoint": "/api/reparar", "response_type": "image", "fields": []},
     {"slug": "semitonos-dtf", "label": L("🕸️ Semitonos DTF Pro", "🕸️ Halftones DTF Pro"), "icon": "fa-braille", "category": L("2. Extraer y Borrar", "2. Extract & Erase"), "desc": L("Convierte fondos en tramas de puntos, aplica asfixia y limpieza HD.", "Convert to halftones, apply choke and upscale."), "endpoint": "/api/procesar", "response_type": "image", "fields": []},
 
+    # --- TUS HERRAMIENTAS DE IA ORIGINALES ---
     {"slug": "detect-objects", "label": L("Borrador Mágico (Auto)", "Magic Eraser (Auto)"), "icon": "fa-magic", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Encuentra objetos para borrarlos con un clic.", "Finds objects to erase them with a click."), "endpoint": "/v1/images/detect-objects", "response_type": "json", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen Base", "Base Image"), "required": True}, {"name": "lang", "type": "select", "label": L("Idioma", "Language"), "options": [{"value": "es", "label": L("Español", "Spanish")}]}, {"name": "erase_mode", "type": "select", "label": L("Calidad", "Quality"), "options": [{"value": "ultra", "label": L("Ultra HD", "Ultra HD")}, {"value": "super", "label": L("Super", "Super")}, {"value": "normal", "label": L("Normal", "Normal")}]}]},
     {"slug": "detect-text", "label": L("Borrar Texto (Auto)", "Erase Text (Auto)"), "icon": "fa-font", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Detecta y borra los textos automáticamente.", "Detects and erases text automatically."), "endpoint": "/v1/images/detect-text", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
     {"slug": "detect-wires", "label": L("Borrar Cables (Auto)", "Erase Wires (Auto)"), "icon": "fa-plug", "category": L("1. Detección Inteligente", "1. Smart Detection"), "desc": L("Detecta y borra cables/postes.", "Detects and erases wires."), "endpoint": "/v1/images/detect-wires", "response_type": "image", "fields": [{"name": "input_image", "type": "image", "label": L("Imagen", "Image"), "required": True}]},
@@ -108,7 +110,7 @@ MODELS = [
         {"name": "prompt", "type": "textarea", "label": L("Instrucción (Ej: Reemplaza a la chica por la de la imagen 2)", "Prompt"), "required": True}
     ]},
 
-    {"slug": "studio-vignette", "label": L("🌟 Resplandor Mágico", "🌟 Magic Glow"), "icon": "fa-star", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Añade resplandor HD a diseños sin fondo.", "Adds a glow to a transparent design."), "endpoint": "/local/canvas", "response_type": "image", "fields": [
+    {"slug": "studio-vignette", "label": L("🌟 Resplandor Mágico", "🌟 Outer Glow"), "icon": "fa-star", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Añade resplandor HD a diseños sin fondo.", "Adds a glow to a transparent design."), "endpoint": "/local/canvas", "response_type": "image", "fields": [
         {"name": "input_image", "type": "image", "label": L("Sube tu Diseño (Sin Fondo)", "Upload Transparent Design"), "required": True}, 
         {"name": "bg_color", "type": "color", "label": L("Elige el Color del Resplandor", "Glow Color"), "default": "#ff0000"},
         {"name": "glow_size", "type": "range", "label": L("Grosor del Resplandor", "Glow Thickness"), "min": 1, "max": 100, "default": 30}
@@ -132,6 +134,7 @@ MODELS = [
 ]
 
 MODELS_BY_SLUG = {m["slug"]: m for m in MODELS}
+
 
 # ==========================================
 # FUNCIONES AUXILIARES (SnapEdit y Limpieza)
@@ -287,6 +290,7 @@ def validate_and_build_response(raw_bytes):
 # RUTAS NUEVAS (SEMITONOS Y DETECTOR)
 # ==========================================
 
+# ¡AQUÍ ESTÁ LA RUTA PRINCIPAL QUE SOLUCIONA EL 404 EN DIGITAL OCEAN!
 @app.route("/")
 def index():
     html = render_template("index.html")
@@ -524,40 +528,6 @@ def verify_telegram():
         return jsonify({"access": False, "message": "No eres miembro del grupo VIP."})
     except Exception as e: return jsonify({"access": False, "message": str(e)}), 500
 
-@app.route("/models")
-def get_models():
-    public_fields = ("slug", "label", "icon", "category", "desc", "fields", "response_type", "needs_image")
-    return jsonify([{k: m[k] for k in public_fields if k in m} for m in MODELS])
-
-@app.route("/style-list")
-def style_list():
-    url = request.args.get("url", "")
-    if not url or not any(url.startswith(f"https://{d}") for d in ALLOWED_STYLE_DOMAINS): return jsonify({"error": True}), 400
-    try: return jsonify(requests.get(url, timeout=15).json())
-    except: return jsonify({"error": True}), 500
-
-@app.route("/proxy-image")
-def proxy_image():
-    url = request.args.get("url")
-    dl = request.args.get("dl", "0")
-    if not url: return jsonify({"error": True, "message": "No URL"}), 400
-    raw_bytes, err = download_from_cdn_with_retry(url)
-    if err: return jsonify({"error": True, "message": err}), 400
-    resp_obj, err_img = validate_and_build_response(raw_bytes)
-    if err_img: return jsonify({"error": True, "message": err_img}), 400
-    if dl == "1":
-        resp_obj.headers["Content-Disposition"] = "attachment; filename=JJ_Studio_Diseno.png"
-    return resp_obj
-
-@app.route("/check-task", methods=["GET"])
-def check_task():
-    task_id = request.args.get("task_id")
-    endpoint = request.args.get("endpoint")
-    if not task_id or not endpoint: return jsonify({"error": True, "message": "Faltan datos de la tarea."})
-    try:
-        r = requests.get(f"{BASE}{endpoint}/tasks/{task_id}", headers=HEADERS, timeout=15)
-        return jsonify(r.json())
-    except Exception as e: return jsonify({"error": True, "message": str(e)})
 
 @app.route("/run/<slug>", methods=["POST"])
 def run_model(slug):
