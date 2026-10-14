@@ -1,6 +1,0 @@
-Flask
-requests
-Pillow
-gunicorn
-numpy
-flask-cors
