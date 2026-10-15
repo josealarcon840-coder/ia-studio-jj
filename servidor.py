@@ -112,7 +112,7 @@ MODELS = [
         {"name": "prompt", "type": "textarea", "label": L("Instrucción (Ej: Reemplaza a la chica por la de la imagen 2)", "Prompt"), "required": True}
     ]},
 
-    {"slug": "studio-vignette", "label": L("🌟 Resplandor Mágico", "🌟 Magic Glow"), "icon": "fa-star", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Añade resplandor HD a diseños sin fondo.", "Adds a glow to a transparent design."), "endpoint": "/local/canvas", "response_type": "image", "fields": [
+    {"slug": "studio-vignette", "label": L("🌟 Resplandor Mágico", "🌟 Outer Glow"), "icon": "fa-star", "category": L("5. Belleza y Edición", "5. Beauty & Edit"), "desc": L("Añade resplandor HD a diseños sin fondo.", "Adds a glow to a transparent design."), "endpoint": "/local/canvas", "response_type": "image", "fields": [
         {"name": "input_image", "type": "image", "label": L("Sube tu Diseño (Sin Fondo)", "Upload Transparent Design"), "required": True}, 
         {"name": "bg_color", "type": "color", "label": L("Elige el Color del Resplandor", "Glow Color"), "default": "#ff0000"},
         {"name": "glow_size", "type": "range", "label": L("Grosor del Resplandor", "Glow Thickness"), "min": 1, "max": 100, "default": 30}
@@ -468,6 +468,8 @@ def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo
         img_resultado.putalpha(alfa)
 
     img_resultado.save(ruta_salida, format="PNG", dpi=(300, 300))
+    img_resultado.close()
+    img_orig.close()
     gc.collect()
     return ruta_salida
 
@@ -547,8 +549,7 @@ def reparar_api():
         file.save(ruta_in)
         
         img = Image.open(ruta_in).convert("RGBA")
-        filtro = Image.BILINEAR
-        img = img.resize((target_w, target_h), filtro)
+        img = img.resize((target_w, target_h), Image.Resampling.LANCZOS)
         
         arr = np.array(img)
         arr[:, :, 3] = np.where(arr[:, :, 3] > 100, 255, 0).astype(np.uint8)
