@@ -1536,7 +1536,11 @@ async function procesarImagenSemi() {
 
     try {
         const response = await fetch("/api/procesar", { method: "POST", body: formData });
-        if (!response.ok) throw new Error("Error en servidor");
+                if (!response.ok) {
+            const errData = await response.json().catch(() => ({error: "Error interno"}));
+            throw new Error(errData.error || "Error 500");
+        }
+
         
         const blob = await response.blob();
         const urlFinal = URL.createObjectURL(blob);
@@ -1550,9 +1554,10 @@ async function procesarImagenSemi() {
         btnDownloadResult.style.display = "block";
         btnRestart.style.display = "block";
 
-    } catch (error) {
-        alert("❌ Falló la conexión con el servidor.");
+        } catch (error) {
+        alert("❌ Falló el proceso: " + error.message + "\n(Asegúrate de agregar numpy a requirements.txt)");
     } finally {
+
         document.getElementById('loadingOverlaySemi').style.display = 'none';
     }
 }
