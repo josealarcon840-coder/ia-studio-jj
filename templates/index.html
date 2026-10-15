@@ -110,6 +110,8 @@
   @keyframes pulse { 0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--red-bright);} 50% { opacity: 0.3; } }
 
   .checkerboard { background-image: linear-gradient(45deg, #111 25%, transparent 25%), linear-gradient(-45deg, #111 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #111 75%), linear-gradient(-45deg, transparent 75%, #111 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
+  
+  /* VISOR AJUSTADO */
   .viewer-container { width: 100%; height: 60vh !important; min-height: 400px; max-height: 600px; border-radius: 16px; border: 1px solid #333; overflow: hidden; position: relative; background: #080808; display: flex !important; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); cursor: grab; }
   .viewer-container:active { cursor: grabbing; }
   #viewerWrapper { transform-origin: center center; transition: transform 0.1s ease-out; position: relative; display: block !important; width: 100%; height: 100%; }
@@ -475,9 +477,12 @@
                   <i class="fa-solid fa-expand mr-2"></i> Centrar
               </button>
               
-              <span class="btn-visor" style="bottom:20px; left:20px; background:#000; cursor:default;" id="btnZoomLabel">
-                  Zoom: <span id="lblZoom">100%</span>
-              </span>
+              <!-- NUEVOS CONTROLES DE ZOOM TÁCTILES / PC -->
+              <div class="btn-visor" style="bottom:20px; left:20px; background:#000; display:flex; gap:15px; align-items:center; padding: 8px 15px;">
+                  <button type="button" style="background:none; border:none; color:white; font-size:18px; cursor:pointer;" onclick="hacerZoom(-0.15)"><i class="fa-solid fa-minus"></i></button>
+                  <span id="btnZoomLabel" style="cursor:default; font-size: 14px;">Zoom: <span id="lblZoom">100%</span></span>
+                  <button type="button" style="background:none; border:none; color:white; font-size:18px; cursor:pointer;" onclick="hacerZoom(0.15)"><i class="fa-solid fa-plus"></i></button>
+              </div>
 
               <!-- LOADING SEMITONOS -->
               <div id="loadingOverlaySemi" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:20; align-items:center; justify-content:center; flex-direction:column; border-radius:10px;">
@@ -501,6 +506,7 @@
                       <div id="semiViewerArea" style="display:none; position:relative; width:100%; height:100%;">
                           <div class="status-badge badge-left">TELA SIMULADA</div>
                           <div class="status-badge badge-right">FONDO TRANSPARENTE</div>
+                          <!-- Letras alt quitadas para estética -->
                           <img id="imgTransparente" class="img-base" src="">
                           <div class="fabric-layer-dtf" id="fabricLayer">
                               <img id="imgConTela" class="img-base" src="">
@@ -689,11 +695,13 @@ function reiniciarHerramienta(keepTool = false) {
     mainResultImg.style.display = "block"; currentImageData = null; urlOriginalMemoria = ""; urlResultMemoria = "";
     statusLine.classList.remove("show", "error", "ok"); btnDownloadResult.style.display = "none"; btnRestart.style.display = "none"; magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; quickActionsBar.style.display = "none"; document.getElementById("masterColorPanel").style.display = "none";
     document.getElementById("downloadBtnText").innerText = t("download_btn"); document.getElementById('btnAntes').style.display = 'none'; document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block'; jsonViewer.style.display = "none";
-    document.querySelectorAll('.dropzone').forEach(dz => { dz.classList.remove("has-file"); dz.querySelector('i').className = "fa-solid fa-cloud-arrow-up"; dz.querySelector('.dz-text').textContent = t("dropzone_text"); });
+    document.querySelectorAll('.dropzone').forEach(dz => { dz.classList.remove("has-file"); dz.querySelector('i').className = "fa-solid fa-cloud-arrow-up"; dz.querySelector('.dz-text').textContent = t("dropzone_text"); dz.style.borderColor = "#444"; });
     
     dtfFileActual = null;
-    if(document.getElementById('dropzoneSemi')) document.getElementById('dropzoneSemi').style.display = 'flex';
-    if(document.getElementById('dropzoneDet')) document.getElementById('dropzoneDet').style.display = 'flex';
+    // Cajas de subida visibles de nuevo en modo DTF (pero no ocultas al cargar, solo reseteado su estilo)
+    if(document.getElementById('dropzoneSemi')) { document.getElementById('dropzoneSemi').style.display = 'flex'; document.querySelector('#dropzoneSemi .dz-text').innerText = "SUBIR DISEÑO A 300DPI"; document.getElementById('dropzoneSemi').style.borderColor = "#444"; }
+    if(document.getElementById('dropzoneDet')) { document.getElementById('dropzoneDet').style.display = 'flex'; document.querySelector('#dropzoneDet .dz-text').innerText = "SUBIR PNG PARA ANALIZAR"; document.getElementById('dropzoneDet').style.borderColor = "#ff00ff"; }
+    
     if(document.getElementById('semiOverlayCanvas')) document.getElementById('semiOverlayCanvas').style.display = 'none';
     if(document.getElementById('detOverlayCanvas')) document.getElementById('detOverlayCanvas').style.display = 'none';
 
@@ -1228,19 +1236,43 @@ const contVisor = document.getElementById('visorContenedor'); const contZoom = d
 
 function actualizarTransform() { contZoom.style.transform = `translate(${panX}px, ${panY}px) scale(${escalaImg})`; lblZoom.innerText = Math.round(escalaImg * 100) + '%'; }
 function resetearZoom() { escalaImg = 1; panX = 0; panY = 0; actualizarTransform(); }
+function hacerZoom(delta) {
+    if ((!mainResultImg.src && !document.getElementById("mainResultVideo").src && editCanvas.style.display !== 'block') || jsonViewer.style.display === "block") return;
+    escalaImg += delta;
+    escalaImg = Math.max(0.5, Math.min(escalaImg, 8));
+    if(escalaImg === 1) { panX = 0; panY = 0; }
+    actualizarTransform();
+}
 
+// Eventos de Mouse (PC)
 contVisor.addEventListener('wheel', (e) => {
     if ((!mainResultImg.src && !document.getElementById("mainResultVideo").src && editCanvas.style.display !== 'block') || jsonViewer.style.display === "block") return; e.preventDefault();
-    if (e.deltaY < 0) escalaImg += 0.15; else escalaImg -= 0.15;
-    escalaImg = Math.max(0.5, Math.min(escalaImg, 8)); if(escalaImg === 1) { panX = 0; panY = 0; } actualizarTransform();
+    if (e.deltaY < 0) hacerZoom(0.15); else hacerZoom(-0.15);
 });
 contVisor.addEventListener('mousedown', (e) => { 
-    if (e.target.id === 'maskCanvas' || e.target.id === 'editCanvas') return;
+    if (e.target.id === 'maskCanvas' || e.target.id === 'editCanvas' || e.target.tagName.toLowerCase() === 'button' || e.target.tagName.toLowerCase() === 'i') return;
     if (e.button !== 0 || (!mainResultImg.src && !document.getElementById("mainResultVideo").src && editCanvas.style.display !== 'block') || jsonViewer.style.display === "block") return; 
     estaArrastrando = true; startX = e.clientX - panX; startY = e.clientY - panY; 
 });
 window.addEventListener('mousemove', (e) => { if (!estaArrastrando) return; panX = e.clientX - startX; panY = e.clientY - startY; actualizarTransform(); });
 window.addEventListener('mouseup', () => { estaArrastrando = false; });
+
+// Eventos Táctiles (Celular)
+contVisor.addEventListener('touchstart', (e) => {
+    if (e.target.id === 'maskCanvas' || e.target.id === 'editCanvas' || e.target.tagName.toLowerCase() === 'button' || e.target.tagName.toLowerCase() === 'i') return;
+    if (e.touches.length === 1) {
+        estaArrastrando = true;
+        startX = e.touches[0].clientX - panX;
+        startY = e.touches[0].clientY - panY;
+    }
+}, {passive: true});
+contVisor.addEventListener('touchmove', (e) => {
+    if (!estaArrastrando || e.touches.length !== 1) return;
+    panX = e.touches[0].clientX - startX;
+    panY = e.touches[0].clientY - startY;
+    actualizarTransform();
+}, {passive: true});
+contVisor.addEventListener('touchend', () => { estaArrastrando = false; });
 
 function mostrar(original) { 
     if(!urlOriginalMemoria) return;
@@ -1353,7 +1385,7 @@ openTool = function(slug) {
     if(slug === 'dtf-semitonos') {
         const formEl = document.getElementById('form');
         formEl.innerHTML = `
-            <div class="dropzone" id="dropzoneSemi" style="margin-bottom:15px;">
+            <div class="dropzone" id="dropzoneSemi" style="margin-bottom:15px;" onclick="document.getElementById('semiFileInput').click()">
                 <input type="file" id="semiFileInput" accept="image/png, image/jpeg, image/webp" onchange="previewOriginalSemi(event)">
                 <i class="fa-solid fa-cloud-arrow-up" style="font-size:35px; color:var(--primary-red); margin-bottom:10px;"></i>
                 <div class="dz-text" style="color:var(--primary-red); font-weight:700;">SUBIR DISEÑO A 300DPI</div>
@@ -1362,7 +1394,7 @@ openTool = function(slug) {
     } else if(slug === 'dtf-detector') {
         const formEl = document.getElementById('form');
         formEl.innerHTML = `
-            <div class="dropzone" id="dropzoneDet" style="margin-bottom:15px; border-color:#ff00ff; background:rgba(255,0,255,0.05);">
+            <div class="dropzone" id="dropzoneDet" style="margin-bottom:15px; border-color:#ff00ff; background:rgba(255,0,255,0.05);" onclick="document.getElementById('detFileInput').click()">
                 <input type="file" id="detFileInput" accept="image/png, image/webp" onchange="previewOriginalDet(event)">
                 <i class="fa-solid fa-cloud-arrow-up" style="font-size:35px; color:#ff00ff; margin-bottom:10px;"></i>
                 <div class="dz-text" style="color:#ff00ff; font-weight:700;">SUBIR PNG PARA ANALIZAR</div>
@@ -1383,7 +1415,10 @@ function previewOriginalSemi(event) {
         }
         img.src = url;
 
-        document.getElementById('dropzoneSemi').style.display = 'none';
+        // Mostrar caja pero indicar cambio de diseño
+        document.querySelector('#dropzoneSemi .dz-text').innerText = "🔄 CAMBIAR DISEÑO";
+        document.getElementById('dropzoneSemi').style.borderColor = "var(--ok)";
+
         document.getElementById('tray').style.display = 'flex';
         document.getElementById('semiViewerArea').style.display = 'block';
         document.getElementById('detViewerArea').style.display = 'none';
@@ -1410,7 +1445,10 @@ function previewOriginalDet(event) {
         }
         img.src = url;
 
-        document.getElementById('dropzoneDet').style.display = 'none';
+        // Mostrar caja pero indicar cambio de diseño
+        document.querySelector('#dropzoneDet .dz-text').innerText = "🔄 CAMBIAR PNG";
+        document.getElementById('dropzoneDet').style.borderColor = "var(--ok)";
+
         document.getElementById('tray').style.display = 'flex';
         document.getElementById('detViewerArea').style.display = 'block';
         document.getElementById('semiViewerArea').style.display = 'none';
@@ -1560,7 +1598,6 @@ async function procesarImagenSemi() {
         const blob = await response.blob();
         const urlFinal = URL.createObjectURL(blob);
         
-        document.getElementById('imgTransparente').src = urlFinal;
         document.getElementById('imgConTela').src = urlFinal;
         urlResultMemoria = urlFinal;
 
