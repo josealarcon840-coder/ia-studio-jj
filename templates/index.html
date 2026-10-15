@@ -110,7 +110,7 @@
   @keyframes pulse { 0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--red-bright);} 50% { opacity: 0.3; } }
 
   .checkerboard { background-image: linear-gradient(45deg, #111 25%, transparent 25%), linear-gradient(-45deg, #111 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #111 75%), linear-gradient(-45deg, transparent 75%, #111 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
-      .viewer-container { width: 100%; height: 60vh !important; min-height: 400px; max-height: 600px; border-radius: 16px; border: 1px solid #333; overflow: hidden; position: relative; background: #080808; display: flex !important; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); cursor: grab; }
+  .viewer-container { width: 100%; height: 60vh !important; min-height: 400px; max-height: 600px; border-radius: 16px; border: 1px solid #333; overflow: hidden; position: relative; background: #080808; display: flex !important; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); cursor: grab; }
   .viewer-container:active { cursor: grabbing; }
   #viewerWrapper { transform-origin: center center; transition: transform 0.1s ease-out; position: relative; display: block !important; width: 100%; height: 100%; }
   #imgContainer { position: absolute !important; top: 0 !important; left: 0 !important; display: block !important; width: 100% !important; height: 100% !important; margin: 0 !important; padding: 0 !important; }
@@ -311,12 +311,6 @@
 
           <!-- PANEL ESPECÍFICO: SEMITONOS DTF PRO -->
           <div id="dtfSemiPanel" style="display:none;">
-                <div class="dropzone" id="dropzoneSemi" style="margin-bottom:15px; cursor:pointer;" onclick="document.getElementById('semiFileInput').click()">
-        <input type="file" id="semiFileInput" accept="image/png, image/jpeg, image/webp" onchange="previewOriginalSemi(event)" style="display:none;">
-        <i class="fa-solid fa-cloud-arrow-up" style="font-size:35px; color:var(--primary-red); margin-bottom:10px;"></i>
-        <div class="dz-text" style="color:var(--primary-red); font-weight:700;">SUBIR DISEÑO A 300DPI</div>
-                </div>
-            
               <div class="section-box-dtf">
                   <div class="section-title-dtf">MEDIDAS DE IMPRESIÓN (CM)</div>
                   <div class="dim-grid-dtf">
@@ -396,12 +390,6 @@
 
           <!-- PANEL ESPECÍFICO: DETECTOR DE SEMITRANSPARENCIAS -->
           <div id="dtfDetPanel" style="display:none;">
-                <div class="dropzone" id="dropzoneDet" style="margin-bottom:15px; border-color:#ff00ff; background:rgba(255,0,255,0.05); cursor:pointer;" onclick="document.getElementById('detFileInput').click()">
-        <input type="file" id="detFileInput" accept="image/png, image/webp" onchange="previewOriginalDet(event)" style="display:none;">
-        <i class="fa-solid fa-cloud-arrow-up" style="font-size:35px; color:#ff00ff; margin-bottom:10px;"></i>
-        <div class="dz-text" style="color:#ff00ff; font-weight:700;">SUBIR PNG PARA ANALIZAR</div>
-                </div>
-            
               <div class="section-box-dtf" style="border-left: 3px solid var(--primary-red);">
                   <div class="section-title-dtf"><div class="step-num">1</div> MEDIDA FINAL (CM)</div>
                   <p style="color:#aaa; font-size:11px; margin-bottom:12px; line-height: 1.4;">Escribe el tamaño exacto de impresión. Generaremos tu archivo seguro a 300 DPI.</p>
@@ -507,15 +495,15 @@
 
               <div id="viewerWrapper">
                   <div id="imgContainer" style="position:relative; display:inline-block; line-height:0;">
-                      <img id="mainResultImg" src="" alt="Resultado" style="display:block; max-width: 90vw; max-height: 70vh; border-radius: 8px;">
+                      <img id="mainResultImg" src="" style="display:block; max-width: 90vw; max-height: 70vh; border-radius: 8px;">
                       
                       <!-- VISOR SEMITONOS PRO -->
                       <div id="semiViewerArea" style="display:none; position:relative; width:100%; height:100%;">
                           <div class="status-badge badge-left">TELA SIMULADA</div>
                           <div class="status-badge badge-right">FONDO TRANSPARENTE</div>
-                          <img id="imgTransparente" class="img-base" src="" alt="Transparente">
+                          <img id="imgTransparente" class="img-base" src="">
                           <div class="fabric-layer-dtf" id="fabricLayer">
-                              <img id="imgConTela" class="img-base" src="" alt="Semitono con Tela">
+                              <img id="imgConTela" class="img-base" src="">
                           </div>
                           <canvas id="semiOverlayCanvas"></canvas>
                           <div class="slider-line-dtf" id="sliderLine"></div>
@@ -528,7 +516,7 @@
                               <span style="color:#aaa; font-size:12px; font-weight:bold;" id="statusTextDet">VISTA PREVIA ORIGINAL</span>
                               <span style="color:#fff; font-size:12px; background:#222; padding:4px 8px; border-radius:4px; border: 1px solid #444;" id="statusResDet">Resolución...</span>
                           </div>
-                          <img id="imgOriginalDet" class="img-base" src="" alt="Original Det">
+                          <img id="imgOriginalDet" class="img-base" src="">
                           <canvas id="detOverlayCanvas"></canvas>
                       </div>
 
@@ -704,6 +692,8 @@ function reiniciarHerramienta(keepTool = false) {
     document.querySelectorAll('.dropzone').forEach(dz => { dz.classList.remove("has-file"); dz.querySelector('i').className = "fa-solid fa-cloud-arrow-up"; dz.querySelector('.dz-text').textContent = t("dropzone_text"); });
     
     dtfFileActual = null;
+    if(document.getElementById('dropzoneSemi')) document.getElementById('dropzoneSemi').style.display = 'flex';
+    if(document.getElementById('dropzoneDet')) document.getElementById('dropzoneDet').style.display = 'flex';
     if(document.getElementById('semiOverlayCanvas')) document.getElementById('semiOverlayCanvas').style.display = 'none';
     if(document.getElementById('detOverlayCanvas')) document.getElementById('detOverlayCanvas').style.display = 'none';
 
@@ -1356,7 +1346,30 @@ function slideRevealSemi(val) {
     document.getElementById('sliderLine').style.left = `${val}%`;
 }
 
-
+// Interceptar apertura de herramientas DTF para asignar dropzones dinámicos
+const originalOpenTool = openTool;
+openTool = function(slug) {
+    originalOpenTool(slug);
+    if(slug === 'dtf-semitonos') {
+        const formEl = document.getElementById('form');
+        formEl.innerHTML = `
+            <div class="dropzone" id="dropzoneSemi" style="margin-bottom:15px;">
+                <input type="file" id="semiFileInput" accept="image/png, image/jpeg, image/webp" onchange="previewOriginalSemi(event)">
+                <i class="fa-solid fa-cloud-arrow-up" style="font-size:35px; color:var(--primary-red); margin-bottom:10px;"></i>
+                <div class="dz-text" style="color:var(--primary-red); font-weight:700;">SUBIR DISEÑO A 300DPI</div>
+            </div>
+        `;
+    } else if(slug === 'dtf-detector') {
+        const formEl = document.getElementById('form');
+        formEl.innerHTML = `
+            <div class="dropzone" id="dropzoneDet" style="margin-bottom:15px; border-color:#ff00ff; background:rgba(255,0,255,0.05);">
+                <input type="file" id="detFileInput" accept="image/png, image/webp" onchange="previewOriginalDet(event)">
+                <i class="fa-solid fa-cloud-arrow-up" style="font-size:35px; color:#ff00ff; margin-bottom:10px;"></i>
+                <div class="dz-text" style="color:#ff00ff; font-weight:700;">SUBIR PNG PARA ANALIZAR</div>
+            </div>
+        `;
+    }
+};
 
 function previewOriginalSemi(event) {
     dtfFileActual = event.target.files[0];
@@ -1539,11 +1552,10 @@ async function procesarImagenSemi() {
 
     try {
         const response = await fetch("/api/procesar", { method: "POST", body: formData });
-                if (!response.ok) {
+        if (!response.ok) {
             const errData = await response.json().catch(() => ({error: "Error interno"}));
             throw new Error(errData.error || "Error 500");
         }
-
         
         const blob = await response.blob();
         const urlFinal = URL.createObjectURL(blob);
@@ -1557,10 +1569,9 @@ async function procesarImagenSemi() {
         btnDownloadResult.style.display = "block";
         btnRestart.style.display = "block";
 
-        } catch (error) {
+    } catch (error) {
         alert("❌ Falló el proceso: " + error.message + "\n(Asegúrate de agregar numpy a requirements.txt)");
     } finally {
-
         document.getElementById('loadingOverlaySemi').style.display = 'none';
     }
 }
