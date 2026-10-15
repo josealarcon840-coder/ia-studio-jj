@@ -203,14 +203,10 @@
   .paleta-mesa-dtf::-webkit-color-swatch-wrapper { padding: 0; }
   .paleta-mesa-dtf::-webkit-color-swatch { border: none; border-radius: 3px; }
 
-  /* Corrección en el slider de tela para que deslice la capa con el diseño, no mueva la imagen original */
-  .fabric-layer-dtf { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: transparent; clip-path: inset(0 50% 0 0); z-index: 2; pointer-events: none; }
-  .fabric-bg-color { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #ffffff; z-index: -1; }
-  .slider-line-dtf { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background-color: var(--primary-red); z-index: 7; pointer-events: none; box-shadow: 0 0 10px rgba(0,0,0,0.8); }
-  .slider-line-dtf::after { content: "↔"; position: absolute; top: 50%; left: -14px; width: 28px; height: 28px; background: var(--primary-red); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; transform: translateY(-50%); box-shadow: 0 0 8px rgba(0,0,0,0.8);}
-  .drag-slider-dtf { -webkit-appearance: none; appearance: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; outline: none; z-index: 10; margin: 0; }
-  .drag-slider-dtf::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 40px; height: 60px; background: transparent; cursor: ew-resize; pointer-events: all; }
-  #detOverlayCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; z-index: 6; display: none; filter: drop-shadow(0 0 5px #ff00ff); }
+  /* Capa de tela estática (fondo de color) detrás de la imagen principal */
+  .fabric-layer-dtf { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+  
+  #semiOverlayCanvas, #detOverlayCanvas { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; object-fit: contain !important; pointer-events: none; z-index: 6; display: none; filter: drop-shadow(0 0 5px #ff00ff); }
 </style>
 </head>
 <body>
@@ -519,25 +515,17 @@
                   <div id="imgContainer" style="position:relative; display:inline-block; line-height:0;">
                       <img id="mainResultImg" src="" style="display:block; max-width: 90vw; max-height: 70vh; border-radius: 8px;">
                       
-                      <!-- VISOR SEMITONOS PRO -->
+                      <!-- VISOR SEMITONOS PRO SIN DESLIZADOR -->
                       <div id="semiViewerArea" style="display:none; position:relative; width:100%; height:100%;">
                           <div class="status-badge badge-left">TELA SIMULADA</div>
-                          <div class="status-badge badge-right">FONDO TRANSPARENTE</div>
                           
-                          <!-- Imagen base transparente -->
-                          <img id="imgTransparente" class="img-base" src="">
-                          
-                          <!-- Capa de tela que se recorta con el slider -->
-                          <div class="fabric-layer-dtf" id="fabricLayer">
-                              <!-- Fondo de color aplicado por JavaScript -->
-                              <div class="fabric-bg-color" id="fabricBgColor" style="background-color: transparent;"></div>
-                              <!-- La misma imagen encima de la tela simulada -->
+                          <!-- Contenedor con la tela de fondo -->
+                          <div class="fabric-layer-dtf" id="fabricLayer" style="background-color: transparent; background-image: repeating-linear-gradient(45deg, #222 25%, transparent 25%, transparent 75%, #222 75%, #222), repeating-linear-gradient(45deg, #222 25%, transparent 25%, transparent 75%, #222 75%, #222); background-position: 0 0, 10px 10px; background-size: 20px 20px;">
+                              <!-- La imagen principal -->
                               <img id="imgConTela" class="img-base" src="">
                           </div>
                           
-                          <canvas id="semiOverlayCanvas"></canvas>
-                          <div class="slider-line-dtf" id="sliderLine"></div>
-                          <input type="range" min="0" max="100" value="50" class="drag-slider-dtf" oninput="slideRevealSemi(this.value)">
+                          <canvas id="semiOverlayCanvas" class="img-base" style="z-index: 6; filter: drop-shadow(0 0 5px #ff00ff); display: none;"></canvas>
                       </div>
 
                       <!-- VISOR DETECTOR DE SEMITRANSPARENCIAS -->
@@ -547,7 +535,7 @@
                               <span style="color:#fff; font-size:12px; background:#222; padding:4px 8px; border-radius:4px; border: 1px solid #444;" id="statusResDet">Resolución...</span>
                           </div>
                           <img id="imgOriginalDet" class="img-base" src="">
-                          <canvas id="detOverlayCanvas"></canvas>
+                          <canvas id="detOverlayCanvas" class="img-base" style="z-index: 6; filter: drop-shadow(0 0 5px #ff00ff); display: none;"></canvas>
                       </div>
 
                       <canvas id="editCanvas" style="display:none; max-width: 90vw; max-height: 70vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.8); margin: 0 auto;"></canvas>
@@ -719,18 +707,26 @@ function reiniciarHerramienta(keepTool = false) {
     mainResultImg.style.display = "block"; currentImageData = null; urlOriginalMemoria = ""; urlResultMemoria = "";
     statusLine.classList.remove("show", "error", "ok"); btnDownloadResult.style.display = "none"; btnRestart.style.display = "none"; magicTagsPanel.style.display = "none"; boxesContainer.innerHTML = ""; quickActionsBar.style.display = "none"; document.getElementById("masterColorPanel").style.display = "none";
     document.getElementById("downloadBtnText").innerText = t("download_btn"); document.getElementById('btnAntes').style.display = 'none'; document.getElementById('imgContainer').style.display = 'inline-block'; document.getElementById('btnCentrar').style.display = 'block'; document.getElementById('btnZoomLabel').style.display = 'block'; jsonViewer.style.display = "none";
-    document.querySelectorAll('.dropzone').forEach(dz => { dz.classList.remove("has-file"); dz.querySelector('i').className = "fa-solid fa-cloud-arrow-up"; dz.querySelector('.dz-text').textContent = t("dropzone_text"); });
+    document.querySelectorAll('.dropzone').forEach(dz => { dz.classList.remove("has-file"); dz.querySelector('i').className = "fa-solid fa-cloud-arrow-up"; dz.querySelector('.dz-text').textContent = t("dropzone_text"); dz.style.borderColor = "#444"; });
     
     dtfFileActual = null;
     
-    // Dejar siempre visible la caja de subir archivos, reiniciando su texto
     const semiDrop = document.getElementById('dropzoneSemi');
-    if(semiDrop) { semiDrop.style.display = 'flex'; semiDrop.querySelector('.dz-text').innerText = "SUBIR DISEÑO A 300DPI"; }
+    if(semiDrop) { semiDrop.style.display = 'flex'; semiDrop.querySelector('.dz-text').innerText = "SUBIR DISEÑO A 300DPI"; semiDrop.style.borderColor = "#444"; }
     const detDrop = document.getElementById('dropzoneDet');
-    if(detDrop) { detDrop.style.display = 'flex'; detDrop.querySelector('.dz-text').innerText = "SUBIR PNG PARA ANALIZAR"; }
+    if(detDrop) { detDrop.style.display = 'flex'; detDrop.querySelector('.dz-text').innerText = "SUBIR PNG PARA ANALIZAR"; detDrop.style.borderColor = "#ff00ff"; }
 
     if(document.getElementById('semiOverlayCanvas')) document.getElementById('semiOverlayCanvas').style.display = 'none';
     if(document.getElementById('detOverlayCanvas')) document.getElementById('detOverlayCanvas').style.display = 'none';
+    
+    // Restaurar fondo transparente original de la tela
+    const layer = document.getElementById('fabricLayer');
+    if (layer) {
+        layer.style.backgroundColor = 'transparent';
+        layer.style.backgroundImage = 'repeating-linear-gradient(45deg, #222 25%, transparent 25%, transparent 75%, #222 75%, #222), repeating-linear-gradient(45deg, #222 25%, transparent 25%, transparent 75%, #222 75%, #222)';
+        layer.style.backgroundPosition = '0 0, 10px 10px';
+        layer.style.backgroundSize = '20px 20px';
+    }
 
     if (currentSlug && keepTool) renderForm(MODELS.find(m => m.slug === currentSlug)); resetearZoom();
 }
@@ -1391,18 +1387,23 @@ function calcularProporcionDet(cambiado) {
 }
 
 function changeFabricBgSemi(colorCode, swatchElement) {
-    document.getElementById('fabricLayer').style.backgroundColor = colorCode;
+    const layer = document.getElementById('fabricLayer');
+    if (layer) {
+        if (colorCode === 'transparent') {
+            layer.style.backgroundColor = 'transparent';
+            layer.style.backgroundImage = 'repeating-linear-gradient(45deg, #222 25%, transparent 25%, transparent 75%, #222 75%, #222), repeating-linear-gradient(45deg, #222 25%, transparent 25%, transparent 75%, #222 75%, #222)';
+            layer.style.backgroundPosition = '0 0, 10px 10px';
+            layer.style.backgroundSize = '20px 20px';
+        } else {
+            layer.style.backgroundImage = 'none';
+            layer.style.backgroundColor = colorCode;
+        }
+    }
     if(swatchElement){
         const swatches = document.querySelectorAll('.swatch-dtf');
         swatches.forEach(s => s.classList.remove('active'));
         swatchElement.classList.add('active');
     }
-}
-
-function slideRevealSemi(val) {
-    const rightCrop = 100 - val;
-    document.getElementById('fabricLayer').style.clipPath = `inset(0 ${rightCrop}% 0 0)`;
-    document.getElementById('sliderLine').style.left = `${val}%`;
 }
 
 // Interceptar apertura de herramientas DTF para asignar dropzones dinámicos
@@ -1442,7 +1443,6 @@ function previewOriginalSemi(event) {
         }
         img.src = url;
 
-        // Mostrar caja pero indicar cambio de diseño
         document.querySelector('#dropzoneSemi .dz-text').innerText = "🔄 CAMBIAR DISEÑO";
         document.getElementById('dropzoneSemi').style.borderColor = "var(--ok)";
 
@@ -1451,12 +1451,7 @@ function previewOriginalSemi(event) {
         document.getElementById('detViewerArea').style.display = 'none';
         document.getElementById('semiOverlayCanvas').style.display = 'none'; 
         
-        // Poner la imagen original sin fondo, y el fondo se queda en fabricLayer
-        document.getElementById('imgTransparente').src = url;
         document.getElementById('imgConTela').src = url;
-        
-        slideRevealSemi(50);
-        document.querySelector('.drag-slider-dtf').value = 50;
     }
 }
 
@@ -1473,7 +1468,6 @@ function previewOriginalDet(event) {
         }
         img.src = url;
 
-        // Mostrar caja pero indicar cambio de diseño
         document.querySelector('#dropzoneDet .dz-text').innerText = "🔄 CAMBIAR PNG";
         document.getElementById('dropzoneDet').style.borderColor = "var(--ok)";
 
@@ -1490,7 +1484,7 @@ function previewOriginalDet(event) {
 
 function escanearSemitransparenciasSemi() {
     if (!dtfFileActual) { alert("Primero sube un diseño."); return; }
-    const btn = event.target;
+    const btn = document.getElementById('btnScanSemiBtn');
     const originalText = btn.innerHTML;
     btn.innerHTML = "⏳ Escaneando Píxeles...";
     btn.disabled = true;
@@ -1541,7 +1535,7 @@ function escanearSemitransparenciasSemi() {
 
 function escanearSemitransparenciasDet() {
     if (!dtfFileActual) return;
-    const btn = event.target;
+    const btn = document.getElementById('btnScanDetBtn');
     btn.innerHTML = "⏳ Escaneando...";
     btn.disabled = true;
 
