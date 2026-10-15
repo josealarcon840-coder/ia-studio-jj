@@ -111,7 +111,7 @@
 
   .checkerboard { background-image: linear-gradient(45deg, #111 25%, transparent 25%), linear-gradient(-45deg, #111 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #111 75%), linear-gradient(-45deg, transparent 75%, #111 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
   
-  /* VISOR AJUSTADO */
+  /* VISOR AJUSTADO Y OPTIMIZADO */
   .viewer-container { width: 100%; height: 60vh !important; min-height: 400px; max-height: 600px; border-radius: 16px; border: 1px solid #333; overflow: hidden; position: relative; background: #080808; display: flex !important; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); cursor: grab; }
   .viewer-container:active { cursor: grabbing; }
   #viewerWrapper { transform-origin: center center; transition: transform 0.1s ease-out; position: relative; display: block !important; width: 100%; height: 100%; }
@@ -313,6 +313,13 @@
 
           <!-- PANEL ESPECÍFICO: SEMITONOS DTF PRO -->
           <div id="dtfSemiPanel" style="display:none;">
+              <!-- ZONA DE SUBIDA FIJA EN EL PANEL -->
+              <div class="dropzone" id="dropzoneSemi" style="margin-bottom:15px; cursor:pointer;" onclick="document.getElementById('semiFileInput').click()">
+                  <input type="file" id="semiFileInput" accept="image/png, image/jpeg, image/webp" onchange="previewOriginalSemi(event)" style="display:none;">
+                  <i class="fa-solid fa-cloud-arrow-up" style="font-size:35px; color:var(--primary-red); margin-bottom:10px;"></i>
+                  <div class="dz-text" style="color:var(--primary-red); font-weight:700;">SUBIR DISEÑO A 300DPI</div>
+              </div>
+
               <div class="section-box-dtf">
                   <div class="section-title-dtf">MEDIDAS DE IMPRESIÓN (CM)</div>
                   <div class="dim-grid-dtf">
@@ -392,6 +399,13 @@
 
           <!-- PANEL ESPECÍFICO: DETECTOR DE SEMITRANSPARENCIAS -->
           <div id="dtfDetPanel" style="display:none;">
+              <!-- ZONA DE SUBIDA FIJA EN EL PANEL -->
+              <div class="dropzone" id="dropzoneDet" style="margin-bottom:15px; border-color:#ff00ff; background:rgba(255,0,255,0.05); cursor:pointer;" onclick="document.getElementById('detFileInput').click()">
+                  <input type="file" id="detFileInput" accept="image/png, image/webp" onchange="previewOriginalDet(event)" style="display:none;">
+                  <i class="fa-solid fa-cloud-arrow-up" style="font-size:35px; color:#ff00ff; margin-bottom:10px;"></i>
+                  <div class="dz-text" style="color:#ff00ff; font-weight:700;">SUBIR PNG PARA ANALIZAR</div>
+              </div>
+
               <div class="section-box-dtf" style="border-left: 3px solid var(--primary-red);">
                   <div class="section-title-dtf"><div class="step-num">1</div> MEDIDA FINAL (CM)</div>
                   <p style="color:#aaa; font-size:11px; margin-bottom:12px; line-height: 1.4;">Escribe el tamaño exacto de impresión. Generaremos tu archivo seguro a 300 DPI.</p>
@@ -698,7 +712,7 @@ function reiniciarHerramienta(keepTool = false) {
     document.querySelectorAll('.dropzone').forEach(dz => { dz.classList.remove("has-file"); dz.querySelector('i').className = "fa-solid fa-cloud-arrow-up"; dz.querySelector('.dz-text').textContent = t("dropzone_text"); dz.style.borderColor = "#444"; });
     
     dtfFileActual = null;
-    // Cajas de subida visibles de nuevo en modo DTF (pero no ocultas al cargar, solo reseteado su estilo)
+    // Cajas de subida visibles de nuevo en modo DTF
     if(document.getElementById('dropzoneSemi')) { document.getElementById('dropzoneSemi').style.display = 'flex'; document.querySelector('#dropzoneSemi .dz-text').innerText = "SUBIR DISEÑO A 300DPI"; document.getElementById('dropzoneSemi').style.borderColor = "#444"; }
     if(document.getElementById('dropzoneDet')) { document.getElementById('dropzoneDet').style.display = 'flex'; document.querySelector('#dropzoneDet .dz-text').innerText = "SUBIR PNG PARA ANALIZAR"; document.getElementById('dropzoneDet').style.borderColor = "#ff00ff"; }
     
@@ -1385,8 +1399,8 @@ openTool = function(slug) {
     if(slug === 'dtf-semitonos') {
         const formEl = document.getElementById('form');
         formEl.innerHTML = `
-            <div class="dropzone" id="dropzoneSemi" style="margin-bottom:15px;" onclick="document.getElementById('semiFileInput').click()">
-                <input type="file" id="semiFileInput" accept="image/png, image/jpeg, image/webp" onchange="previewOriginalSemi(event)">
+            <div class="dropzone" id="dropzoneSemi" style="margin-bottom:15px; cursor:pointer;" onclick="document.getElementById('semiFileInput').click()">
+                <input type="file" id="semiFileInput" accept="image/png, image/jpeg, image/webp" onchange="previewOriginalSemi(event)" style="display:none;">
                 <i class="fa-solid fa-cloud-arrow-up" style="font-size:35px; color:var(--primary-red); margin-bottom:10px;"></i>
                 <div class="dz-text" style="color:var(--primary-red); font-weight:700;">SUBIR DISEÑO A 300DPI</div>
             </div>
@@ -1394,8 +1408,8 @@ openTool = function(slug) {
     } else if(slug === 'dtf-detector') {
         const formEl = document.getElementById('form');
         formEl.innerHTML = `
-            <div class="dropzone" id="dropzoneDet" style="margin-bottom:15px; border-color:#ff00ff; background:rgba(255,0,255,0.05);" onclick="document.getElementById('detFileInput').click()">
-                <input type="file" id="detFileInput" accept="image/png, image/webp" onchange="previewOriginalDet(event)">
+            <div class="dropzone" id="dropzoneDet" style="margin-bottom:15px; border-color:#ff00ff; background:rgba(255,0,255,0.05); cursor:pointer;" onclick="document.getElementById('detFileInput').click()">
+                <input type="file" id="detFileInput" accept="image/png, image/webp" onchange="previewOriginalDet(event)" style="display:none;">
                 <i class="fa-solid fa-cloud-arrow-up" style="font-size:35px; color:#ff00ff; margin-bottom:10px;"></i>
                 <div class="dz-text" style="color:#ff00ff; font-weight:700;">SUBIR PNG PARA ANALIZAR</div>
             </div>
@@ -1424,6 +1438,7 @@ function previewOriginalSemi(event) {
         document.getElementById('detViewerArea').style.display = 'none';
         document.getElementById('semiOverlayCanvas').style.display = 'none'; 
         
+        // Poner la imagen original sin fondo, y el fondo se queda en fabricLayer
         document.getElementById('imgTransparente').src = url;
         document.getElementById('imgConTela').src = url;
         
@@ -1598,6 +1613,7 @@ async function procesarImagenSemi() {
         const blob = await response.blob();
         const urlFinal = URL.createObjectURL(blob);
         
+        // Mantiene la imagen original de fondo para comparar
         document.getElementById('imgConTela').src = urlFinal;
         urlResultMemoria = urlFinal;
 
