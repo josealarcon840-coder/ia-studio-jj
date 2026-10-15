@@ -244,6 +244,234 @@ def download_from_cdn_with_retry(url_img, retries=3):
             time.sleep(1)
     return None, "El CDN de SnapEdit entregó 0 bytes."
 
+def procesar_con_snapedit(ruta_imagen):
+    url = "https://api.snapedit.app/v1/images/enhance-art"
+    headers = {"api-key": API_SNAPEDIT}
+    try:
+        with open(ruta_imagen, 'rb') as f:
+            response = requests.post(url, headers=headers, files={'input_image': f}, data={'zoom_factor': '4'}, timeout=90)
+        if response.status_code == 200:
+            data = response.json()
+            if "data" in data and len(data["data"]) > 0:
+                img_descargada = requests.get(data["data"][0]["url"], timeout=90).content
+                nueva_ruta = ruta_imagen.replace(".", "_ia.")
+                with open(nueva_ruta, 'wb') as f_out: f_out.write(img_descargada)
+                return nueva_ruta
+    except: pass
+    return ruta_imagen 
+
+def quitar_fondo_snapedit(ruta_imagen):
+    url = "https://api.snapedit.app/v1/images/remove-background-graphic"
+    headers = {"api-key": API_SNAPEDIT}
+    try:
+        with open(ruta_imagen, 'rb') as f:
+            response = requests.post(url, headers=headers, files={'input_image': f}, timeout=90)
+        if response.status_code == 200:
+            data = response.json()
+            if "data" in data and len(data["data"]) > 0:
+                img_descargada = requests.get(data["data"][0]["url"], timeout=90).content
+                nueva_ruta = ruta_imagen.replace(".", "_nobg.")
+                with open(nueva_ruta, 'wb') as f_out: f_out.write(img_descargada)
+                return nueva_ruta
+    except: pass
+    return ruta_imagen 
+
+def upscale_cropped_design_hd(img_pil):
+    try:
+        w, h = img_pil.size
+        max_side = max(w, h)
+        if max_side <= 950:
+            zf = "4"
+        elif max_side <= 1500:
+            zf = "2"
+        else:
+            return img_pil
+
+        buf = io.BytesIO()
+        img_pil.convert("RGB").save(buf, format="JPEG", quality=98)
+        f_up = {"input_image": ("crop.jpg", buf.getvalue(), "image/jpeg")}
+
+        r_up = requests.post(BASE + "/v1/images/enhance-art", headers=HEADERS, files=f_up, data={"zoom_factor": zf}, timeout=120)
+        up_bytes, up_err = extract_raw_bytes_from_response(r_up)
+
+        if up_err or not up_bytes:
+            f_up2 = {"input_image": ("crop.jpg", buf.getvalue(), "image/jpeg")}
+            r_up2 = requests.post(BASE + "/v1/images/enhance", headers=HEADERS, files=f_up2, data={"zoom_factor": zf, "enhance_faces": "true"}, timeout=120)
+            up_bytes, up_err = extract_raw_bytes_from_response(r_up2)
+
+        if not up_err and up_bytes and len(up_bytes) > 100:
+            upscaled_img = Image.open(io.BytesIO(up_bytes)).convert("RGBA")
+            img_pil.close()
+            return upscaled_img
+    except Exception as e:
+        print(f"⚠️ Aviso en upscale_cropped_design_hd: {e}")
+    return img_pil
+
+def process_dtf_extraction(raw_bytes, extract_mode):
+    try:
+        img = Image.open(io.BytesIO(raw_bytes)).convert("RGBA")
+        r, g, b, _ = img.split()
+
+        if "BLACK" in extract_mode:
+            max_c = ImageChops.lighter(ImageChops.lighter(r, g), b)
+            crop_mask = max_c.point(lambda p: 255 if p > 28 else 0)
+        else:
+            min_c = ImageChops.darker(ImageChops.darker(r, g), b)
+            crop_mask = min_c.point(lambda p: 255 if p < 235 else 0)
+
+        bbox = crop_mask.getbbox()
+        if bbox:
+            pad = 20
+            left = max(0, bbox[0] - pad)
+            top = max(0, bbox[1] - pad)
+            right = min(img.width, bbox[2] + pad)
+            bottom = min(img.height, bbox[3] + pad)
+            img = img.crop((left, top, right, bottom))
+
+        img = upscale_cropped_design_hd(img)
+
+        if extract_mode == "AUTO_BLACK":
+            r, g, b, _ = img.split()
+            max_c = ImageChops.lighter(ImageChops.lighter(r, g), b)
+            alpha = max_c.point(lambda p: 0 if p <= 20 else (255 if p >= 52 else int((p - 20) * 255 / 32)))
+            img.putalpha(alpha)
+
+        elif extract_mode == "AUTO_WHITE":
+            buf_crop = io.BytesIO()
+            img.save(buf_crop, format="PNG")
+            f_bg = {"input_image": ("extracted_hd.png", buf_crop.getvalue(), "image/png")}
+            r_bg = requests.post(BASE + "/v1/images/remove-background-graphic", headers=HEADERS, files=f_bg, timeout=120)
+            bg_bytes, bg_err = extract_raw_bytes_from_response(r_bg)
+            if not bg_err and bg_bytes and len(bg_bytes) > 100:
+                img.close()
+                img = Image.open(io.BytesIO(bg_bytes)).convert("RGBA")
+            else:
+                r, g, b, _ = img.split()
+                min_c = ImageChops.darker(ImageChops.darker(r, g), b)
+                alpha = min_c.point(lambda p: 0 if p >= 242 else (255 if p <= 212 else int((242 - p) * 255 / 30)))
+                img.putalpha(alpha)
+
+        out = io.BytesIO()
+        img.save(out, format="PNG")
+        res_bytes = out.getvalue()
+        img.close()
+        gc.collect()
+        return res_bytes
+    except Exception as e:
+        print(f"⚠️ Error en process_dtf_extraction: {e}")
+        return raw_bytes
+
+# ==========================================
+# MOTOR MATEMÁTICO V36 (Luz Mejorada)
+# ==========================================
+def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo, tolerancia, saturacion, trama, reducir_pixeles, modo_suave_clasico, gamma_boost, fix_semi, target_w=None, target_h=None):
+    img_orig = Image.open(ruta_entrada).convert("RGBA")
+    
+    if target_w and target_h:
+        img_orig = img_orig.resize((target_w, target_h), Image.Resampling.LANCZOS)
+    
+    if saturacion != 1.0:
+        enhancer = ImageEnhance.Color(img_orig)
+        img_orig = enhancer.enhance(saturacion)
+        
+    arr_visual = np.array(img_orig).copy() 
+    ancho, alto = img_orig.size
+    
+    hex_str = color_hex.lstrip('#')
+    color_objetivo = np.array([int(hex_str[i:i+2], 16) for i in (0, 2, 4)], dtype=np.float32)
+    umbral_distancia = np.float32((tolerancia * 4.41) + 1.0)
+    
+    rad = np.float32(np.radians(angulo))
+    cos_a = np.float32(np.cos(rad))
+    sin_a = np.float32(np.sin(rad))
+    dot_f32 = np.float32(dot_size)
+    radio_max = np.float32(dot_size / 2.0)
+
+    chunk_size = 1000 
+    for y_start in range(0, alto, chunk_size):
+        y_end = min(y_start + chunk_size, alto)
+        
+        chunk_math = arr_visual[y_start:y_end, :, :].astype(np.float32)
+        rgb = chunk_math[:, :, :3]
+        alfa_original = arr_visual[y_start:y_end, :, 3].copy()
+        
+        if fix_semi:
+            alfa_original = np.where(alfa_original > 80, 255, 0).astype(np.uint8)
+
+        if tolerancia >= 200.0:
+            peso_color = np.ones((y_end - y_start, ancho), dtype=np.float32)
+        else:
+            distancia = np.linalg.norm(rgb - color_objetivo, axis=2)
+            peso_color = np.clip(np.float32(1.0) - (distancia / umbral_distancia), 0.0, 1.0).astype(np.float32)
+
+        y_coords, x_coords = np.indices((y_end - y_start, ancho), dtype=np.float32)
+        y_coords += y_start 
+        
+        xr = (x_coords * cos_a - y_coords * sin_a).astype(np.float32)
+        yr = (x_coords * sin_a + y_coords * cos_a).astype(np.float32)
+
+        u = (np.mod(xr, dot_f32) - radio_max).astype(np.float32)
+        v = (np.mod(yr, dot_f32) - radio_max).astype(np.float32)
+
+        if trama == "round":
+            matriz_trama = np.clip(np.sqrt((u * u) + (v * v), dtype=np.float32) / radio_max, 0.0, 1.0)
+        elif trama == "line":
+            matriz_trama = np.clip(np.abs(u) / radio_max, 0.0, 1.0)
+        elif trama == "ellipse":
+            matriz_trama = np.clip(np.sqrt(((u / 1.5) * (u / 1.5)) + (v * v), dtype=np.float32) / radio_max, 0.0, 1.0)
+        elif trama == "roseta":
+            matriz_trama = np.clip((np.abs(u) + np.abs(v)) / (radio_max * 1.5), 0.0, 1.0)
+        else:
+            matriz_trama = np.clip(np.sqrt((u * u) + (v * v), dtype=np.float32) / radio_max, 0.0, 1.0)
+
+        if modo_suave_clasico:
+            opacidad_final = np.where((np.float32(1.0) - peso_color) >= matriz_trama, 1.0, 0.0).astype(np.float32)
+        else:
+            if trama == "round":
+                wave = (np.cos((u * np.pi) / radio_max) + np.cos((v * np.pi) / radio_max)) / 2.0
+            elif trama == "line":
+                wave = np.cos((u * np.pi) / radio_max)
+            elif trama == "ellipse":
+                wave = (np.cos((u * np.pi) / (radio_max * 1.5)) + np.cos((v * np.pi) / radio_max)) / 2.0
+            else:
+                wave = (np.cos((u * np.pi) / radio_max) + np.cos((v * np.pi) / radio_max)) / 2.0
+                
+            matriz_trama = np.clip((np.float32(1.0) - wave) / 2.0, 0.0, 1.0).astype(np.float32)
+
+            luminancia = (0.299 * rgb[:, :, 0] + 0.587 * rgb[:, :, 1] + 0.114 * rgb[:, :, 2]) / 255.0
+            
+            if gamma_boost:
+                luminancia = np.clip(luminancia * 1.5, 0.0, 1.0)
+                luminancia = np.power(luminancia, 0.45) 
+                luminancia = np.clip(luminancia, 0.0, 0.95).astype(np.float32)
+            else:
+                luminancia = luminancia.astype(np.float32)
+
+            is_dark_target = np.mean(color_objetivo) < 128
+            if is_dark_target:
+                factor_tramado = np.where(luminancia >= matriz_trama, 1.0, 0.0).astype(np.float32)
+            else:
+                factor_tramado = np.where((np.float32(1.0) - luminancia) >= matriz_trama, 1.0, 0.0).astype(np.float32)
+                
+            opacidad_final = (np.float32(1.0) - peso_color) + (peso_color * factor_tramado)
+
+        arr_visual[y_start:y_end, :, 3] = np.where((alfa_original > 127) & (opacidad_final > 0.5), 255, 0)
+        gc.collect() 
+
+    img_resultado = Image.fromarray(arr_visual, mode="RGBA")
+    del arr_visual
+
+    if reducir_pixeles > 0:
+        alfa = img_resultado.split()[3]
+        for _ in range(reducir_pixeles):
+            alfa = alfa.filter(ImageFilter.MinFilter(3)) 
+        img_resultado.putalpha(alfa)
+
+    img_resultado.save(ruta_salida, format="PNG", dpi=(300, 300))
+    gc.collect()
+    return ruta_salida
+
+
 @app.route("/")
 def index(): return render_template("index.html")
 
@@ -300,9 +528,6 @@ def check_task():
         return jsonify(r.json())
     except Exception as e: return jsonify({"error": True, "message": str(e)})
 
-# ==========================================
-# RUTA DE REPARACIÓN DE SEMITRANSPARENCIAS DTF
-# ==========================================
 @app.route('/api/reparar', methods=['POST'])
 def reparar_api():
     try:
@@ -345,9 +570,6 @@ def reparar_api():
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
-# ==========================================
-# MOTOR MATEMÁTICO V36 UNIFICADO (/api/procesar)
-# ==========================================
 @app.route('/api/procesar', methods=['POST'])
 def procesar():
     try:
@@ -365,7 +587,7 @@ def procesar():
 
         color_hex = request.form.get('color', '#000000')
         nivel_limpieza = request.form.get('limpieza', 'global')
-        trama = request.form.get('trama', 'round')
+        trama_str = request.form.get('trama', 'round')
         
         saturacion_str = request.form.get('sat', '1.0')
         saturacion = float(saturacion_str) if saturacion_str != 'null' else 1.0
@@ -399,110 +621,14 @@ def procesar():
             tolerancia_val = 500.0  
             gamma_boost = True
 
-        img_orig = Image.open(ruta_entrada).convert("RGBA")
-        img_orig = img_orig.resize((target_w, target_h), Image.LANCZOS)
-        
-        if saturacion != 1.0:
-            enhancer = ImageEnhance.Color(img_orig)
-            img_orig = enhancer.enhance(saturacion)
-            
-        arr_visual = np.array(img_orig).copy() 
-        ancho, alto = img_orig.size
-        
-        hex_str = color_hex.lstrip('#')
-        color_objetivo = np.array([int(hex_str[i:i+2], 16) for i in (0, 2, 4)], dtype=np.float32)
-        umbral_distancia = np.float32((tolerancia_val * 4.41) + 1.0)
-        
-        rad = np.float32(np.radians(angulo))
-        cos_a = np.float32(np.cos(rad))
-        sin_a = np.float32(np.sin(rad))
-        dot_f32 = np.float32(dot_size)
-        radio_max = np.float32(dot_size / 2.0)
-
-        chunk_size = 1000 
-        for y_start in range(0, alto, chunk_size):
-            y_end = min(y_start + chunk_size, alto)
-            
-            chunk_math = arr_visual[y_start:y_end, :, :].astype(np.float32)
-            rgb = chunk_math[:, :, :3]
-            alfa_original = arr_visual[y_start:y_end, :, 3].copy()
-            
-            if fix_semi:
-                alfa_original = np.where(alfa_original > 80, 255, 0).astype(np.uint8)
-
-            if tolerancia_val >= 200.0:
-                peso_color = np.ones((y_end - y_start, ancho), dtype=np.float32)
-            else:
-                distancia = np.linalg.norm(rgb - color_objetivo, axis=2)
-                peso_color = np.clip(np.float32(1.0) - (distancia / umbral_distancia), 0.0, 1.0).astype(np.float32)
-
-            y_coords, x_coords = np.indices((y_end - y_start, ancho), dtype=np.float32)
-            y_coords += y_start 
-            
-            xr = (x_coords * cos_a - y_coords * sin_a).astype(np.float32)
-            yr = (x_coords * sin_a + y_coords * cos_a).astype(np.float32)
-
-            u = (np.mod(xr, dot_f32) - radio_max).astype(np.float32)
-            v = (np.mod(yr, dot_f32) - radio_max).astype(np.float32)
-
-            if trama == "round":
-                matriz_trama = np.clip(np.sqrt((u * u) + (v * v), dtype=np.float32) / radio_max, 0.0, 1.0)
-            elif trama == "line":
-                matriz_trama = np.clip(np.abs(u) / radio_max, 0.0, 1.0)
-            elif trama == "ellipse":
-                matriz_trama = np.clip(np.sqrt(((u / 1.5) * (u / 1.5)) + (v * v), dtype=np.float32) / radio_max, 0.0, 1.0)
-            elif trama == "roseta":
-                matriz_trama = np.clip((np.abs(u) + np.abs(v)) / (radio_max * 1.5), 0.0, 1.0)
-            else:
-                matriz_trama = np.clip(np.sqrt((u * u) + (v * v), dtype=np.float32) / radio_max, 0.0, 1.0)
-
-            if modo_suave_clasico:
-                opacidad_final = np.where((np.float32(1.0) - peso_color) >= matriz_trama, 1.0, 0.0).astype(np.float32)
-            else:
-                if trama == "round":
-                    wave = (np.cos((u * np.pi) / radio_max) + np.cos((v * np.pi) / radio_max)) / 2.0
-                elif trama == "line":
-                    wave = np.cos((u * np.pi) / radio_max)
-                elif trama == "ellipse":
-                    wave = (np.cos((u * np.pi) / (radio_max * 1.5)) + np.cos((v * np.pi) / radio_max)) / 2.0
-                else:
-                    wave = (np.cos((u * np.pi) / radio_max) + np.cos((v * np.pi) / radio_max)) / 2.0
-                    
-                matriz_trama = np.clip((np.float32(1.0) - wave) / 2.0, 0.0, 1.0).astype(np.float32)
-
-                luminancia = (0.299 * rgb[:, :, 0] + 0.587 * rgb[:, :, 1] + 0.114 * rgb[:, :, 2]) / 255.0
-                
-                if gamma_boost:
-                    luminancia = np.clip(luminancia * 1.5, 0.0, 1.0)
-                    luminancia = np.power(luminancia, 0.45) 
-                    luminancia = np.clip(luminancia, 0.0, 0.95).astype(np.float32)
-                else:
-                    luminancia = luminancia.astype(np.float32)
-
-                is_dark_target = np.mean(color_objetivo) < 128
-                if is_dark_target:
-                    factor_tramado = np.where(luminancia >= matriz_trama, 1.0, 0.0).astype(np.float32)
-                else:
-                    factor_tramado = np.where((np.float32(1.0) - luminancia) >= matriz_trama, 1.0, 0.0).astype(np.float32)
-                    
-                opacidad_final = (np.float32(1.0) - peso_color) + (peso_color * factor_tramado)
-
-            arr_visual[y_start:y_end, :, 3] = np.where((alfa_original > 127) & (opacidad_final > 0.5), 255, 0)
-            gc.collect() 
-
-        img_resultado = Image.fromarray(arr_visual, mode="RGBA")
-        del arr_visual
-
-        if reducir_pixeles_val > 0:
-            alfa = img_resultado.split()[3]
-            for _ in range(reducir_pixeles_val):
-                alfa = alfa.filter(ImageFilter.MinFilter(3)) 
-            img_resultado.putalpha(alfa)
-
-        img_resultado.save(ruta_salida, format="PNG", dpi=(300, 300))
-        img_resultado.close()
-        img_orig.close()
-        gc.collect()
+        motor_local_semitonos(
+            ruta_entrada=ruta_entrada, ruta_salida=ruta_salida,
+            color_hex=color_hex, dot_size=dot_size, angulo=angulo, 
+            tolerancia=tolerancia_val, saturacion=saturacion, trama=trama_str, 
+            reducir_pixeles=reducir_pixeles_val, modo_suave_clasico=modo_suave_clasico, 
+            gamma_boost=gamma_boost, fix_semi=fix_semi,
+            target_w=target_w, target_h=target_h
+        )
         
         try: os.remove(ruta_entrada)
         except: pass
@@ -550,7 +676,7 @@ def run_model(slug):
                 f"preserving all fine lines, small letters, and exact original colors on a {bg_color_name} background."
             )
             
-        if slug == "generate-background" && ("png" not in mime.lower()):
+        if slug == "generate-background" and ("png" not in mime.lower()):
              return jsonify({"error": True, "message": "¡Debes subir un PNG transparente (sin fondo)! Ve primero a 'Quitar Fondo'."}), 400
              
         if slug == "sticker":
