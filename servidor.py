@@ -461,7 +461,7 @@ def procesar():
             
         file = request.files['imagen']
         if file.filename == '':
-            return jsonify({"error": "Nombre de archivo vacío"}), 400
+            return jsonify({"error": "Nombre vacío"}), 400
 
         os.makedirs("temp", exist_ok=True)
         ruta_entrada = os.path.join("temp", f"img_orig_{int(time.time())}.png")
@@ -476,9 +476,6 @@ def procesar():
         tolerancia = int(request.form.get('tolerancia', 20))
         dot_size = int(request.form.get('px', 10))
         angulo = int(request.form.get('angulo', 22))
-        
-        usar_ia = request.form.get('usar_ia') == 'true'
-        quitar_fondo = request.form.get('quitar_fondo') == 'true'
         choke = request.form.get('choke') == 'true'
         fix_semi = request.form.get('fix_semi') == 'true'
 
@@ -486,68 +483,72 @@ def procesar():
         alto_cm = float(request.form.get('alto', 42.0))
 
         dpi = 300
-        cm_to_inch = 2.54
-        target_w = int((ancho_cm / cm_to_inch) * dpi)
-        target_h = int((alto_cm / cm_to_inch) * dpi)
+        target_w = int((ancho_cm / 2.54) * dpi)
+        target_h = int((alto_cm / 2.54) * dpi)
 
-        modo_suave_clasico = (modo == "baja")
-        gamma_boost = 1.0 if modo_suave_clasico else 0.8 
+        modo_suave = (modo == "baja")
+        gamma = 1.0 if modo_suave else 0.8 
 
         img_orig = Image.open(ruta_entrada).convert("RGBA")
-        filtro = Image.BILINEAR
-        img_orig = img_orig.resize((target_w, target_h), filtro)
+        img_orig = img_orig.resize((target_w, target_h), Image.BILINEAR)
         
         if saturacion != 1.0:
-            enhancer = ImageEnhance.Color(img_orig)
-            img_orig = enhancer.enhance(saturacion)
+            img_orig = ImageEnhance.Color(img_orig).enhance(saturacion)
             
         arr_visual = np.array(img_orig).copy() 
         ancho, alto = img_orig.size
         
-        hex_str = color_hex.lstrip('#')
-        c_target = np.array([int(hex_str[0:2], 16), int(hex_str[2:4], 16), int(hex_str[4:6], 16)], dtype=np.float32)
+        c_target = np.array([int(color_hex.lstrip('#')[i:i+2], 16) for i in (0, 2, 4)], dtype=np.float32)
         
         img_rgb = np.array(img_orig.convert("RGB"), dtype=np.float32)
         alpha_orig = np.array(img_orig.split()[3], dtype=np.float32)
 
         diff = np.sqrt(np.sum((img_rgb - c_target)**2, axis=2))
         
-        if modo_suave_clasico:
-            dist_max = tolerancia * 2.55 
+        dist_max = tolerancia * 2.55 if modo_suave else tolerancia * 4.0
+        rango_fade = 60.0
+        
+        if modo_suave:
             opacidad_target = np.clip(1.0 - (diff / (dist_max + 1e-5)), 0.0, 1.0)
         else:
-            dist_max = tolerancia * 4.0
-            rango_fade = 60.0
             opacidad_target = np.clip(1.0 - ((diff - dist_max + rango_fade) / rango_fade), 0.0, 1.0)
 
-        if gamma_boost != 1.0:
-            opacidad_target = np.power(opacidad_target, 1.0/gamma_boost)
+        if gamma != 1.0:
+            opacidad_target = np.power(opacidad_target, 1.0/gamma)
 
         opacidad_target = opacidad_target * (alpha_orig / 255.0)
 
-        x = np.arange(ancho, dtype=np.float32)
-        y = np.arange(alto, dtype=np.float32)
-        xv, yv = np.meshgrid(x, y)
+        # Liberamos RAM gigante inmediatamente
+        del img_rgb, diff
+        gc.collect()
 
         theta = np.radians(angulo)
-        xr = xv * np.cos(theta) - yv * np.sin(theta)
-        yr = xv * np.sin(theta) + yv * np.cos(theta)
+        cos_t, sin_t = np.cos(theta), np.sin(theta)
 
-        if trama == "line":
-            patron = (np.cos(2 * np.pi * yr / dot_size) + 1.0) / 2.0
-        elif trama == "ellipse":
-            patron = (np.cos(2 * np.pi * xr / dot_size) + np.cos(2 * np.pi * yr / (dot_size/2.0))) / 4.0 + 0.5
-        elif trama == "roseta":
-            p1 = (np.cos(2 * np.pi * xr / dot_size) + np.cos(2 * np.pi * yr / dot_size)) / 4.0 + 0.5
-            xr2 = xv * np.cos(theta + np.pi/4) - yv * np.sin(theta + np.pi/4)
-            yr2 = xv * np.sin(theta + np.pi/4) + yv * np.cos(theta + np.pi/4)
-            p2 = (np.cos(2 * np.pi * xr2 / dot_size) + np.cos(2 * np.pi * yr2 / dot_size)) / 4.0 + 0.5
-            patron = (p1 + p2) / 2.0
-        else:
-            patron = (np.cos(2 * np.pi * xr / dot_size) + np.cos(2 * np.pi * yr / dot_size)) / 4.0 + 0.5
+        alpha_final = np.zeros((alto, ancho), dtype=np.uint8)
+        xv = np.arange(ancho, dtype=np.float32)
 
-        mask_remover = opacidad_target > patron
-        alpha_final = np.where(mask_remover, 0, alpha_orig).astype(np.uint8)
+        # Cálculo fila por fila para evitar OOM (Cuelgues de memoria)
+        for i in range(alto):
+            y_val = np.float32(i)
+            xr = xv * cos_t - y_val * sin_t
+            yr = xv * sin_t + y_val * cos_t
+
+            if trama == "line":
+                patron = (np.cos(2 * np.pi * yr / dot_size) + 1.0) / 2.0
+            elif trama == "ellipse":
+                patron = (np.cos(2 * np.pi * xr / dot_size) + np.cos(2 * np.pi * yr / (dot_size/2.0))) / 4.0 + 0.5
+            elif trama == "roseta":
+                p1 = (np.cos(2 * np.pi * xr / dot_size) + np.cos(2 * np.pi * yr / dot_size)) / 4.0 + 0.5
+                xr2 = xv * np.cos(theta + np.pi/4) - y_val * np.sin(theta + np.pi/4)
+                yr2 = xv * np.sin(theta + np.pi/4) + y_val * np.cos(theta + np.pi/4)
+                p2 = (np.cos(2 * np.pi * xr2 / dot_size) + np.cos(2 * np.pi * yr2 / dot_size)) / 4.0 + 0.5
+                patron = (p1 + p2) / 2.0
+            else:
+                patron = (np.cos(2 * np.pi * xr / dot_size) + np.cos(2 * np.pi * yr / dot_size)) / 4.0 + 0.5
+
+            mask_remover = opacidad_target[i, :] > patron
+            alpha_final[i, :] = np.where(mask_remover, 0, alpha_orig[i, :])
 
         if fix_semi:
             alpha_final = np.where((alpha_final > 15) & (alpha_final < 240), 255, alpha_final)
@@ -571,7 +572,7 @@ def procesar():
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-
+        
 
 @app.route("/run/<slug>", methods=["POST"])
 def run_model(slug):
