@@ -231,6 +231,29 @@ def extract_raw_bytes_from_response(response):
             return None, f"Servidores de IA ocupados (HTTP {response.status_code}). Intenta en unos segundos."
         return response.content, None
 
+# ==========================================
+# RESTAURANDO LA FUNCIÓN QUE FALTABA
+# ==========================================
+def validate_and_build_response(raw_bytes):
+    if not raw_bytes or len(raw_bytes) < 64:
+        return None, "El servidor de IA devolvió un archivo vacío (0 bytes)."
+
+    if raw_bytes[:8] == b'\x89PNG\r\n\x1a\n':
+        return Response(raw_bytes, mimetype="image/png"), None
+    elif (raw_bytes[:3] == b'\xff\xd8\xff') or (raw_bytes[:4] == b'RIFF' and raw_bytes[8:12] == b'WEBP'):
+        try:
+            img = Image.open(io.BytesIO(raw_bytes))
+            out = io.BytesIO()
+            img.save(out, format="PNG")
+            png_bytes = out.getvalue()
+            img.close()
+            gc.collect()
+            return Response(png_bytes, mimetype="image/png"), None
+        except Exception:
+            return Response(raw_bytes, mimetype="image/png"), None
+    else:
+        return None, "La IA devolvió un archivo corrupto o está saturada. Intenta nuevamente."
+
 def download_from_cdn_with_retry(url_img, retries=3):
     for attempt in range(retries):
         try:
