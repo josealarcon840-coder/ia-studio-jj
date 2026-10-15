@@ -231,111 +231,6 @@ def extract_raw_bytes_from_response(response):
             return None, f"Servidores de IA ocupados (HTTP {response.status_code}). Intenta en unos segundos."
         return response.content, None
 
-def upscale_cropped_design_hd(img_pil):
-    try:
-        w, h = img_pil.size
-        max_side = max(w, h)
-        if max_side <= 950:
-            zf = "4"
-        elif max_side <= 1500:
-            zf = "2"
-        else:
-            return img_pil
-
-        buf = io.BytesIO()
-        img_pil.convert("RGB").save(buf, format="JPEG", quality=98)
-        f_up = {"input_image": ("crop.jpg", buf.getvalue(), "image/jpeg")}
-
-        r_up = requests.post(BASE + "/v1/images/enhance-art", headers=HEADERS, files=f_up, data={"zoom_factor": zf}, timeout=120)
-        up_bytes, up_err = extract_raw_bytes_from_response(r_up)
-
-        if up_err or not up_bytes:
-            f_up2 = {"input_image": ("crop.jpg", buf.getvalue(), "image/jpeg")}
-            r_up2 = requests.post(BASE + "/v1/images/enhance", headers=HEADERS, files=f_up2, data={"zoom_factor": zf, "enhance_faces": "true"}, timeout=120)
-            up_bytes, up_err = extract_raw_bytes_from_response(r_up2)
-
-        if not up_err and up_bytes and len(up_bytes) > 100:
-            upscaled_img = Image.open(io.BytesIO(up_bytes)).convert("RGBA")
-            img_pil.close()
-            return upscaled_img
-    except Exception as e:
-        print(f"⚠️ Aviso en upscale_cropped_design_hd: {e}")
-    return img_pil
-
-def process_dtf_extraction(raw_bytes, extract_mode):
-    try:
-        img = Image.open(io.BytesIO(raw_bytes)).convert("RGBA")
-        r, g, b, _ = img.split()
-
-        if "BLACK" in extract_mode:
-            max_c = ImageChops.lighter(ImageChops.lighter(r, g), b)
-            crop_mask = max_c.point(lambda p: 255 if p > 28 else 0)
-        else:
-            min_c = ImageChops.darker(ImageChops.darker(r, g), b)
-            crop_mask = min_c.point(lambda p: 255 if p < 235 else 0)
-
-        bbox = crop_mask.getbbox()
-        if bbox:
-            pad = 20
-            left = max(0, bbox[0] - pad)
-            top = max(0, bbox[1] - pad)
-            right = min(img.width, bbox[2] + pad)
-            bottom = min(img.height, bbox[3] + pad)
-            img = img.crop((left, top, right, bottom))
-
-        img = upscale_cropped_design_hd(img)
-
-        if extract_mode == "AUTO_BLACK":
-            r, g, b, _ = img.split()
-            max_c = ImageChops.lighter(ImageChops.lighter(r, g), b)
-            alpha = max_c.point(lambda p: 0 if p <= 20 else (255 if p >= 52 else int((p - 20) * 255 / 32)))
-            img.putalpha(alpha)
-
-        elif extract_mode == "AUTO_WHITE":
-            buf_crop = io.BytesIO()
-            img.save(buf_crop, format="PNG")
-            f_bg = {"input_image": ("extracted_hd.png", buf_crop.getvalue(), "image/png")}
-            r_bg = requests.post(BASE + "/v1/images/remove-background-graphic", headers=HEADERS, files=f_bg, timeout=120)
-            bg_bytes, bg_err = extract_raw_bytes_from_response(r_bg)
-            if not bg_err and bg_bytes and len(bg_bytes) > 100:
-                img.close()
-                img = Image.open(io.BytesIO(bg_bytes)).convert("RGBA")
-            else:
-                r, g, b, _ = img.split()
-                min_c = ImageChops.darker(ImageChops.darker(r, g), b)
-                alpha = min_c.point(lambda p: 0 if p >= 242 else (255 if p <= 212 else int((242 - p) * 255 / 30)))
-                img.putalpha(alpha)
-
-        out = io.BytesIO()
-        img.save(out, format="PNG")
-        res_bytes = out.getvalue()
-        img.close()
-        gc.collect()
-        return res_bytes
-    except Exception as e:
-        print(f"⚠️ Error en process_dtf_extraction: {e}")
-        return raw_bytes
-
-def validate_and_build_response(raw_bytes):
-    if not raw_bytes or len(raw_bytes) < 64:
-        return None, "El servidor de IA devolvió un archivo vacío (0 bytes)."
-
-    if raw_bytes[:8] == b'\x89PNG\r\n\x1a\n':
-        return Response(raw_bytes, mimetype="image/png"), None
-    elif (raw_bytes[:3] == b'\xff\xd8\xff') or (raw_bytes[:4] == b'RIFF' and raw_bytes[8:12] == b'WEBP'):
-        try:
-            img = Image.open(io.BytesIO(raw_bytes))
-            out = io.BytesIO()
-            img.save(out, format="PNG")
-            png_bytes = out.getvalue()
-            img.close()
-            gc.collect()
-            return Response(png_bytes, mimetype="image/png"), None
-        except Exception:
-            return Response(raw_bytes, mimetype="image/png"), None
-    else:
-        return None, "La IA devolvió un archivo corrupto o está saturada. Intenta nuevamente."
-
 def download_from_cdn_with_retry(url_img, retries=3):
     for attempt in range(retries):
         try:
@@ -451,7 +346,7 @@ def reparar_api():
         return jsonify({"error": str(e)}), 500
 
 # ==========================================
-# RUTA DE PROCESAMIENTO SEMITONOS DTF
+# MOTOR MATEMÁTICO V36 UNIFICADO (/api/procesar)
 # ==========================================
 @app.route('/api/procesar', methods=['POST'])
 def procesar():
@@ -469,101 +364,144 @@ def procesar():
         file.save(ruta_entrada)
 
         color_hex = request.form.get('color', '#000000')
-        saturacion = float(request.form.get('sat', '1.0'))
-        modo = request.form.get('limpieza', 'global')
+        nivel_limpieza = request.form.get('limpieza', 'global')
         trama = request.form.get('trama', 'round')
         
-        tolerancia = int(request.form.get('tolerancia', 20))
-        dot_size = int(request.form.get('px', 10))
-        angulo = int(request.form.get('angulo', 22))
-        choke = request.form.get('choke') == 'true'
+        saturacion_str = request.form.get('sat', '1.0')
+        saturacion = float(saturacion_str) if saturacion_str != 'null' else 1.0
+        
+        dot_size = float(request.form.get('px', 10.0))
+        tolerancia_input = float(request.form.get('tolerancia', 20.0))
+        angulo = float(request.form.get('angulo', 22.0))
+        
+        usar_ia = request.form.get('usar_ia') == 'true'
+        quitar_fondo = request.form.get('quitar_fondo') == 'true'
+        aplicar_choke = request.form.get('choke') == 'true'
         fix_semi = request.form.get('fix_semi') == 'true'
 
         ancho_cm = float(request.form.get('ancho', 29.7))
         alto_cm = float(request.form.get('alto', 42.0))
+        target_w = int((ancho_cm / 2.54) * 300)
+        target_h = int((alto_cm / 2.54) * 300)
 
-        dpi = 300
-        target_w = int((ancho_cm / 2.54) * dpi)
-        target_h = int((alto_cm / 2.54) * dpi)
+        reducir_pixeles_val = 1 if aplicar_choke else 0
 
-        modo_suave = (modo == "baja")
-        gamma = 1.0 if modo_suave else 0.8 
+        if usar_ia: ruta_entrada = procesar_con_snapedit(ruta_entrada)
+        if quitar_fondo: ruta_entrada = quitar_fondo_snapedit(ruta_entrada)
+
+        modo_suave_clasico = False
+        gamma_boost = False
+        tolerancia_val = tolerancia_input
+        
+        if nivel_limpieza == 'baja': 
+            modo_suave_clasico = True   
+        elif nivel_limpieza == 'global': 
+            tolerancia_val = 500.0  
+            gamma_boost = True
 
         img_orig = Image.open(ruta_entrada).convert("RGBA")
-        
-        # LANCZOS aplicado aquí para máxima nitidez sin perder calidad
         img_orig = img_orig.resize((target_w, target_h), Image.LANCZOS)
         
         if saturacion != 1.0:
-            img_orig = ImageEnhance.Color(img_orig).enhance(saturacion)
+            enhancer = ImageEnhance.Color(img_orig)
+            img_orig = enhancer.enhance(saturacion)
             
         arr_visual = np.array(img_orig).copy() 
         ancho, alto = img_orig.size
         
-        c_target = np.array([int(color_hex.lstrip('#')[i:i+2], 16) for i in (0, 2, 4)], dtype=np.float32)
+        hex_str = color_hex.lstrip('#')
+        color_objetivo = np.array([int(hex_str[i:i+2], 16) for i in (0, 2, 4)], dtype=np.float32)
+        umbral_distancia = np.float32((tolerancia_val * 4.41) + 1.0)
         
-        img_rgb = np.array(img_orig.convert("RGB"), dtype=np.float32)
-        alpha_orig = np.array(img_orig.split()[3], dtype=np.float32)
+        rad = np.float32(np.radians(angulo))
+        cos_a = np.float32(np.cos(rad))
+        sin_a = np.float32(np.sin(rad))
+        dot_f32 = np.float32(dot_size)
+        radio_max = np.float32(dot_size / 2.0)
 
-        diff = np.sqrt(np.sum((img_rgb - c_target)**2, axis=2))
-        
-        dist_max = tolerancia * 2.55 if modo_suave else tolerancia * 4.0
-        rango_fade = 60.0
-        
-        if modo_suave:
-            opacidad_target = np.clip(1.0 - (diff / (dist_max + 1e-5)), 0.0, 1.0)
-        else:
-            opacidad_target = np.clip(1.0 - ((diff - dist_max + rango_fade) / rango_fade), 0.0, 1.0)
+        chunk_size = 1000 
+        for y_start in range(0, alto, chunk_size):
+            y_end = min(y_start + chunk_size, alto)
+            
+            chunk_math = arr_visual[y_start:y_end, :, :].astype(np.float32)
+            rgb = chunk_math[:, :, :3]
+            alfa_original = arr_visual[y_start:y_end, :, 3].copy()
+            
+            if fix_semi:
+                alfa_original = np.where(alfa_original > 80, 255, 0).astype(np.uint8)
 
-        if gamma != 1.0:
-            opacidad_target = np.power(opacidad_target, 1.0/gamma)
-
-        opacidad_target = opacidad_target * (alpha_orig / 255.0)
-
-        # Liberamos RAM de forma agresiva antes de las matemáticas pesadas
-        del img_rgb, diff
-        gc.collect()
-
-        theta = np.radians(angulo)
-        cos_t, sin_t = np.cos(theta), np.sin(theta)
-
-        alpha_final = np.zeros((alto, ancho), dtype=np.uint8)
-        xv = np.arange(ancho, dtype=np.float32)
-
-        # Cálculo fila por fila para evitar el OOM (código 128)
-        for i in range(alto):
-            y_val = np.float32(i)
-            xr = xv * cos_t - y_val * sin_t
-            yr = xv * sin_t + y_val * cos_t
-
-            if trama == "line":
-                patron = (np.cos(2 * np.pi * yr / dot_size) + 1.0) / 2.0
-            elif trama == "ellipse":
-                patron = (np.cos(2 * np.pi * xr / dot_size) + np.cos(2 * np.pi * yr / (dot_size/2.0))) / 4.0 + 0.5
-            elif trama == "roseta":
-                p1 = (np.cos(2 * np.pi * xr / dot_size) + np.cos(2 * np.pi * yr / dot_size)) / 4.0 + 0.5
-                xr2 = xv * np.cos(theta + np.pi/4) - y_val * np.sin(theta + np.pi/4)
-                yr2 = xv * np.sin(theta + np.pi/4) + y_val * np.cos(theta + np.pi/4)
-                p2 = (np.cos(2 * np.pi * xr2 / dot_size) + np.cos(2 * np.pi * yr2 / dot_size)) / 4.0 + 0.5
-                patron = (p1 + p2) / 2.0
+            if tolerancia_val >= 200.0:
+                peso_color = np.ones((y_end - y_start, ancho), dtype=np.float32)
             else:
-                patron = (np.cos(2 * np.pi * xr / dot_size) + np.cos(2 * np.pi * yr / dot_size)) / 4.0 + 0.5
+                distancia = np.linalg.norm(rgb - color_objetivo, axis=2)
+                peso_color = np.clip(np.float32(1.0) - (distancia / umbral_distancia), 0.0, 1.0).astype(np.float32)
 
-            mask_remover = opacidad_target[i, :] > patron
-            alpha_final[i, :] = np.where(mask_remover, 0, alpha_orig[i, :])
+            y_coords, x_coords = np.indices((y_end - y_start, ancho), dtype=np.float32)
+            y_coords += y_start 
+            
+            xr = (x_coords * cos_a - y_coords * sin_a).astype(np.float32)
+            yr = (x_coords * sin_a + y_coords * cos_a).astype(np.float32)
 
-        if fix_semi:
-            alpha_final = np.where((alpha_final > 15) & (alpha_final < 240), 255, alpha_final)
+            u = (np.mod(xr, dot_f32) - radio_max).astype(np.float32)
+            v = (np.mod(yr, dot_f32) - radio_max).astype(np.float32)
 
-        arr_visual[:,:,3] = alpha_final
-        img_final = Image.fromarray(arr_visual, "RGBA")
-        
-        if choke:
-            img_final = img_final.filter(ImageFilter.MinFilter(3))
+            if trama == "round":
+                matriz_trama = np.clip(np.sqrt((u * u) + (v * v), dtype=np.float32) / radio_max, 0.0, 1.0)
+            elif trama == "line":
+                matriz_trama = np.clip(np.abs(u) / radio_max, 0.0, 1.0)
+            elif trama == "ellipse":
+                matriz_trama = np.clip(np.sqrt(((u / 1.5) * (u / 1.5)) + (v * v), dtype=np.float32) / radio_max, 0.0, 1.0)
+            elif trama == "roseta":
+                matriz_trama = np.clip((np.abs(u) + np.abs(v)) / (radio_max * 1.5), 0.0, 1.0)
+            else:
+                matriz_trama = np.clip(np.sqrt((u * u) + (v * v), dtype=np.float32) / radio_max, 0.0, 1.0)
 
-        img_final.save(ruta_salida, "PNG", optimize=True)
+            if modo_suave_clasico:
+                opacidad_final = np.where((np.float32(1.0) - peso_color) >= matriz_trama, 1.0, 0.0).astype(np.float32)
+            else:
+                if trama == "round":
+                    wave = (np.cos((u * np.pi) / radio_max) + np.cos((v * np.pi) / radio_max)) / 2.0
+                elif trama == "line":
+                    wave = np.cos((u * np.pi) / radio_max)
+                elif trama == "ellipse":
+                    wave = (np.cos((u * np.pi) / (radio_max * 1.5)) + np.cos((v * np.pi) / radio_max)) / 2.0
+                else:
+                    wave = (np.cos((u * np.pi) / radio_max) + np.cos((v * np.pi) / radio_max)) / 2.0
+                    
+                matriz_trama = np.clip((np.float32(1.0) - wave) / 2.0, 0.0, 1.0).astype(np.float32)
+
+                luminancia = (0.299 * rgb[:, :, 0] + 0.587 * rgb[:, :, 1] + 0.114 * rgb[:, :, 2]) / 255.0
+                
+                if gamma_boost:
+                    luminancia = np.clip(luminancia * 1.5, 0.0, 1.0)
+                    luminancia = np.power(luminancia, 0.45) 
+                    luminancia = np.clip(luminancia, 0.0, 0.95).astype(np.float32)
+                else:
+                    luminancia = luminancia.astype(np.float32)
+
+                is_dark_target = np.mean(color_objetivo) < 128
+                if is_dark_target:
+                    factor_tramado = np.where(luminancia >= matriz_trama, 1.0, 0.0).astype(np.float32)
+                else:
+                    factor_tramado = np.where((np.float32(1.0) - luminancia) >= matriz_trama, 1.0, 0.0).astype(np.float32)
+                    
+                opacidad_final = (np.float32(1.0) - peso_color) + (peso_color * factor_tramado)
+
+            arr_visual[y_start:y_end, :, 3] = np.where((alfa_original > 127) & (opacidad_final > 0.5), 255, 0)
+            gc.collect() 
+
+        img_resultado = Image.fromarray(arr_visual, mode="RGBA")
+        del arr_visual
+
+        if reducir_pixeles_val > 0:
+            alfa = img_resultado.split()[3]
+            for _ in range(reducir_pixeles_val):
+                alfa = alfa.filter(ImageFilter.MinFilter(3)) 
+            img_resultado.putalpha(alfa)
+
+        img_resultado.save(ruta_salida, format="PNG", dpi=(300, 300))
+        img_resultado.close()
         img_orig.close()
-        img_final.close()
         gc.collect()
         
         try: os.remove(ruta_entrada)
@@ -574,7 +512,6 @@ def procesar():
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-      
 
 @app.route("/run/<slug>", methods=["POST"])
 def run_model(slug):
@@ -613,7 +550,7 @@ def run_model(slug):
                 f"preserving all fine lines, small letters, and exact original colors on a {bg_color_name} background."
             )
             
-        if slug == "generate-background" and ("png" not in mime.lower()):
+        if slug == "generate-background" && ("png" not in mime.lower()):
              return jsonify({"error": True, "message": "¡Debes subir un PNG transparente (sin fondo)! Ve primero a 'Quitar Fondo'."}), 400
              
         if slug == "sticker":
