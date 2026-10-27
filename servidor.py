@@ -382,7 +382,7 @@ def process_dtf_extraction(raw_bytes, extract_mode):
         return raw_bytes
 
 # ==========================================
-# MOTOR MATEMÁTICO V37 (Corregido: Suave y Luminosidad)
+# MOTOR MATEMÁTICO V38 (Ambos modos con puntos)
 # ==========================================
 def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo, tolerancia, saturacion, trama, reducir_pixeles, modo_suave_clasico, gamma_boost, fix_semi, target_w=None, target_h=None):
     img_orig = Image.open(ruta_entrada).convert("RGBA")
@@ -390,11 +390,9 @@ def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo
     if target_w and target_h:
         img_orig = img_orig.resize((target_w, target_h), Image.Resampling.LANCZOS)
     
-    # Aplicar saturación real a los canales de color
     if saturacion != 1.0:
         img_orig = ImageEnhance.Color(img_orig).enhance(saturacion)
         
-    # Dar luminosidad y brillo real si el modo avanzado/global está activo para evitar opacidad
     if gamma_boost or not modo_suave_clasico:
         img_orig = ImageEnhance.Brightness(img_orig).enhance(1.15)
         img_orig = ImageEnhance.Contrast(img_orig).enhance(1.10)
@@ -426,33 +424,32 @@ def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo
         distancia = np.linalg.norm(rgb - color_objetivo, axis=2)
         peso_color = np.clip(np.float32(1.0) - (distancia / umbral_distancia), 0.0, 1.0).astype(np.float32)
 
-        if modo_suave_clasico:
-            # MODO SUAVE: Transparencia suave y degradada, sin matriz de puntos (halftone)
-            opacidad_final = np.clip(np.float32(1.0) - peso_color, 0.0, 1.0)
-            alfa_calc = (alfa_original.astype(np.float32) * opacidad_final).astype(np.uint8)
-            arr_visual[y_start:y_end, :, 3] = alfa_calc
+        # Matriz generada para ambos modos
+        y_coords, x_coords = np.indices((y_end - y_start, ancho), dtype=np.float32)
+        y_coords += y_start 
+        
+        xr = (x_coords * cos_a - y_coords * sin_a).astype(np.float32)
+        yr = (x_coords * sin_a + y_coords * cos_a).astype(np.float32)
+
+        u = (np.mod(xr, dot_f32) - radio_max).astype(np.float32)
+        v = (np.mod(yr, dot_f32) - radio_max).astype(np.float32)
+
+        if trama == "round":
+            wave = (np.cos((u * np.pi) / radio_max) + np.cos((v * np.pi) / radio_max)) / 2.0
+        elif trama == "line":
+            wave = np.cos((u * np.pi) / radio_max)
+        elif trama == "ellipse":
+            wave = (np.cos((u * np.pi) / (radio_max * 1.5)) + np.cos((v * np.pi) / radio_max)) / 2.0
         else:
-            # MODO TRAMADO TOTAL: Perfora el diseño con puntos de semitono perfectos
-            y_coords, x_coords = np.indices((y_end - y_start, ancho), dtype=np.float32)
-            y_coords += y_start 
+            wave = (np.cos((u * np.pi) / radio_max) + np.cos((v * np.pi) / radio_max)) / 2.0
             
-            xr = (x_coords * cos_a - y_coords * sin_a).astype(np.float32)
-            yr = (x_coords * sin_a + y_coords * cos_a).astype(np.float32)
+        matriz_trama = np.clip((np.float32(1.0) - wave) / 2.0, 0.0, 1.0).astype(np.float32)
 
-            u = (np.mod(xr, dot_f32) - radio_max).astype(np.float32)
-            v = (np.mod(yr, dot_f32) - radio_max).astype(np.float32)
-
-            if trama == "round":
-                wave = (np.cos((u * np.pi) / radio_max) + np.cos((v * np.pi) / radio_max)) / 2.0
-            elif trama == "line":
-                wave = np.cos((u * np.pi) / radio_max)
-            elif trama == "ellipse":
-                wave = (np.cos((u * np.pi) / (radio_max * 1.5)) + np.cos((v * np.pi) / radio_max)) / 2.0
-            else:
-                wave = (np.cos((u * np.pi) / radio_max) + np.cos((v * np.pi) / radio_max)) / 2.0
-                
-            matriz_trama = np.clip((np.float32(1.0) - wave) / 2.0, 0.0, 1.0).astype(np.float32)
-
+        if modo_suave_clasico:
+            # TRAMADO SUAVE: Aplica puntos solo a las sombras y difuminados, colores sólidos sin perforar
+            opacidad_final = np.where((np.float32(1.0) - peso_color) >= matriz_trama, 1.0, 0.0).astype(np.float32)
+        else:
+            # TRAMADO TOTAL: Perfora todo el diseño según su luminosidad
             luminancia = (0.299 * rgb[:, :, 0] + 0.587 * rgb[:, :, 1] + 0.114 * rgb[:, :, 2]) / 255.0
             
             if gamma_boost:
@@ -472,8 +469,7 @@ def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo
                 lum_adj = np.clip(lum_adj, 0.0, 0.85).astype(np.float32)
                 opacidad_final = np.where(lum_adj > matriz_trama, 1.0, 0.0).astype(np.float32)
 
-            arr_visual[y_start:y_end, :, 3] = np.where((alfa_original > 127) & (opacidad_final > 0.5), 255, 0)
-            
+        arr_visual[y_start:y_end, :, 3] = np.where((alfa_original > 127) & (opacidad_final > 0.5), 255, 0)
         gc.collect() 
 
     img_resultado = Image.fromarray(arr_visual, mode="RGBA")
