@@ -17,6 +17,7 @@ Image.MAX_IMAGE_PIXELS = None
 
 app = Flask(__name__)
 CORS(app)
+
 API_SNAPEDIT = os.environ.get("SNAPEDIT_API_KEY", "sk-snap-uuh6Z0veQTW7z3DSQ7TUr5yuyaC7HIHAoUchqM_KrfI")
 BASE = "https://api.snapedit.app"
 HEADERS = {"api-key": API_SNAPEDIT, "Authorization": f"Bearer {API_SNAPEDIT}"}
@@ -417,11 +418,9 @@ def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo
         if fix_semi:
             alfa_original = np.where(alfa_original > 80, 255, 0).astype(np.uint8)
 
-        if tolerancia >= 200.0:
-            peso_color = np.ones((y_end - y_start, ancho), dtype=np.float32)
-        else:
-            distancia = np.linalg.norm(rgb - color_objetivo, axis=2)
-            peso_color = np.clip(np.float32(1.0) - (distancia / umbral_distancia), 0.0, 1.0).astype(np.float32)
+        # Usar la tolerancia del cliente para identificar el fondo exacto
+        distancia = np.linalg.norm(rgb - color_objetivo, axis=2)
+        peso_color = np.clip(np.float32(1.0) - (distancia / umbral_distancia), 0.0, 1.0).astype(np.float32)
 
         y_coords, x_coords = np.indices((y_end - y_start, ancho), dtype=np.float32)
         y_coords += y_start 
@@ -444,7 +443,7 @@ def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo
             matriz_trama = np.clip(np.sqrt((u * u) + (v * v), dtype=np.float32) / radio_max, 0.0, 1.0)
 
         if modo_suave_clasico:
-            opacidad_final = np.where((np.float32(1.0) - peso_color) >= matriz_trama, 1.0, 0.0).astype(np.float32)
+            opacidad_final = np.where((np.float32(1.0) - peso_color) > matriz_trama, 1.0, 0.0).astype(np.float32)
         else:
             if trama == "round":
                 wave = (np.cos((u * np.pi) / radio_max) + np.cos((v * np.pi) / radio_max)) / 2.0
@@ -470,11 +469,11 @@ def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo
             if is_dark_target:
                 lum_adj = luminancia * (np.float32(1.0) - peso_color)
                 lum_adj = np.clip(lum_adj, 0.0, 0.85).astype(np.float32)
-                opacidad_final = np.where(lum_adj >= matriz_trama, 1.0, 0.0).astype(np.float32)
+                opacidad_final = np.where(lum_adj > matriz_trama, 1.0, 0.0).astype(np.float32)
             else:
                 lum_adj = (np.float32(1.0) - luminancia) * (np.float32(1.0) - peso_color)
                 lum_adj = np.clip(lum_adj, 0.0, 0.85).astype(np.float32)
-                opacidad_final = np.where(lum_adj >= matriz_trama, 1.0, 0.0).astype(np.float32)
+                opacidad_final = np.where(lum_adj > matriz_trama, 1.0, 0.0).astype(np.float32)
 
         arr_visual[y_start:y_end, :, 3] = np.where((alfa_original > 127) & (opacidad_final > 0.5), 255, 0)
         gc.collect() 
@@ -494,9 +493,9 @@ def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo
     gc.collect()
     return ruta_salida
 
-
 @app.route("/")
-def index(): return render_template("index.html")
+def index():
+    return render_template("index.html")
 
 @app.route("/models")
 def get_models():
@@ -640,7 +639,7 @@ def procesar():
         if nivel_limpieza == 'baja': 
             modo_suave_clasico = True   
         elif nivel_limpieza == 'global': 
-            tolerancia_val = 500.0  
+            tolerancia_val = tolerancia_input  
             gamma_boost = True
 
         motor_local_semitonos(
