@@ -15,9 +15,8 @@ from urllib.parse import quote
 
 Image.MAX_IMAGE_PIXELS = None
 
-app = Flask(__name__, template_folder='.')
+app = Flask(__name__)
 CORS(app)
-
 API_SNAPEDIT = os.environ.get("SNAPEDIT_API_KEY", "sk-snap-uuh6Z0veQTW7z3DSQ7TUr5yuyaC7HIHAoUchqM_KrfI")
 BASE = "https://api.snapedit.app"
 HEADERS = {"api-key": API_SNAPEDIT, "Authorization": f"Bearer {API_SNAPEDIT}"}
