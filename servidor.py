@@ -15,7 +15,7 @@ from urllib.parse import quote
 
 Image.MAX_IMAGE_PIXELS = None
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='.')
 CORS(app)
 
 API_SNAPEDIT = os.environ.get("SNAPEDIT_API_KEY", "sk-snap-uuh6Z0veQTW7z3DSQ7TUr5yuyaC7HIHAoUchqM_KrfI")
@@ -231,9 +231,6 @@ def extract_raw_bytes_from_response(response):
             return None, f"Servidores de IA ocupados (HTTP {response.status_code}). Intenta en unos segundos."
         return response.content, None
 
-# ==========================================
-# RESTAURANDO LA FUNCIÓN QUE FALTABA
-# ==========================================
 def validate_and_build_response(raw_bytes):
     if not raw_bytes or len(raw_bytes) < 64:
         return None, "El servidor de IA devolvió un archivo vacío (0 bytes)."
@@ -472,11 +469,13 @@ def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo
 
             is_dark_target = np.mean(color_objetivo) < 128
             if is_dark_target:
-                factor_tramado = np.where(luminancia >= matriz_trama, 1.0, 0.0).astype(np.float32)
+                lum_adj = luminancia * (np.float32(1.0) - peso_color)
+                lum_adj = np.clip(lum_adj, 0.0, 0.85).astype(np.float32)
+                opacidad_final = np.where(lum_adj >= matriz_trama, 1.0, 0.0).astype(np.float32)
             else:
-                factor_tramado = np.where((np.float32(1.0) - luminancia) >= matriz_trama, 1.0, 0.0).astype(np.float32)
-                
-            opacidad_final = (np.float32(1.0) - peso_color) + (peso_color * factor_tramado)
+                lum_adj = (np.float32(1.0) - luminancia) * (np.float32(1.0) - peso_color)
+                lum_adj = np.clip(lum_adj, 0.0, 0.85).astype(np.float32)
+                opacidad_final = np.where(lum_adj >= matriz_trama, 1.0, 0.0).astype(np.float32)
 
         arr_visual[y_start:y_end, :, 3] = np.where((alfa_original > 127) & (opacidad_final > 0.5), 255, 0)
         gc.collect() 
@@ -616,7 +615,7 @@ def procesar():
         saturacion_str = request.form.get('sat', '1.0')
         saturacion = float(saturacion_str) if saturacion_str != 'null' else 1.0
         
-        dot_size = float(request.form.get('px', 10.0))
+        dot_size = float(request.form.get('px', 12.0))
         tolerancia_input = float(request.form.get('tolerancia', 20.0))
         angulo = float(request.form.get('angulo', 22.0))
         
