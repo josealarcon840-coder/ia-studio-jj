@@ -382,7 +382,7 @@ def process_dtf_extraction(raw_bytes, extract_mode):
         return raw_bytes
 
 # ==========================================
-# MOTOR MATEMÁTICO V36 (Luz Mejorada)
+# MOTOR MATEMÁTICO V37 (Corregido: Suave y Luminosidad)
 # ==========================================
 def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo, tolerancia, saturacion, trama, reducir_pixeles, modo_suave_clasico, gamma_boost, fix_semi, target_w=None, target_h=None):
     img_orig = Image.open(ruta_entrada).convert("RGBA")
@@ -390,9 +390,14 @@ def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo
     if target_w and target_h:
         img_orig = img_orig.resize((target_w, target_h), Image.Resampling.LANCZOS)
     
+    # Aplicar saturación real a los canales de color
     if saturacion != 1.0:
-        enhancer = ImageEnhance.Color(img_orig)
-        img_orig = enhancer.enhance(saturacion)
+        img_orig = ImageEnhance.Color(img_orig).enhance(saturacion)
+        
+    # Dar luminosidad y brillo real si el modo avanzado/global está activo para evitar opacidad
+    if gamma_boost or not modo_suave_clasico:
+        img_orig = ImageEnhance.Brightness(img_orig).enhance(1.15)
+        img_orig = ImageEnhance.Contrast(img_orig).enhance(1.10)
         
     arr_visual = np.array(img_orig).copy() 
     ancho, alto = img_orig.size
@@ -418,33 +423,25 @@ def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo
         if fix_semi:
             alfa_original = np.where(alfa_original > 80, 255, 0).astype(np.uint8)
 
-        # Usar la tolerancia del cliente para identificar el fondo exacto
         distancia = np.linalg.norm(rgb - color_objetivo, axis=2)
         peso_color = np.clip(np.float32(1.0) - (distancia / umbral_distancia), 0.0, 1.0).astype(np.float32)
 
-        y_coords, x_coords = np.indices((y_end - y_start, ancho), dtype=np.float32)
-        y_coords += y_start 
-        
-        xr = (x_coords * cos_a - y_coords * sin_a).astype(np.float32)
-        yr = (x_coords * sin_a + y_coords * cos_a).astype(np.float32)
-
-        u = (np.mod(xr, dot_f32) - radio_max).astype(np.float32)
-        v = (np.mod(yr, dot_f32) - radio_max).astype(np.float32)
-
-        if trama == "round":
-            matriz_trama = np.clip(np.sqrt((u * u) + (v * v), dtype=np.float32) / radio_max, 0.0, 1.0)
-        elif trama == "line":
-            matriz_trama = np.clip(np.abs(u) / radio_max, 0.0, 1.0)
-        elif trama == "ellipse":
-            matriz_trama = np.clip(np.sqrt(((u / 1.5) * (u / 1.5)) + (v * v), dtype=np.float32) / radio_max, 0.0, 1.0)
-        elif trama == "roseta":
-            matriz_trama = np.clip((np.abs(u) + np.abs(v)) / (radio_max * 1.5), 0.0, 1.0)
-        else:
-            matriz_trama = np.clip(np.sqrt((u * u) + (v * v), dtype=np.float32) / radio_max, 0.0, 1.0)
-
         if modo_suave_clasico:
-            opacidad_final = np.where((np.float32(1.0) - peso_color) > matriz_trama, 1.0, 0.0).astype(np.float32)
+            # MODO SUAVE: Transparencia suave y degradada, sin matriz de puntos (halftone)
+            opacidad_final = np.clip(np.float32(1.0) - peso_color, 0.0, 1.0)
+            alfa_calc = (alfa_original.astype(np.float32) * opacidad_final).astype(np.uint8)
+            arr_visual[y_start:y_end, :, 3] = alfa_calc
         else:
+            # MODO TRAMADO TOTAL: Perfora el diseño con puntos de semitono perfectos
+            y_coords, x_coords = np.indices((y_end - y_start, ancho), dtype=np.float32)
+            y_coords += y_start 
+            
+            xr = (x_coords * cos_a - y_coords * sin_a).astype(np.float32)
+            yr = (x_coords * sin_a + y_coords * cos_a).astype(np.float32)
+
+            u = (np.mod(xr, dot_f32) - radio_max).astype(np.float32)
+            v = (np.mod(yr, dot_f32) - radio_max).astype(np.float32)
+
             if trama == "round":
                 wave = (np.cos((u * np.pi) / radio_max) + np.cos((v * np.pi) / radio_max)) / 2.0
             elif trama == "line":
@@ -475,7 +472,8 @@ def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo
                 lum_adj = np.clip(lum_adj, 0.0, 0.85).astype(np.float32)
                 opacidad_final = np.where(lum_adj > matriz_trama, 1.0, 0.0).astype(np.float32)
 
-        arr_visual[y_start:y_end, :, 3] = np.where((alfa_original > 127) & (opacidad_final > 0.5), 255, 0)
+            arr_visual[y_start:y_end, :, 3] = np.where((alfa_original > 127) & (opacidad_final > 0.5), 255, 0)
+            
         gc.collect() 
 
     img_resultado = Image.fromarray(arr_visual, mode="RGBA")
@@ -493,9 +491,13 @@ def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo
     gc.collect()
     return ruta_salida
 
+
 @app.route("/")
 def index():
-    return render_template("index.html")
+    try:
+        return render_template("index.html")
+    except Exception as e:
+        return f"Error: No se pudo cargar la página. Verifica que 'index.html' esté en la misma carpeta. Detalles: {e}", 500
 
 @app.route("/models")
 def get_models():
