@@ -382,9 +382,9 @@ def process_dtf_extraction(raw_bytes, extract_mode):
         return raw_bytes
 
 # ==========================================
-# MOTOR MATEMÁTICO V39 (Híbrido + Tonalidad)
+# MOTOR MATEMÁTICO V38 (Limpio y Híbrido)
 # ==========================================
-def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo, tolerancia, saturacion, trama, reducir_pixeles, modo_suave_clasico, gamma_boost, fix_semi, luz_val, raw_val, sombra_val, target_w=None, target_h=None):
+def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo, tolerancia, saturacion, trama, reducir_pixeles, modo_suave_clasico, gamma_boost, fix_semi, target_w=None, target_h=None):
     img_orig = Image.open(ruta_entrada).convert("RGBA")
     
     if target_w and target_h:
@@ -446,19 +446,6 @@ def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo
 
         luminancia = (0.299 * rgb[:, :, 0] + 0.587 * rgb[:, :, 1] + 0.114 * rgb[:, :, 2]) / 255.0
 
-        # Multiplicadores de Zonas Tonales 
-        cond_sombras = luminancia < 0.33
-        cond_raw = (luminancia >= 0.33) & (luminancia < 0.66)
-        cond_luces = luminancia >= 0.66
-
-        multiplicador = np.select(
-            [cond_sombras, cond_raw, cond_luces],
-            [sombra_val, raw_val, luz_val],
-            default=1.0
-        ).astype(np.float32)
-
-        luminancia = np.clip(luminancia * multiplicador, 0.0, 1.0)
-
         is_dark_target = np.mean(color_objetivo) < 128
         if is_dark_target:
             lum_adj = luminancia * (np.float32(1.0) - peso_color)
@@ -470,14 +457,12 @@ def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo
             opacidad_trama = np.where(lum_adj > matriz_trama, 1.0, 0.0).astype(np.float32)
 
         if modo_suave_clasico:
-            # MODO HÍBRIDO: Detecta si es diseño sólido o si es humo/luz según la coincidencia de color
             es_diseno_solido = peso_color < 0.1
             es_humo_luz = (peso_color >= 0.1) & (peso_color <= 0.95)
             
             opacidad_final = np.where(es_diseno_solido, 1.0, 
                              np.where(es_humo_luz, opacidad_trama, 0.0))
         else:
-            # MODO TOTAL: Todo se vuelve semitono
             opacidad_final = opacidad_trama
 
         arr_visual[y_start:y_end, :, 3] = np.where((alfa_original > 127) & (opacidad_final > 0.5), 255, 0)
@@ -625,11 +610,6 @@ def procesar():
         tolerancia_input = float(request.form.get('tolerancia', 20.0))
         angulo = float(request.form.get('angulo', 22.0))
         
-        # Recuperar valores tonales (Por defecto 1.0 si no se envían)
-        luz_val = float(request.form.get('luz', 1.0))
-        raw_val = float(request.form.get('raw', 1.0))
-        sombra_val = float(request.form.get('sombra', 1.0))
-        
         usar_ia = request.form.get('usar_ia') == 'true'
         quitar_fondo = request.form.get('quitar_fondo') == 'true'
         aplicar_choke = request.form.get('choke') == 'true'
@@ -661,7 +641,6 @@ def procesar():
             tolerancia=tolerancia_val, saturacion=saturacion, trama=trama_str, 
             reducir_pixeles=reducir_pixeles_val, modo_suave_clasico=modo_suave_clasico, 
             gamma_boost=gamma_boost, fix_semi=fix_semi,
-            luz_val=luz_val, raw_val=raw_val, sombra_val=sombra_val,
             target_w=target_w, target_h=target_h
         )
         
