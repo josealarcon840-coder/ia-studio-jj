@@ -378,6 +378,28 @@
                       <button class="btn-select-dtf" type="button" data-val="ellipse" onclick="selectBtnSemi(this, 'semiTramaGroup')">Elipse</button>
                       <button class="btn-select-dtf" type="button" data-val="roseta" onclick="selectBtnSemi(this, 'semiTramaGroup')">Doble Trama</button>
                   </div>
+
+                  <!-- NUEVOS CONTROLES DE INTENSIDAD TONAL -->
+                  <div class="tonal-controls" style="margin-top: 15px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                      <label style="font-size: 10px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 5px; text-transform: uppercase;">Intensidad de Luces (Brillos)</label>
+                      <div class="slider-wrap-dtf" style="margin-bottom: 12px;">
+                          <input type="range" class="ui-slider-dtf" id="luzSlider" min="0.5" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('luzVal').innerText = this.value">
+                          <span class="val-badge-dtf" id="luzVal" style="font-weight: bold; color: #fff;">1.0</span>
+                      </div>
+                      
+                      <label style="font-size: 10px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 5px; text-transform: uppercase;">Intensidad Raw (Medios Tonos)</label>
+                      <div class="slider-wrap-dtf" style="margin-bottom: 12px;">
+                          <input type="range" class="ui-slider-dtf" id="rawSlider" min="0.5" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('rawVal').innerText = this.value">
+                          <span class="val-badge-dtf" id="rawVal" style="font-weight: bold; color: #fff;">1.0</span>
+                      </div>
+                      
+                      <label style="font-size: 10px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 5px; text-transform: uppercase;">Intensidad de Sombras (Oscuros)</label>
+                      <div class="slider-wrap-dtf">
+                          <input type="range" class="ui-slider-dtf" id="sombraSlider" min="0.5" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('sombraVal').innerText = this.value">
+                          <span class="val-badge-dtf" id="sombraVal" style="font-weight: bold; color: #fff;">1.0</span>
+                      </div>
+                  </div>
+
               </div>
 
               <div class="section-box-dtf">
@@ -386,7 +408,7 @@
                   <div class="slider-wrap-dtf"><input type="range" class="ui-slider-dtf" id="semiTolSlider" min="1" max="100" value="20" oninput="updateValSemi('semiTolVal', this.value)"><span class="val-badge-dtf" id="semiTolVal">20</span></div>
 
                   <label class="lbl-dtf">LPI (GROSOR PIXEL)</label>
-                 <div class="slider-wrap-dtf"><input type="range" class="ui-slider-dtf" id="semiPxSlider" min="5" max="25" value="12" oninput="updateValSemi('semiPxVal', this.value, 'px')"><span class="val-badge-dtf" id="semiPxVal">12px</span></div>
+                  <div class="slider-wrap-dtf"><input type="range" class="ui-slider-dtf" id="semiPxSlider" min="5" max="25" value="12" oninput="updateValSemi('semiPxVal', this.value, 'px')"><span class="val-badge-dtf" id="semiPxVal">12px</span></div>
                   
                   <label class="lbl-dtf">ÁNGULO</label>
                   <div class="slider-wrap-dtf"><input type="range" class="ui-slider-dtf" id="semiAngSlider" min="0" max="90" value="22" oninput="updateValSemi('semiAngVal', this.value, '°')"><span class="val-badge-dtf" id="semiAngVal">22°</span></div>
@@ -1609,6 +1631,11 @@ async function procesarImagenSemi() {
     formData.append("quitar_fondo", document.getElementById('semiCheckBG').checked);
     formData.append("choke", document.getElementById('semiCheckChoke').checked);
     formData.append("fix_semi", document.getElementById('semiCheckSemi').checked);
+    
+    // ENVIAR VALORES TONALES DE LUZ, RAW Y SOMBRAS
+    formData.append("luz", document.getElementById('luzSlider').value);
+    formData.append("raw", document.getElementById('rawSlider').value);
+    formData.append("sombra", document.getElementById('sombraSlider').value);
 
     try {
         const response = await fetch("/api/procesar", { method: "POST", body: formData });
