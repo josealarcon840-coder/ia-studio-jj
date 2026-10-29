@@ -382,7 +382,7 @@ def process_dtf_extraction(raw_bytes, extract_mode):
         return raw_bytes
 
 # ==========================================
-# MOTOR MATEMÁTICO V38 (Limpio y Híbrido)
+# MOTOR MATEMÁTICO V40 (Suave=Inteligente, Total=Perfora Todo)
 # ==========================================
 def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo, tolerancia, saturacion, trama, reducir_pixeles, modo_suave_clasico, gamma_boost, fix_semi, target_w=None, target_h=None):
     img_orig = Image.open(ruta_entrada).convert("RGBA")
@@ -392,10 +392,6 @@ def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo
     
     if saturacion != 1.0:
         img_orig = ImageEnhance.Color(img_orig).enhance(saturacion)
-        
-    if gamma_boost or not modo_suave_clasico:
-        img_orig = ImageEnhance.Brightness(img_orig).enhance(1.15)
-        img_orig = ImageEnhance.Contrast(img_orig).enhance(1.10)
         
     arr_visual = np.array(img_orig).copy() 
     ancho, alto = img_orig.size
@@ -446,24 +442,24 @@ def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo
 
         luminancia = (0.299 * rgb[:, :, 0] + 0.587 * rgb[:, :, 1] + 0.114 * rgb[:, :, 2]) / 255.0
 
-        is_dark_target = np.mean(color_objetivo) < 128
-        if is_dark_target:
-            lum_adj = luminancia * (np.float32(1.0) - peso_color)
-            lum_adj = np.clip(lum_adj, 0.0, 0.85).astype(np.float32)
-            opacidad_trama = np.where(lum_adj > matriz_trama, 1.0, 0.0).astype(np.float32)
-        else:
-            lum_adj = (np.float32(1.0) - luminancia) * (np.float32(1.0) - peso_color)
-            lum_adj = np.clip(lum_adj, 0.0, 0.85).astype(np.float32)
-            opacidad_trama = np.where(lum_adj > matriz_trama, 1.0, 0.0).astype(np.float32)
-
         if modo_suave_clasico:
-            es_diseno_solido = peso_color < 0.1
-            es_humo_luz = (peso_color >= 0.1) & (peso_color <= 0.95)
-            
-            opacidad_final = np.where(es_diseno_solido, 1.0, 
-                             np.where(es_humo_luz, opacidad_trama, 0.0))
+            # MODO SUAVE (INTELIGENTE): Protege luces/colores vivos y solo trama sombras
+            is_dark_target = np.mean(color_objetivo) < 128
+            if is_dark_target:
+                lum_adj = (luminancia * 1.5) * (np.float32(1.0) - peso_color)
+            else:
+                lum_adj = (np.float32(1.0) - luminancia) * 1.5 * (np.float32(1.0) - peso_color)
+            opacidad_final = np.where(lum_adj > matriz_trama, 1.0, 0.0).astype(np.float32)
         else:
-            opacidad_final = opacidad_trama
+            # MODO TOTAL: Perfora absolutamente todo el diseño sin piedad
+            is_dark_target = np.mean(color_objetivo) < 128
+            if is_dark_target:
+                lum_adj = luminancia * (np.float32(1.0) - peso_color)
+                lum_adj = np.clip(lum_adj, 0.0, 0.85).astype(np.float32)
+            else:
+                lum_adj = (np.float32(1.0) - luminancia) * (np.float32(1.0) - peso_color)
+                lum_adj = np.clip(lum_adj, 0.0, 0.85).astype(np.float32)
+            opacidad_final = np.where(lum_adj > matriz_trama, 1.0, 0.0).astype(np.float32)
 
         arr_visual[y_start:y_end, :, 3] = np.where((alfa_original > 127) & (opacidad_final > 0.5), 255, 0)
         gc.collect() 
