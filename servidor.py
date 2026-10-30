@@ -382,7 +382,7 @@ def process_dtf_extraction(raw_bytes, extract_mode):
         return raw_bytes
 
 # ==========================================
-# MOTOR MATEMÁTICO V41 (Separación Total vs Inteligente)
+# MOTOR MATEMÁTICO V42 (Transición Perfecta sin Cortes)
 # ==========================================
 def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo, tolerancia, saturacion, trama, reducir_pixeles, modo_suave_clasico, gamma_boost, fix_semi, target_w=None, target_h=None):
     img_orig = Image.open(ruta_entrada).convert("RGBA")
@@ -393,7 +393,9 @@ def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo
     if saturacion != 1.0:
         img_orig = ImageEnhance.Color(img_orig).enhance(saturacion)
         
-    if gamma_boost or not modo_suave_clasico:
+    # Solo aplicar brillo extra en modo Tramado Total para un look retro.
+    # En Modo Suave lo desactivamos para no falsear tu foto original.
+    if not modo_suave_clasico:
         img_orig = ImageEnhance.Brightness(img_orig).enhance(1.15)
         img_orig = ImageEnhance.Contrast(img_orig).enhance(1.10)
         
@@ -444,23 +446,15 @@ def motor_local_semitonos(ruta_entrada, ruta_salida, color_hex, dot_size, angulo
             
         matriz_trama = np.clip((np.float32(1.0) - wave) / 2.0, 0.0, 1.0).astype(np.float32)
 
-        luminancia = (0.299 * rgb[:, :, 0] + 0.587 * rgb[:, :, 1] + 0.114 * rgb[:, :, 2]) / 255.0
-
         if modo_suave_clasico:
-            # MODO SUAVE (INTELIGENTE): Protege luces/colores vivos y solo trama sombras
-            is_dark_target = np.mean(color_objetivo) < 128
-            if is_dark_target:
-                es_solido = luminancia > 0.50
-                lum_adj = (luminancia * 1.3) * (np.float32(1.0) - peso_color)
-                opacidad_trama = np.where(lum_adj > matriz_trama, 1.0, 0.0).astype(np.float32)
-                opacidad_final = np.where(es_solido, 1.0, opacidad_trama).astype(np.float32)
-            else:
-                es_solido = luminancia < 0.50
-                lum_adj = (np.float32(1.0) - luminancia) * 1.3 * (np.float32(1.0) - peso_color)
-                opacidad_trama = np.where(lum_adj > matriz_trama, 1.0, 0.0).astype(np.float32)
-                opacidad_final = np.where(es_solido, 1.0, opacidad_trama).astype(np.float32)
+            # MODO CLÁSICO (SUAVE): Degradado perfecto sin cortes.
+            # opacidad_trama es 1.0 (sólida) para la piel lejos del negro, 
+            # y baja gradualmente a medida que la sombra se acerca al negro.
+            opacidad_trama = np.float32(1.0) - peso_color
+            opacidad_final = np.where(opacidad_trama > matriz_trama, 1.0, 0.0).astype(np.float32)
         else:
-            # MODO TOTAL: Perfora absolutamente todo el diseño sin piedad (capado a 0.90)
+            # MODO TOTAL: Perfora todo el cuerpo con puntos sin excepción
+            luminancia = (0.299 * rgb[:, :, 0] + 0.587 * rgb[:, :, 1] + 0.114 * rgb[:, :, 2]) / 255.0
             is_dark_target = np.mean(color_objetivo) < 128
             if is_dark_target:
                 lum_adj = luminancia * (np.float32(1.0) - peso_color)
